@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>公会竞标赛</title>
+  <style>
+    /* ==========================================
+       CSS 变量 — Apple Sequoia 风格
+       ========================================== */
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f7;
+      --bg-card: #ffffff;
+      --bg-hover: rgba(0,0,0,0.04);
+      --text: #1d1d1f;
+      --text-secondary: #6e6e73;
+      --text-tertiary: #aeaeb2;
+      --accent: #007AFF;
+      --accent-hover: #0062d1;
+      --border: #d2d2d7;
+      --border-light: #e5e5ea;
+      --danger: #ff3b30;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+      --radius-sm: 8px;
+      --radius: 12px;
+      --radius-lg: 14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000;
+        --bg-secondary: #1c1c1e;
+        --bg-card: #1c1c1e;
+        --bg-hover: rgba(255,255,255,0.08);
+        --text: #f5f5f7;
+        --text-secondary: #8e8e93;
+        --text-tertiary: #636366;
+        --accent: #0A84FF;
+        --accent-hover: #409cff;
+        --border: #38383a;
+        --border-light: #2c2c2e;
+        --danger: #ff453a;
+        --shadow-sm: 0 1px 2px rgba(255,255,255,0.03);
+        --shadow: 0 1px 3px rgba(255,255,255,0.05);
+        --shadow-lg: 0 4px 16px rgba(255,255,255,0.06);
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+      font-size: 15px; line-height: 1.5;
+      color: var(--text); background: var(--bg);
+      -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+
+    /* ==========================================
+       顶部导航栏
+       ========================================== */
+    .navbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 52px;
+      border-bottom: 1px solid var(--border-light);
+      background: var(--bg); position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(20px);
+    }
+
+    .navbar .left, .navbar .right {
+      display: flex; align-items: center; gap: 12px;
+      min-width: 120px;
+    }
+
+    .navbar .right { justify-content: flex-end; }
+
+    .navbar .back-link {
+      font-size: 15px; color: var(--accent); text-decoration: none;
+      padding: 4px 8px; border-radius: 6px; transition: background 0.15s;
+    }
+    .navbar .back-link:hover { background: var(--bg-hover); }
+
+    .navbar .title {
+      font-size: 17px; font-weight: 600; color: var(--text);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .navbar .user-name {
+      font-size: 14px; color: var(--text-secondary);
+    }
+
+    /* ==========================================
+       主内容区
+       ========================================== */
+    .main {
+      max-width: 720px; margin: 0 auto; padding: 28px 24px 48px;
+    }
+
+    /* ==========================================
+       赛季信息栏
+       ========================================== */
+    .season-bar {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .season-bar .season-row1 {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      font-size: 16px; font-weight: 600; color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .season-bar .season-row1 .divider {
+      color: var(--border); font-weight: 300;
+    }
+
+    .season-bar .season-row1 .countdown {
+      color: var(--accent); font-weight: 500;
+    }
+
+    .season-bar .season-row1 .ended {
+      color: var(--danger);
+    }
+
+    .season-bar .season-row2 {
+      font-size: 13px; color: var(--text-secondary);
+      display: flex; gap: 16px; flex-wrap: wrap;
+    }
+
+    .season-bar.empty {
+      text-align: center; padding: 24px;
+    }
+    .season-bar.empty .msg {
+      font-size: 15px; color: var(--text-secondary);
+    }
+
+    /* ==========================================
+       功能入口卡片
+       ========================================== */
+    .card-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 560px) {
+      .card-row { grid-template-columns: 1fr; }
+    }
+
+    .feature-card {
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 36px 24px 28px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      text-decoration: none; color: inherit;
+      transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .feature-card .card-icon { font-size: 48px; margin-bottom: 16px; line-height: 1; }
+
+    .feature-card .card-title {
+      font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 8px;
+    }
+
+    .feature-card .card-desc {
+      font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;
+    }
+
+    .feature-card .card-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 9px 28px; border-radius: 10px;
+      font-size: 15px; font-weight: 500; font-family: inherit;
+      background: var(--accent); color: #ffffff; border: none;
+      cursor: pointer;
+      transition: background 0.25s ease-in-out;
+    }
+
+    .feature-card:hover .card-btn { background: var(--accent-hover); }
+
+    /* ==========================================
+       底部管理员入口
+       ========================================== */
+    .admin-footer {
+      margin-top: 40px; text-align: center;
+    }
+
+    .admin-footer .admin-links {
+      font-size: 13px; color: var(--text-tertiary);
+    }
+
+    .admin-footer .admin-links a {
+      color: var(--text-secondary); text-decoration: none;
+      cursor: pointer; transition: color 0.15s;
+    }
+    .admin-footer .admin-links a:hover { color: var(--accent); }
+
+    .admin-footer .sep { margin: 0 8px; color: var(--border); }
+
+    /* ==========================================
+       Toast
+       ========================================== */
+    .toast {
+      position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+      padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 500;
+      z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+      box-shadow: var(--shadow);
+    }
+    .toast.show { opacity: 1; }
+    .toast.info { background: var(--accent); color: #fff; }
+  </style>
+</head>
+<body>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- ==================== 顶部导航 ==================== -->
+  <nav class="navbar">
+    <div class="left">
+      <a href="../index.html" class="back-link">← 返回主界面</a>
+    </div>
+    <div class="title">🏆 公会竞标赛</div>
+    <div class="right">
+      <span class="user-name" id="navUserName">--</span>
+    </div>
+  </nav>
+
+  <!-- ==================== 主内容 ==================== -->
+  <div class="main">
+
+    <!-- 赛季信息栏 -->
+    <div class="season-bar" id="seasonBar">
+      <div class="msg">加载中...</div>
+    </div>
+
+    <!-- 功能入口卡片 -->
+    <div class="card-row">
+      <!-- 卡片 1：录入 -->
+      <a href="input.html" class="feature-card">
+        <div class="card-icon">📝</div>
+        <div class="card-title">录入我的竞标赛</div>
+        <div class="card-desc">标记你能做的任务，设定目标分数</div>
+        <span class="card-btn">进入</span>
+      </a>
+
+      <!-- 卡片 2：查询 -->
+      <a href="query.html" class="feature-card">
+        <div class="card-icon">🔍</div>
+        <div class="card-title">查询可接成员</div>
+        <div class="card-desc">查找谁可以做某个任务</div>
+        <span class="card-btn">进入</span>
+      </a>
+    </div>
+
+    <!-- 底部管理员入口 -->
+    <div class="admin-footer" id="adminFooter" style="display:none;">
+      <div class="admin-links">
+        🔧 管理员入口：
+        <a href="../admin/members.html">成员总览</a>
+        <span class="sep">｜</span>
+        <a href="../admin/tasks.html">任务管理</a>
+        <span class="sep">｜</span>
+        <a href="../admin/season.html">赛季配置</a>
+        <span class="sep" id="sepLogs">｜</span>
+        <a href="../admin/logs.html" id="linkLogs">操作日志</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // Supabase 配置
+    // ==========================================
+    var SUPABASE_URL = 'https://nifmryfrgfdjjbrdrgpo.supabase.co';
+    var SUPABASE_ANON_KEY = 'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+
+    var API = {
+      h: function () {
+        return {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+        };
+      },
+      get: async function (path) {
+        var r = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: this.h() });
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+      },
+    };
+
+    // ==========================================
+    // 用户
+    // ==========================================
+    var currentUser = null;
+
+    function getUser() {
+      var s = localStorage.getItem('guild_current_user');
+      if (!s) { window.location.href = '../login.html'; return null; }
+      try {
+        var u = JSON.parse(s);
+        if (!u.id) throw new Error('invalid');
+        return u;
+      } catch (_) {
+        localStorage.removeItem('guild_current_user');
+        window.location.href = '../login.html';
+        return null;
+      }
+    }
+
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast info show';
+      clearTimeout(t._t);
+      t._t = setTimeout(function () { t.classList.remove('show'); }, 2500);
+    }
+
+    // ==========================================
+    // 倒计时
+    // ==========================================
+    function calcCountdown(endDateStr) {
+      if (!endDateStr) return { text: '⏳ 赛季时间待定', cls: '' };
+
+      var end = new Date(endDateStr);
+      var now = new Date();
+      var diff = end - now;
+
+      if (diff <= 0) return { text: '🏁 赛季已结束', cls: 'ended' };
+
+      var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      return { text: '⏱️ 剩余 ' + days + '天' + hours + '小时', cls: 'countdown' };
+    }
+
+    function formatDate(str) {
+      if (!str) return '待定';
+      var d = new Date(str);
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    }
+
+    // ==========================================
+    // 渲染赛季栏
+    // ==========================================
+    function renderSeason(season) {
+      var bar = document.getElementById('seasonBar');
+
+      if (!season) {
+        bar.className = 'season-bar empty';
+        bar.innerHTML = '<div class="msg">📢 暂无当前赛季，请管理员在后台配置</div>';
+        return;
+      }
+
+      bar.className = 'season-bar';
+      var cd = calcCountdown(season.end_date);
+
+      bar.innerHTML =
+        '<div class="season-row1">' +
+          '<span>🏆 ' + esc(season.season_name) + '</span>' +
+          '<span class="divider">｜</span>' +
+          '<span>🎯 目标：' + esc(season.target_rank || '未设定') + '</span>' +
+          '<span class="divider">｜</span>' +
+          '<span class="' + cd.cls + '">' + cd.text + '</span>' +
+        '</div>' +
+        '<div class="season-row2">' +
+          '<span>开始：' + formatDate(season.start_date) + '</span>' +
+          '<span>结束：' + formatDate(season.end_date) + '</span>' +
+        '</div>';
+    }
+
+    function esc(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ==========================================
+    // 加载赛季
+    // ==========================================
+    async function loadSeason() {
+      try {
+        var data = await API.get(
+          'seasons?is_current=eq.true&select=*&limit=1'
+        );
+        renderSeason(data && data.length > 0 ? data[0] : null);
+      } catch (err) {
+        console.error('加载赛季失败:', err);
+        renderSeason(null);
+      }
+    }
+
+    // ==========================================
+    // 倒计时实时更新
+    // ==========================================
+    var countdownTimer = null;
+
+    function startCountdownTick() {
+      clearInterval(countdownTimer);
+      countdownTimer = setInterval(async function () {
+        // 重新拉取赛季数据以更新倒计时
+        try {
+          var data = await API.get(
+            'seasons?is_current=eq.true&select=*&limit=1'
+          );
+          if (data && data.length > 0) {
+            renderSeason(data[0]);
+          }
+        } catch (_) { /* 静默处理 */ }
+      }, 60000); // 每分钟刷新一次倒计时
+    }
+
+    // ==========================================
+    // 初始化
+    // ==========================================
+    async function init() {
+      currentUser = getUser();
+      if (!currentUser) return;
+
+      // 导航栏用户名
+      document.getElementById('navUserName').textContent =
+        currentUser.display_name || currentUser.uid;
+
+      // 管理员底部入口
+      if (currentUser.is_admin || currentUser.is_task_admin) {
+        document.getElementById('adminFooter').style.display = 'block';
+      }
+      // 操作日志仅超级管理员可见
+      if (!currentUser.is_admin) {
+        document.getElementById('sepLogs').style.display = 'none';
+        document.getElementById('linkLogs').style.display = 'none';
+      }
+
+      await loadSeason();
+      startCountdownTick();
+    }
+
+    init();
+  </script>
+</body>
+</html>

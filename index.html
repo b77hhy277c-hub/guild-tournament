@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>公会管理工具</title>
+  <style>
+    /* ==========================================
+       CSS 变量 — 浅色/深色
+       ========================================== */
+    :root {
+      --bg: #ffffff;
+      --bg-sidebar: #f5f5f7;
+      --bg-card: #ffffff;
+      --bg-hover: rgba(0,0,0,0.04);
+      --text: #1d1d1f;
+      --text-secondary: #6e6e73;
+      --text-tertiary: #aeaeb2;
+      --accent: #007AFF;
+      --accent-hover: #0062cc;
+      --border: #d2d2d7;
+      --border-light: #e5e5ea;
+      --danger: #ff3b30;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000;
+        --bg-sidebar: #1c1c1e;
+        --bg-card: #1c1c1e;
+        --bg-hover: rgba(255,255,255,0.08);
+        --text: #f5f5f7;
+        --text-secondary: #8e8e93;
+        --text-tertiary: #636366;
+        --accent: #0A84FF;
+        --accent-hover: #409cff;
+        --border: #38383a;
+        --border-light: #2c2c2e;
+        --danger: #ff453a;
+        --shadow: 0 1px 3px rgba(255,255,255,0.05);
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+      font-size: 15px; color: var(--text); background: var(--bg);
+      -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+
+    .app { display: flex; min-height: 100vh; }
+
+    /* ==========================================
+       左侧面板 (260px)
+       ========================================== */
+    .sidebar {
+      width: 260px; background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-light);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 10;
+    }
+
+    /* --- 区域一：用户身份 --- */
+    .sidebar-identity {
+      padding: 32px 24px 20px;
+      border-bottom: 1px solid var(--border-light);
+      background: var(--bg-hover);
+    }
+
+    .sidebar-identity .avatar-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+    }
+
+    .sidebar-identity .avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--accent); color: #ffffff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 19px; font-weight: 600; flex-shrink: 0;
+    }
+
+    .sidebar-identity .name {
+      font-size: 20px; font-weight: 600; color: var(--text);
+      line-height: 1.2;
+    }
+
+    .sidebar-identity .uid {
+      font-size: 13px; color: var(--text-secondary); margin-top: 2px;
+    }
+
+    /* --- 区域二：信息概览 --- */
+    .sidebar-info {
+      flex: 1; padding: 16px 24px; overflow-y: auto;
+    }
+
+    .sidebar-info .section-label {
+      font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+    }
+
+    .sidebar-info .field {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .sidebar-info .field:last-child { border-bottom: none; }
+
+    .sidebar-info .field .field-label {
+      font-size: 14px; color: var(--text-secondary);
+    }
+
+    .sidebar-info .field .field-value {
+      font-size: 14px; color: var(--text); font-weight: 500;
+      text-align: right;
+    }
+
+    .sidebar-info .field .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 6px;
+      font-size: 12px; font-weight: 500;
+    }
+
+    .badge-yes { background: #30d158; color: #fff; }
+    .badge-no { background: var(--border); color: var(--text-secondary); }
+    .badge-admin { background: var(--accent); color: #fff; }
+
+    /* --- 区域三：操作区 --- */
+    .sidebar-actions {
+      padding: 16px 24px 24px;
+      border-top: 1px solid var(--border-light);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .btn {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; width: 100%; padding: 10px 16px; border-radius: 10px;
+      font-size: 15px; font-weight: 500; font-family: inherit;
+      cursor: pointer; border: none;
+      transition: all 0.25s ease-in-out; text-decoration: none;
+    }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-secondary {
+      background: transparent; color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--bg-hover); }
+
+    .btn-danger { background: transparent; color: var(--danger); }
+    .btn-danger:hover { background: rgba(255,59,48,0.08); }
+
+    /* ==========================================
+       右侧内容区
+       ========================================== */
+    .content {
+      flex: 1; margin-left: 260px; padding: 48px;
+      max-width: 1060px;
+    }
+
+    .content h1 {
+      font-size: 28px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 6px;
+    }
+
+    .content .subtitle {
+      font-size: 15px; color: var(--text-secondary); margin-bottom: 36px;
+    }
+
+    /* --- 卡片网格 --- */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border-light);
+      border-radius: 14px; padding: 24px; box-shadow: var(--shadow);
+      cursor: pointer; transition: all 0.25s ease-in-out;
+      text-decoration: none; color: inherit; display: block;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+
+    .card.disabled {
+      opacity: 0.4; cursor: not-allowed; pointer-events: none;
+    }
+
+    .card.disabled:hover { transform: none; box-shadow: var(--shadow); }
+
+    .card .card-icon {
+      font-size: 36px; margin-bottom: 14px;
+    }
+
+    .card .card-title {
+      font-size: 18px; font-weight: 600; margin-bottom: 6px;
+    }
+
+    .card .card-desc {
+      font-size: 14px; color: var(--text-secondary); line-height: 1.5;
+    }
+
+    /* ==========================================
+       响应式
+       ========================================== */
+    @media (max-width: 768px) {
+      .sidebar { width: 72px; }
+      .sidebar-identity { padding: 20px 12px 16px; }
+      .sidebar-identity .name,
+      .sidebar-identity .uid,
+      .sidebar-info { display: none; }
+      .sidebar-actions { padding: 12px; }
+      .sidebar-actions .btn span { display: none; }
+      .sidebar-actions .btn { justify-content: center; padding: 10px; }
+      .content { margin-left: 72px; padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+    <!-- ==================== 左侧面板 ==================== -->
+    <aside class="sidebar">
+
+      <!-- 区域一：用户身份 -->
+      <div class="sidebar-identity">
+        <div class="avatar-row">
+          <div class="avatar" id="sbAvatar">?</div>
+          <div>
+            <div class="name" id="sbName">--</div>
+            <div class="uid" id="sbUid">--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 区域二：信息概览 -->
+      <div class="sidebar-info">
+        <div class="section-label">信息概览</div>
+        <div class="field">
+          <span class="field-label">昵称</span>
+          <span class="field-value" id="fiName">--</span>
+        </div>
+        <div class="field">
+          <span class="field-label">UID</span>
+          <span class="field-value" id="fiUid">--</span>
+        </div>
+        <div class="field">
+          <span class="field-label">全赞</span>
+          <span class="field-value" id="fiFullLike">--</span>
+        </div>
+        <div class="field">
+          <span class="field-label">等级</span>
+          <span class="field-value" id="fiLevel">--</span>
+        </div>
+        <div class="field">
+          <span class="field-label">VIP 等级</span>
+          <span class="field-value" id="fiVip">--</span>
+        </div>
+        <div class="field">
+          <span class="field-label">管理员</span>
+          <span class="field-value" id="fiAdmin">--</span>
+        </div>
+      </div>
+
+      <!-- 区域三：操作区 -->
+      <div class="sidebar-actions">
+        <a href="profile.html" class="btn btn-primary">
+          <span>📝</span> <span>修改信息</span>
+        </a>
+        <a href="admin.html" class="btn btn-primary" id="btnAdmin" style="display:none; background: var(--danger);">
+          <span>⚙️</span> <span>管理员后台</span>
+        </a>
+        <button class="btn btn-danger" onclick="handleLogout()" style="margin-top: 4px;">
+          <span>🚪</span> <span>退出登录</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ==================== 右侧内容 ==================== -->
+    <main class="content">
+      <h1>公会管理工具</h1>
+      <p class="subtitle">选择一个功能模块开始使用</p>
+
+      <div class="card-grid">
+        <!-- 公会锦标赛 -->
+        <a href="tournament/index.html" class="card">
+          <div class="card-icon">🏆</div>
+          <div class="card-title">公会锦标赛</div>
+          <div class="card-desc">管理公会锦标赛的报名、分组与赛程</div>
+        </a>
+
+        <!-- 占位卡片 -->
+        <div class="card disabled">
+          <div class="card-icon">🔜</div>
+          <div class="card-title">敬请期待</div>
+          <div class="card-desc">更多功能即将上线</div>
+        </div>
+
+        <div class="card disabled">
+          <div class="card-icon">🔜</div>
+          <div class="card-title">敬请期待</div>
+          <div class="card-desc">更多功能即将上线</div>
+        </div>
+
+        <div class="card disabled">
+          <div class="card-icon">🔜</div>
+          <div class="card-title">敬请期待</div>
+          <div class="card-desc">更多功能即将上线</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    var SUPABASE_URL = 'https://nifmryfrgfdjjbrdrgpo.supabase.co';
+    var SUPABASE_ANON_KEY = 'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+
+    var API = {
+      headers: function () {
+        return {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+        };
+      },
+      get: async function (path) {
+        var res = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: this.headers() });
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+      },
+    };
+
+    var currentUser = null;
+
+    function getUser() {
+      var s = localStorage.getItem('guild_current_user');
+      if (!s) { window.location.href = 'login.html'; return null; }
+      try {
+        var u = JSON.parse(s);
+        if (!u.id) throw new Error('invalid');
+        return u;
+      } catch (_) {
+        localStorage.removeItem('guild_current_user');
+        window.location.href = 'login.html';
+        return null;
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('guild_current_user');
+      window.location.href = 'login.html';
+    }
+
+    function updateSidebar(u) {
+      // 区域一
+      document.getElementById('sbAvatar').textContent = (u.display_name || '?').charAt(0);
+      document.getElementById('sbName').textContent = u.display_name;
+      document.getElementById('sbUid').textContent = u.uid;
+
+      // 区域二
+      document.getElementById('fiName').textContent = u.display_name;
+      document.getElementById('fiUid').textContent = u.uid;
+      document.getElementById('fiFullLike').textContent = u.is_full_like ? '是' : '否';
+      document.getElementById('fiLevel').textContent = u.level;
+      document.getElementById('fiVip').textContent = u.vip_level;
+      document.getElementById('fiAdmin').textContent = u.is_admin ? '是' : '否';
+
+      // 管理员入口
+      if (u.is_admin) {
+        document.getElementById('btnAdmin').style.display = 'flex';
+      }
+    }
+
+    async function init() {
+      currentUser = getUser();
+      if (!currentUser) return;
+
+      // 从 Supabase 拉最新数据
+      try {
+        var data = await API.get('members?id=eq.' + currentUser.id + '&select=*');
+        if (data && data.length > 0) {
+          var db = data[0];
+          currentUser.display_name = db.display_name;
+          currentUser.uid = db.uid;
+          currentUser.is_full_like = db.is_full_like;
+          currentUser.level = db.level;
+          currentUser.vip_level = db.vip_level;
+          currentUser.is_admin = db.is_admin;
+          localStorage.setItem('guild_current_user', JSON.stringify(currentUser));
+        }
+      } catch (err) {
+        console.warn('拉取最新数据失败，使用缓存:', err.message);
+      }
+
+      updateSidebar(currentUser);
+    }
+
+    init();
+  </script>
+</body>
+</html>

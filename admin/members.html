@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>成员能力总览</title>
+  <style>
+    :root {
+      --bg: #ffffff; --bg2: #f5f5f7; --card: #ffffff; --hover: rgba(0,0,0,0.04);
+      --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2;
+      --accent: #007AFF; --accent-h: #0062d1; --danger: #ff3b30;
+      --border: #d2d2d7; --border-l: #e5e5ea;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08); --r: 12px;
+      --toggle-off: #e5e5ea;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000; --bg2: #1c1c1e; --card: #1c1c1e;
+        --hover: rgba(255,255,255,0.08);
+        --text: #f5f5f7; --text2: #8e8e93; --text3: #636366;
+        --accent: #0A84FF; --accent-h: #409cff; --danger: #ff453a;
+        --border: #38383a; --border-l: #2c2c2e;
+        --shadow: 0 1px 3px rgba(255,255,255,0.05); --toggle-off: #3a3a3c;
+      }
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif; font-size: 14px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    .navbar { display:flex; align-items:center; justify-content:space-between; height:48px; padding:0 20px; border-bottom:1px solid var(--border-l); position:sticky; top:0; background:var(--bg); z-index:10; backdrop-filter:blur(20px); }
+    .navbar a { color:var(--accent); text-decoration:none; font-size:14px; }
+    .navbar .title { font-size:16px; font-weight:600; }
+    .navbar .user { font-size:13px; color:var(--text2); display:flex; align-items:center; gap:8px; }
+
+    .badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:500; }
+    .badge-sa { background:var(--danger); color:#fff; }
+    .badge-ta { background:var(--accent); color:#fff; }
+    .badge-m { background:var(--border); color:var(--text2); }
+    .badge-ok { background:#30d158; color:#fff; }
+    .badge-no { background:var(--border); color:var(--text2); }
+
+    .main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+    .toolbar { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
+    .toolbar input { padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-family:inherit; background:var(--bg); color:var(--text); outline:none; width:200px; }
+    .toolbar input:focus { border-color:var(--accent); }
+    .toolbar select { padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-family:inherit; background:var(--bg); color:var(--text); outline:none; }
+
+    .card { background:var(--card); border:1px solid var(--border-l); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:10px 14px; text-align:left; border-bottom:1px solid var(--border-l); font-size:13px; }
+    th { font-size:12px; font-weight:600; color:var(--text2); background:var(--bg2); white-space:nowrap; }
+    tr:hover td { background:var(--hover); }
+    tr:last-child td { border-bottom:none; }
+
+    .btn { display:inline-flex; align-items:center; gap:4px; padding:5px 12px; border-radius:6px; font-size:12px; font-weight:500; font-family:inherit; cursor:pointer; border:none; transition:all 0.2s; }
+    .btn-p { background:var(--accent); color:#fff; }
+    .btn-p:hover { background:var(--accent-h); }
+
+    .toggle-switch { position:relative; width:40px; height:22px; cursor:pointer; flex-shrink:0; display:inline-block; }
+    .toggle-switch input { opacity:0; width:0; height:0; position:absolute; }
+    .toggle-slider { position:absolute; inset:0; background:var(--toggle-off); border-radius:22px; transition:background 0.25s; }
+    .toggle-slider::before { content:""; position:absolute; width:18px; height:18px; left:2px; top:2px; background:#fff; border-radius:50%; transition:transform 0.25s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+    .toggle-switch input:checked+.toggle-slider { background:var(--accent); }
+    .toggle-switch input:checked+.toggle-slider::before { transform:translateX(18px); }
+    .toggle-switch.disabled { opacity:0.35; cursor:not-allowed; pointer-events:none; }
+
+    /* modal */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    .modal-overlay.show { display:flex; }
+    .modal { background:var(--card); border-radius:14px; padding:28px; width:600px; max-width:94vw; max-height:80vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.25); border:1px solid var(--border-l); }
+    .modal h3 { font-size:18px; font-weight:600; margin-bottom:6px; }
+    .modal .modal-sub { font-size:13px; color:var(--text2); margin-bottom:16px; }
+    .modal .group { margin-bottom:14px; }
+    .modal .group h4 { font-size:14px; font-weight:600; margin-bottom:4px; }
+    .modal .group p { font-size:13px; color:var(--text2); line-height:1.6; word-break:break-all; }
+
+    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); padding:10px 20px; border-radius:8px; font-size:14px; font-weight:500; z-index:200; opacity:0; pointer-events:none; transition:opacity 0.3s; box-shadow:var(--shadow); }
+    .toast.show { opacity:1; }
+    .toast.ok { background:#30d158; color:#fff; }
+    .toast.err { background:var(--danger); color:#fff; }
+
+    .stats { display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
+    .stat { flex:1; min-width:120px; background:var(--bg2); border-radius:var(--r); padding:14px 18px; border:1px solid var(--border-l); text-align:center; }
+    .stat .num { font-size:28px; font-weight:700; color:var(--accent); }
+    .stat .lbl { font-size:12px; color:var(--text2); margin-top:2px; }
+  </style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<nav class="navbar">
+  <a href="../tournament/index.html">← 返回竞标赛首页</a>
+  <span class="title">👥 成员能力总览</span>
+  <span class="user" id="navUser"></span>
+</nav>
+
+<div class="main">
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">成员总数</div></div>
+    <div class="stat"><div class="num" id="statAble">0</div><div class="lbl">已录入能力</div></div>
+    <div class="stat"><div class="num" id="statTarget">0</div><div class="lbl">已设目标</div></div>
+    <div class="stat"><div class="num" id="statAdmin">0</div><div class="lbl">竞标赛管理</div></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="搜索昵称或UID..." oninput="renderTable()" />
+    <select id="filterTarget" onchange="renderTable()">
+      <option value="">全部目标状态</option>
+      <option value="set">已设目标</option>
+      <option value="unset">未设目标</option>
+    </select>
+    <select id="filterAble" onchange="renderTable()">
+      <option value="">全部能力状态</option>
+      <option value="yes">有勾选任务</option>
+      <option value="no">无勾选任务</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr id="theadRow"></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" id="detailContent"></div>
+</div>
+
+<script>
+var SUPABASE_URL = 'https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API = {
+  h: function(){ return { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }; },
+  get: async function(p){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}); if(!r.ok)throw Error(await r.text()); return r.json(); },
+  patch: async function(p,b){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'PATCH',headers:Object.assign({'Prefer':'return=representation'},this.h()),body:JSON.stringify(b)}); if(!r.ok)throw Error(await r.text()); return r.json(); },
+};
+
+var curUser = null, members = [], abilityCounts = {}, configMap = {}, cats = [], defs = [];
+
+function toast(m,t){ var e=document.getElementById('toast'); e.textContent=m; e.className='toast '+(t||'ok')+' show'; clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove('show');},2500); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function getUser(){
+  var s=localStorage.getItem('guild_current_user');
+  if(!s){ window.location.href='../login.html'; return null; }
+  try{ var u=JSON.parse(s); if(!u.id)throw Error(); return u; }catch(_){ localStorage.removeItem('guild_current_user'); window.location.href='../login.html'; return null; }
+}
+
+function getRoleLabel(u){
+  if(u.is_admin) return '<span class="badge badge-sa">超级管理员</span>';
+  if(u.is_task_admin) return '<span class="badge badge-ta">项目管理员</span>';
+  return '<span class="badge badge-m">成员</span>';
+}
+
+function canManage(){
+  return curUser && (curUser.is_admin || curUser.is_task_admin);
+}
+
+// ===== Load =====
+async function loadData(){
+  try {
+    members = await API.get('members?select=*&order=level.desc');
+
+    // Get current season
+    var sd = await API.get('seasons?is_current=eq.true&select=id&limit=1');
+    var seasonId = sd && sd.length>0 ? sd[0].id : null;
+
+    // Get all abilities and configs (could be large; for a guild of 30-100 it's fine)
+    var allAbilities = await API.get('member_task_abilities?select=member_id');
+    abilityCounts = {};
+    allAbilities.forEach(function(a){
+      abilityCounts[a.member_id] = (abilityCounts[a.member_id]||0) + 1;
+    });
+
+    if(seasonId){
+      var allConfigs = await API.get('member_season_config?season_id=eq.'+seasonId+'&select=member_id,target_score,available_attempts');
+      configMap = {};
+      allConfigs.forEach(function(c){ configMap[c.member_id] = c; });
+    }
+
+    // Load cats & defs for detail modal
+    cats = await API.get('task_categories?select=*&order=sort_order.asc');
+    defs = await API.get('task_definitions?select=*&order=sort_order.asc');
+
+    updateStats();
+    renderTable();
+  } catch(e){ console.error(e); toast('加载失败: '+e.message,'err'); }
+}
+
+function updateStats(){
+  document.getElementById('statTotal').textContent = members.length;
+  document.getElementById('statAble').textContent = Object.keys(abilityCounts).length;
+  document.getElementById('statTarget').textContent = Object.keys(configMap).length;
+  document.getElementById('statAdmin').textContent = members.filter(function(m){ return m.is_task_admin; }).length;
+}
+
+// ===== Render =====
+function renderTable(){
+  var search = (document.getElementById('searchInput').value||'').toLowerCase();
+  var filterT = document.getElementById('filterTarget').value;
+  var filterA = document.getElementById('filterAble').value;
+
+  var showAdminCol = canManage();
+
+  // thead
+  var th = '<th style="width:40px;">#</th><th>昵称</th><th>UID</th><th>等级</th><th>VIP</th><th>已勾选</th><th>目标</th>';
+  if(showAdminCol) th += '<th style="width:90px;">竞标赛管理</th>';
+  th += '<th style="width:70px;">详情</th>';
+  document.getElementById('theadRow').innerHTML = th;
+
+  var filtered = members.filter(function(m){
+    if(search && m.display_name.toLowerCase().indexOf(search)<0 && m.uid.toLowerCase().indexOf(search)<0) return false;
+    var hasTarget = !!configMap[m.id];
+    if(filterT==='set' && !hasTarget) return false;
+    if(filterT==='unset' && hasTarget) return false;
+    var hasAble = (abilityCounts[m.id]||0) > 0;
+    if(filterA==='yes' && !hasAble) return false;
+    if(filterA==='no' && hasAble) return false;
+    return true;
+  });
+
+  var html = '';
+  filtered.forEach(function(m, i){
+    var cfg = configMap[m.id];
+    var hasTarget = !!cfg;
+    var targetStr = hasTarget ? '✅ '+(cfg.target_score||0)+'分/'+(cfg.available_attempts||0)+'次' : '❌ 未设置';
+    var ableCount = abilityCounts[m.id]||0;
+    var isSelf = curUser && curUser.id === m.id;
+
+    html += '<tr>';
+    html += '<td>'+(i+1)+'</td>';
+    html += '<td><strong>'+esc(m.display_name)+'</strong></td>';
+    html += '<td>'+esc(m.uid)+'</td>';
+    html += '<td>Lv.'+(m.level||0)+'</td>';
+    html += '<td>VIP'+(m.vip_level||0)+'</td>';
+    html += '<td>'+ableCount+'</td>';
+    html += '<td>'+targetStr+'</td>';
+
+    if(showAdminCol){
+      // Super admin can toggle anyone; task admin can toggle others but not self
+      var canToggle = (curUser.is_admin || (curUser.is_task_admin && !isSelf));
+      if(isSelf && !curUser.is_admin){
+        // Self (task admin viewing own row): show but disabled
+        html += '<td><span class="badge '+(m.is_task_admin?'badge-ta':'badge-no')+'">'+(m.is_task_admin?'是':'否')+'</span></td>';
+      } else if(canToggle){
+        html += '<td><label class="toggle-switch">';
+        html += '<input type="checkbox" '+(m.is_task_admin?'checked':'')+' onchange="toggleTaskAdmin(\''+m.id+'\',\''+esc(m.display_name)+'\',this)" />';
+        html += '<span class="toggle-slider"></span></label></td>';
+      } else {
+        html += '<td><span class="badge '+(m.is_task_admin?'badge-ta':'badge-no')+'">'+(m.is_task_admin?'是':'否')+'</span></td>';
+      }
+    }
+
+    html += '<td><button class="btn btn-p" onclick="showDetail(\''+m.id+'\')">查看</button></td>';
+    html += '</tr>';
+  });
+
+  document.getElementById('tbody').innerHTML = html || '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:20px;">无匹配成员</td></tr>';
+}
+
+// ===== Toggle task admin =====
+async function toggleTaskAdmin(memberId, name, cb){
+  var newVal = cb.checked;
+  if(!confirm((newVal?'赋予':'取消')+'「'+name+'」的竞标赛管理权限？')){
+    cb.checked = !newVal; // revert
+    return;
+  }
+  try {
+    await API.patch('members?id=eq.'+memberId, { is_task_admin: newVal });
+    // Update local
+    var m = members.find(function(x){ return x.id===memberId; });
+    if(m) m.is_task_admin = newVal;
+    updateStats();
+    toast('✅ 已'+(newVal?'赋予':'取消')+'权限');
+    // If toggling self off, refresh so UI updates
+    if(curUser && curUser.id === memberId){
+      curUser.is_task_admin = newVal;
+      localStorage.setItem('guild_current_user', JSON.stringify(curUser));
+    }
+    renderTable();
+  } catch(e){ console.error(e); toast('操作失败: '+e.message,'err'); cb.checked = !newVal; renderTable(); }
+}
+
+// ===== Detail modal =====
+async function showDetail(memberId){
+  var m = members.find(function(x){ return x.id===memberId; });
+  if(!m) return;
+
+  // Get this member's abilities
+  var abs = [];
+  try {
+    abs = await API.get('member_task_abilities?member_id=eq.'+memberId+'&is_able=eq.true&select=task_definition_id,quantity');
+  } catch(e){ console.error(e); }
+
+  // Build map: defId → quantity
+  var qtyMap = {}; abs.forEach(function(a){ qtyMap[a.task_definition_id] = a.quantity||0; });
+
+  // Build category tree
+  var l1cats = cats.filter(function(c){ return !c.parent_id; });
+
+  var html = '<h3>'+esc(m.display_name)+'</h3>';
+  html += '<p class="modal-sub">'+esc(m.uid)+' · Lv.'+(m.level||0)+' · VIP'+(m.vip_level||0)+'</p>';
+
+  l1cats.forEach(function(l1){
+    var l2s = cats.filter(function(c){ return c.parent_id===l1.id; });
+    var groupItems = [];
+
+    l2s.forEach(function(l2){
+      var l3s = cats.filter(function(c){ return c.parent_id===l2.id; });
+      if(l3s.length === 0){
+        // L2 directly hosts tasks (守护神/其他)
+        var tasks = defs.filter(function(d){ return d.category_id===l2.id; });
+        var picked = [];
+        tasks.forEach(function(t){
+          if(qtyMap[t.id] !== undefined){
+            if(t.is_skin) picked.push(t.display_name||t.task_name + ' x'+qtyMap[t.id]);
+            else picked.push(t.display_name||t.task_name);
+          }
+        });
+        if(picked.length>0) groupItems.push('<strong>'+esc(l2.name)+'</strong>：'+picked.join('、'));
+      } else {
+        // L3 holds tasks (人才/艺人)
+        l3s.forEach(function(l3){
+          var tasks = defs.filter(function(d){ return d.category_id===l3.id; });
+          var picked = [], skins = [];
+          tasks.forEach(function(t){
+            if(qtyMap[t.id] !== undefined){
+              if(t.is_skin) skins.push((t.display_name||t.task_name)+' x'+qtyMap[t.id]);
+              else picked.push(t.display_name||t.task_name);
+            }
+          });
+          if(picked.length>0 || skins.length>0){
+            var parts = [];
+            if(picked.length>0) parts.push(picked.join('、'));
+            if(skins.length>0) parts.push('🎨 '+skins.join('、'));
+            groupItems.push('<strong>'+esc(l3.name)+'</strong>：'+parts.join(' | '));
+          }
+        });
+      }
+    });
+
+    if(groupItems.length>0){
+      html += '<div class="group"><h4>'+esc(l1.name)+'</h4>';
+      groupItems.forEach(function(gi){ html += '<p>'+gi+'</p>'; });
+      html += '</div>';
+    }
+  });
+
+  if(abs.length === 0){
+    html += '<p style="color:var(--text3);">该成员尚未录入任何任务</p>';
+  }
+
+  html += '<div style="margin-top:16px;text-align:right;"><button class="btn btn-p" onclick="closeDetail()">关闭</button></div>';
+  document.getElementById('detailContent').innerHTML = html;
+  document.getElementById('detailModal').classList.add('show');
+}
+
+function closeDetail(){
+  document.getElementById('detailModal').classList.remove('show');
+}
+document.getElementById('detailModal').addEventListener('click', function(e){
+  if(e.target === this) closeDetail();
+});
+
+// ===== Init =====
+async function init(){
+  curUser = getUser();
+  if(!curUser) return;
+  document.getElementById('navUser').innerHTML = (curUser.display_name||curUser.uid) + ' ' + getRoleLabel(curUser);
+  await loadData();
+}
+
+init();
+</script>
+</body>
+</html>

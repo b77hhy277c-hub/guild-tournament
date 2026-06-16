@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>查询可接成员</title>
+  <style>
+    :root {
+      --bg: #ffffff; --bg2: #f5f5f7; --card: #ffffff; --hover: rgba(0,0,0,0.04);
+      --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2;
+      --accent: #007AFF; --accent-h: #0062d1;
+      --border: #d2d2d7; --border-l: #e5e5ea; --danger: #ff3b30;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08); --r: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000; --bg2: #1c1c1e; --card: #1c1c1e;
+        --hover: rgba(255,255,255,0.08);
+        --text: #f5f5f7; --text2: #8e8e93; --text3: #636366;
+        --accent: #0A84FF; --accent-h: #409cff;
+        --border: #38383a; --border-l: #2c2c2e; --danger: #ff453a;
+        --shadow: 0 1px 3px rgba(255,255,255,0.05);
+      }
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif; font-size: 15px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    .navbar { display:flex; align-items:center; justify-content:space-between; height:48px; padding:0 20px; border-bottom:1px solid var(--border-l); position:sticky; top:0; background:var(--bg); z-index:10; backdrop-filter:blur(20px); }
+    .navbar a { color:var(--accent); text-decoration:none; font-size:14px; }
+    .navbar .title { font-size:16px; font-weight:600; }
+    .navbar .user { font-size:13px; color:var(--text2); }
+
+    .main { max-width: 800px; margin: 0 auto; padding: 32px 24px; }
+
+    /* Query area */
+    .query-card {
+      background: var(--card); border: 1px solid var(--border-l);
+      border-radius: var(--r); padding: 24px; box-shadow: var(--shadow);
+      margin-bottom: 28px;
+    }
+    .query-card h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .query-card .desc { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+
+    .selects { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .select-group { flex: 1; min-width: 140px; }
+    .select-group label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .select-group select {
+      width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 14px; font-family: inherit;
+      background: var(--bg); color: var(--text); outline: none;
+      cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      padding-right: 30px;
+    }
+    .select-group select:focus { border-color: var(--accent); }
+    .select-group select:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 28px; border-radius: 10px; font-size: 15px;
+      font-weight: 500; font-family: inherit; cursor: pointer; border: none;
+      transition: all 0.25s;
+    }
+    .btn-p { background: var(--accent); color: #fff; }
+    .btn-p:hover { background: var(--accent-h); }
+
+    /* Results */
+    .result-card {
+      background: var(--card); border: 1px solid var(--border-l);
+      border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden;
+    }
+    .result-card .result-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border-l);
+      font-size: 16px; font-weight: 600;
+    }
+    .result-card .result-header .count { color: var(--accent); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-l); font-size: 14px; }
+    th { font-size: 13px; font-weight: 600; color: var(--text2); background: var(--bg2); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--hover); }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+    .badge-ok { background: #30d158; color: #fff; }
+    .badge-full { background: var(--border); color: var(--text2); }
+
+    .empty { text-align: center; padding: 40px 20px; color: var(--text2); }
+    .empty .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty p { font-size: 15px; margin-bottom: 4px; }
+
+    .filter-note { font-size: 12px; color: var(--text3); padding: 12px 20px; border-top: 1px solid var(--border-l); }
+
+    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); padding:10px 20px; border-radius:8px; font-size:14px; font-weight:500; z-index:999; opacity:0; pointer-events:none; transition:opacity 0.3s; box-shadow:var(--shadow); }
+    .toast.show { opacity:1; }
+    .toast.ok { background:#30d158; color:#fff; }
+    .toast.err { background:var(--danger); color:#fff; }
+
+    @media (max-width:600px) { .selects { flex-direction:column; } }
+  </style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<nav class="navbar">
+  <a href="index.html">← 返回竞标赛首页</a>
+  <span class="title">🔍 查询可接成员</span>
+  <span class="user" id="navUser">--</span>
+</nav>
+
+<div class="main">
+
+  <!-- Query -->
+  <div class="query-card">
+    <h2>任务选择器</h2>
+    <p class="desc">逐级选择分类，定位到具体任务后点击查询</p>
+
+    <div class="selects">
+      <div class="select-group">
+        <label>一级分类</label>
+        <select id="s1" onchange="onS1()"></select>
+      </div>
+      <div class="select-group">
+        <label>二级</label>
+        <select id="s2" onchange="onS2()"></select>
+      </div>
+      <div class="select-group" id="g3">
+        <label>三级</label>
+        <select id="s3" onchange="onS3()"></select>
+      </div>
+      <div class="select-group">
+        <label>任务</label>
+        <select id="s4"></select>
+      </div>
+    </div>
+
+    <button class="btn btn-p" onclick="doQuery()">🔍 查询可接成员</button>
+  </div>
+
+  <!-- Results -->
+  <div class="result-card" id="resultCard" style="display:none;">
+    <div class="result-header" id="resultHeader"></div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px;">序号</th>
+            <th>昵称</th>
+            <th>UID</th>
+            <th>等级</th>
+            <th>状态</th>
+            <th>皮肤数量</th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
+    <div class="filter-note">💡 筛选说明：已设置目标分数的成员，仅当其均分 ≤ 任务分数时才会显示。未设置目标分数的成员默认显示。</div>
+  </div>
+
+  <!-- Empty state (pre-query) -->
+  <div class="empty" id="emptyHint">
+    <div class="icon">👆</div>
+    <p>选择分类后点击查询按钮</p>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL = 'https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API = {
+  h: function(){ return { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY }; },
+  get: async function(p){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}); if(!r.ok)throw Error(await r.text()); return r.json(); },
+};
+
+var curUser = null, cats = [], defs = [];
+
+function toast(m,t){ var e=document.getElementById('toast'); e.textContent=m; e.className='toast '+(t||'ok')+' show'; clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove('show');},2500); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function getUser(){
+  var s=localStorage.getItem('guild_current_user');
+  if(!s){ window.location.href='../login.html'; return null; }
+  try{ var u=JSON.parse(s); if(!u.id)throw Error(); return u; }catch(_){ localStorage.removeItem('guild_current_user'); window.location.href='../login.html'; return null; }
+}
+
+// ===== Load categories & definitions =====
+async function loadData(){
+  try {
+    cats = await API.get('task_categories?select=*&order=sort_order.asc');
+    defs = await API.get('task_definitions?select=*&order=sort_order.asc');
+    populateS1();
+  } catch(e){ console.error(e); toast('加载失败: '+e.message,'err'); }
+}
+
+// ===== Populate dropdowns =====
+function populateS1(){
+  var l1 = cats.filter(function(c){ return !c.parent_id; });
+  var s = document.getElementById('s1');
+  s.innerHTML = l1.map(function(c){ return '<option value="'+c.id+'">'+esc(c.name)+'</option>'; }).join('');
+  onS1();
+}
+
+function onS1(){
+  var l1id = document.getElementById('s1').value;
+  var l1 = cats.find(function(c){ return c.id===l1id; });
+  var isTalentOrArtist = l1 && (l1.name==='人才'||l1.name==='艺人');
+
+  // Populate S2
+  var l2 = cats.filter(function(c){ return c.parent_id===l1id; });
+  var s2 = document.getElementById('s2');
+  s2.innerHTML = l2.map(function(c){ return '<option value="'+c.id+'">'+esc(c.name)+'</option>'; }).join('');
+  s2.disabled = l2.length===0;
+
+  // Show/hide S3
+  document.getElementById('g3').style.display = isTalentOrArtist ? '' : 'none';
+
+  onS2();
+}
+
+function onS2(){
+  var l1id = document.getElementById('s1').value;
+  var l2id = document.getElementById('s2').value;
+  var l1 = cats.find(function(c){ return c.id===l1id; });
+  var isTalentOrArtist = l1 && (l1.name==='人才'||l1.name==='艺人');
+
+  if(isTalentOrArtist){
+    // Populate S3 with L3 items
+    var l3 = cats.filter(function(c){ return c.parent_id===l2id; });
+    var s3 = document.getElementById('s3');
+    s3.innerHTML = l3.map(function(c){ return '<option value="'+c.id+'">'+esc(c.name)+'</option>'; }).join('');
+    s3.disabled = l3.length===0;
+  }
+  onS3();
+}
+
+function onS3(){
+  var l1id = document.getElementById('s1').value;
+  var l2id = document.getElementById('s2').value;
+  var s3val = document.getElementById('s3').value;
+  var l1 = cats.find(function(c){ return c.id===l1id; });
+  var isTalentOrArtist = l1 && (l1.name==='人才'||l1.name==='艺人');
+
+  // Determine which category_id to use for task_definitions
+  var catId;
+  if(isTalentOrArtist){
+    catId = s3val; // L3 category → task_definitions reference this
+  } else {
+    catId = l2id; // L2 category → task_definitions reference this directly
+  }
+
+  var tasks = defs.filter(function(d){ return d.category_id===catId; });
+  var s4 = document.getElementById('s4');
+  s4.innerHTML = tasks.map(function(t){
+    var label = (t.display_name||t.task_name) + ' (' + (t.default_score||0) + '分)';
+    return '<option value="'+t.id+'">'+esc(label)+'</option>';
+  }).join('');
+  s4.disabled = tasks.length===0;
+}
+
+// ===== Query =====
+async function doQuery(){
+  var taskId = document.getElementById('s4').value;
+  if(!taskId){ toast('请先选择任务','err'); return; }
+
+  var task = defs.find(function(d){ return d.id===taskId; });
+  var taskScore = task ? (task.default_score||0) : 0;
+  var isSkin = task ? task.is_skin : false;
+
+  try {
+    document.getElementById('emptyHint').style.display = 'none';
+
+    // 1. Get abilities for this task
+    var abilities = await API.get('member_task_abilities?task_definition_id=eq.'+taskId+'&is_able=eq.true&select=member_id,quantity');
+
+    if(!abilities || abilities.length===0){
+      showEmpty('该任务无人可接，请大胆刷新或删除');
+      return;
+    }
+
+    var memberIds = abilities.map(function(a){ return a.member_id; });
+    var qtyMap = {};
+    abilities.forEach(function(a){ qtyMap[a.member_id] = a.quantity||0; });
+
+    // 2. Get member details (use in.() for batch)
+    var members = [];
+    var idList = memberIds.join(',');
+    members = await API.get('members?id=in.('+idList+')&select=id,display_name,uid,level&order=level.desc');
+
+    // 3. Get season configs for these members
+    var currentSeason = await API.get('seasons?is_current=eq.true&select=id&limit=1');
+    var seasonId = currentSeason && currentSeason.length>0 ? currentSeason[0].id : null;
+
+    var configMap = {};
+    if(seasonId){
+      var configs = await API.get('member_season_config?season_id=eq.'+seasonId+'&select=member_id,can_accept,avg_score');
+      (configs||[]).forEach(function(c){ configMap[c.member_id] = c; });
+    }
+
+    // 4. Filter by avg_score rule
+    var filtered = members.filter(function(m){
+      var cfg = configMap[m.id];
+      if(!cfg || cfg.avg_score === null || cfg.avg_score === undefined || cfg.avg_score === 0){
+        // No config → include by default
+        return true;
+      }
+      // Has config → avg_score must be <= task score
+      return cfg.avg_score <= taskScore;
+    });
+
+    if(filtered.length===0){
+      showEmpty('该任务无人可接（均分要求不满足），请大胆刷新或删除');
+      return;
+    }
+
+    // 5. Render
+    document.getElementById('resultCard').style.display = 'block';
+    document.getElementById('resultHeader').innerHTML =
+      '查询结果：<span class="count">共 '+filtered.length+' 人</span>可接此任务 · ' +
+      esc(task.display_name||task.task_name) + ' ('+taskScore+'分)';
+
+    var html = '';
+    filtered.forEach(function(m, i){
+      var cfg = configMap[m.id] || {};
+      var canAccept = cfg.can_accept !== false; // default true
+      var statusLabel = canAccept ? '可接' : '已满';
+      var statusCls = canAccept ? 'badge-ok' : 'badge-full';
+      var qty = qtyMap[m.id] || 0;
+      var qtyStr = isSkin ? String(qty) : '-';
+
+      html += '<tr>' +
+        '<td>'+(i+1)+'</td>' +
+        '<td><strong>'+esc(m.display_name)+'</strong></td>' +
+        '<td>'+esc(m.uid)+'</td>' +
+        '<td>Lv.'+(m.level||0)+'</td>' +
+        '<td><span class="badge '+statusCls+'">'+statusLabel+'</span></td>' +
+        '<td>'+qtyStr+'</td>' +
+        '</tr>';
+    });
+    document.getElementById('resultBody').innerHTML = html;
+
+  } catch(e){
+    console.error(e);
+    toast('查询失败: '+e.message,'err');
+  }
+}
+
+function showEmpty(msg){
+  document.getElementById('resultCard').style.display = 'none';
+  document.getElementById('emptyHint').style.display = 'block';
+  document.getElementById('emptyHint').innerHTML =
+    '<div class="icon">📭</div><p>'+msg+'</p>';
+}
+
+// ===== Init =====
+async function init(){
+  curUser = getUser();
+  if(!curUser) return;
+  document.getElementById('navUser').textContent = curUser.display_name || curUser.uid;
+  await loadData();
+}
+init();
+</script>
+</body>
+</html>

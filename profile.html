@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>修改信息 - 公会管理工具</title>
+  <style>
+    :root {
+      --bg: #ffffff; --bg-card: #ffffff; --bg-hover: rgba(0,0,0,0.04);
+      --text: #1d1d1f; --text-secondary: #6e6e73; --text-tertiary: #aeaeb2;
+      --accent: #007AFF; --accent-hover: #0062cc;
+      --border: #d2d2d7; --border-light: #e5e5ea; --danger: #ff3b30;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08); --input-bg: rgba(0,0,0,0.02);
+      --toggle-off: #e5e5ea;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000; --bg-card: #1c1c1e; --bg-hover: rgba(255,255,255,0.08);
+        --text: #f5f5f7; --text-secondary: #8e8e93; --text-tertiary: #636366;
+        --accent: #0A84FF; --accent-hover: #409cff;
+        --border: #38383a; --border-light: #2c2c2e; --danger: #ff453a;
+        --shadow: 0 1px 3px rgba(255,255,255,0.05); --input-bg: rgba(255,255,255,0.04);
+        --toggle-off: #3a3a3c;
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+      font-size: 15px; color: var(--text); background: var(--bg);
+      -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+
+    /* 顶部导航 */
+    .topbar {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-light);
+      position: sticky; top: 0; background: var(--bg); z-index: 10;
+      backdrop-filter: blur(20px);
+    }
+
+    .topbar .back-btn {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 15px; color: var(--accent); cursor: pointer;
+      background: none; border: none; font-family: inherit; padding: 4px 8px;
+      border-radius: 6px; transition: background 0.15s;
+    }
+    .topbar .back-btn:hover { background: var(--bg-hover); }
+
+    .topbar h1 { font-size: 20px; font-weight: 600; }
+
+    /* 主内容 */
+    .main { max-width: 560px; margin: 0 auto; padding: 32px 24px; }
+
+    .section { margin-bottom: 36px; }
+
+    .section h2 {
+      font-size: 18px; font-weight: 600; margin-bottom: 6px;
+    }
+
+    .section .section-desc {
+      font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;
+    }
+
+    /* 卡片 */
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border-light);
+      border-radius: 14px; box-shadow: var(--shadow); overflow: hidden;
+    }
+
+    .field {
+      display: flex; align-items: center; padding: 14px 20px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .field:last-child { border-bottom: none; }
+
+    .field .label {
+      width: 100px; font-size: 14px; color: var(--text-secondary); flex-shrink: 0;
+    }
+
+    .field input {
+      flex: 1; font-size: 15px; font-family: inherit;
+      padding: 6px 10px; border: none;
+      border-bottom: 1.5px solid var(--border);
+      border-radius: 4px 4px 0 0; background: var(--input-bg);
+      color: var(--text); outline: none;
+      transition: border-color 0.25s ease-in-out;
+    }
+    .field input:focus { border-bottom-color: var(--accent); }
+
+    /* Toggle */
+    .toggle-switch {
+      position: relative; width: 44px; height: 24px; flex-shrink: 0; cursor: pointer;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-slider {
+      position: absolute; inset: 0; background: var(--toggle-off);
+      border-radius: 24px; transition: background 0.25s ease-in-out;
+    }
+    .toggle-slider::before {
+      content: ""; position: absolute; width: 20px; height: 20px;
+      left: 2px; top: 2px; background: #fff; border-radius: 50%;
+      transition: transform 0.25s ease-in-out; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* 按钮 */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; padding: 10px 24px; border-radius: 10px;
+      font-size: 15px; font-weight: 500; font-family: inherit;
+      cursor: pointer; border: none;
+      transition: all 0.25s ease-in-out;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--bg-hover); }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+
+    /* Toast */
+    .toast {
+      position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+      padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 500;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+      box-shadow: var(--shadow);
+    }
+    .toast.show { opacity: 1; }
+    .toast.success { background: #30d158; color: #fff; }
+    .toast.error { background: var(--danger); color: #fff; }
+  </style>
+</head>
+<body>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- 顶部 -->
+  <div class="topbar">
+    <button class="back-btn" onclick="history.back()">← 返回</button>
+    <h1>修改信息</h1>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="main">
+
+    <!-- 基本资料 -->
+    <div class="section">
+      <h2>基本资料</h2>
+      <p class="section-desc">修改你的公会成员信息</p>
+      <div class="card" id="profileCard"></div>
+    </div>
+
+    <!-- 修改密码 -->
+    <div class="section">
+      <h2>修改密码</h2>
+      <p class="section-desc">留空则不修改密码</p>
+      <div class="card">
+        <div class="field">
+          <span class="label">新密码</span>
+          <input type="password" id="newPassword" placeholder="至少 4 位" />
+        </div>
+        <div class="field">
+          <span class="label">确认密码</span>
+          <input type="password" id="confirmPassword" placeholder="再次输入" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 按钮 -->
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveProfile()">💾 保存</button>
+      <button class="btn btn-secondary" onclick="history.back()">取消</button>
+    </div>
+  </div>
+
+  <script>
+    var SUPABASE_URL = 'https://nifmryfrgfdjjbrdrgpo.supabase.co';
+    var SUPABASE_ANON_KEY = 'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+
+    var API = {
+      h: function () {
+        return {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+        };
+      },
+      get: async function (p) {
+        var r = await fetch(SUPABASE_URL + '/rest/v1/' + p, { headers: this.h() });
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+      },
+      patch: async function (p, b) {
+        var r = await fetch(SUPABASE_URL + '/rest/v1/' + p, {
+          method: 'PATCH',
+          headers: Object.assign({}, this.h(), { Prefer: 'return=representation' }),
+          body: JSON.stringify(b),
+        });
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+      },
+      rpc: async function (fn, params) {
+        var r = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+          method: 'POST', headers: this.h(), body: JSON.stringify(params),
+        });
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+      },
+    };
+
+    var currentUser = null;
+
+    function getUser() {
+      var s = localStorage.getItem('guild_current_user');
+      if (!s) { window.location.href = 'login.html'; return null; }
+      try {
+        var u = JSON.parse(s);
+        if (!u.id) throw new Error('invalid');
+        return u;
+      } catch (_) {
+        localStorage.removeItem('guild_current_user');
+        window.location.href = 'login.html';
+        return null;
+      }
+    }
+
+    function showToast(msg, type) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + (type || 'success') + ' show';
+      clearTimeout(t._t);
+      t._t = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function render() {
+      var u = currentUser;
+      var html =
+        '<div class="field"><span class="label">昵称</span>' +
+        '<input type="text" id="editName" value="' + esc(u.display_name) + '" /></div>' +
+
+        '<div class="field"><span class="label">UID</span>' +
+        '<input type="text" id="editUid" value="' + esc(u.uid) + '" /></div>' +
+
+        '<div class="field"><span class="label">全赞</span>' +
+        '<label class="toggle-switch">' +
+        '<input type="checkbox" id="editFullLike" ' + (u.is_full_like ? 'checked' : '') + ' />' +
+        '<span class="toggle-slider"></span></label></div>' +
+
+        '<div class="field"><span class="label">等级</span>' +
+        '<input type="number" id="editLevel" value="' + u.level + '" /></div>' +
+
+        '<div class="field"><span class="label">VIP 等级</span>' +
+        '<input type="number" id="editVip" value="' + u.vip_level + '" /></div>';
+
+      document.getElementById('profileCard').innerHTML = html;
+    }
+
+    async function saveProfile() {
+      var newPw = document.getElementById('newPassword').value;
+      var cfmPw = document.getElementById('confirmPassword').value;
+
+      if (newPw) {
+        if (newPw.length < 4) { showToast('新密码至少 4 位', 'error'); return; }
+        if (newPw !== cfmPw) { showToast('两次密码不一致', 'error'); return; }
+      }
+
+      var updates = {
+        display_name: document.getElementById('editName').value.trim(),
+        uid: document.getElementById('editUid').value.trim(),
+        is_full_like: document.getElementById('editFullLike').checked,
+        level: parseInt(document.getElementById('editLevel').value) || 0,
+        vip_level: parseInt(document.getElementById('editVip').value) || 0,
+      };
+
+      if (!updates.display_name || !updates.uid) {
+        showToast('昵称和 UID 不能为空', 'error'); return;
+      }
+
+      try {
+        var updated = await API.patch('members?id=eq.' + currentUser.id, updates);
+        if (!updated || updated.length === 0) throw new Error('更新失败');
+        var fresh = updated[0];
+
+        if (newPw) {
+          var hashResult = await API.rpc('hash_password', { p_password: newPw });
+          await API.patch('members?id=eq.' + currentUser.id, { password_hash: hashResult });
+        }
+
+        // 更新 localStorage
+        currentUser.display_name = fresh.display_name;
+        currentUser.uid = fresh.uid;
+        currentUser.is_full_like = fresh.is_full_like;
+        currentUser.level = fresh.level;
+        currentUser.vip_level = fresh.vip_level;
+        localStorage.setItem('guild_current_user', JSON.stringify(currentUser));
+
+        showToast('✅ 保存成功');
+      } catch (err) {
+        console.error(err);
+        showToast('保存失败: ' + (err.message || '未知错误'), 'error');
+      }
+    }
+
+    async function init() {
+      currentUser = getUser();
+      if (!currentUser) return;
+
+      try {
+        var data = await API.get('members?id=eq.' + currentUser.id + '&select=*');
+        if (data && data.length > 0) {
+          var db = data[0];
+          currentUser.display_name = db.display_name;
+          currentUser.uid = db.uid;
+          currentUser.is_full_like = db.is_full_like;
+          currentUser.level = db.level;
+          currentUser.vip_level = db.vip_level;
+          currentUser.is_admin = db.is_admin;
+          localStorage.setItem('guild_current_user', JSON.stringify(currentUser));
+        }
+      } catch (err) {
+        console.warn('拉取数据失败，使用缓存:', err.message);
+      }
+
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理员后台 - 公会管理工具</title>
+  <style>
+    :root {
+      --bg: #ffffff; --bg-card: #ffffff; --bg-hover: rgba(0,0,0,0.04);
+      --text: #1d1d1f; --text-secondary: #6e6e73; --text-tertiary: #aeaeb2;
+      --accent: #007AFF; --accent-hover: #0062cc;
+      --border: #d2d2d7; --border-light: #e5e5ea; --danger: #ff3b30;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08); --input-bg: rgba(0,0,0,0.02);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000; --bg-card: #1c1c1e; --bg-hover: rgba(255,255,255,0.08);
+        --text: #f5f5f7; --text-secondary: #8e8e93; --text-tertiary: #636366;
+        --accent: #0A84FF; --accent-hover: #409cff;
+        --border: #38383a; --border-light: #2c2c2e; --danger: #ff453a;
+        --shadow: 0 1px 3px rgba(255,255,255,0.05); --input-bg: rgba(255,255,255,0.04);
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+      font-size: 15px; color: var(--text); background: var(--bg);
+      -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 16px 24px; border-bottom: 1px solid var(--border-light);
+      position: sticky; top: 0; background: var(--bg); z-index: 10;
+      backdrop-filter: blur(20px);
+    }
+    .topbar .left { display: flex; align-items: center; gap: 16px; }
+    .back-btn {
+      font-size: 15px; color: var(--accent); cursor: pointer;
+      background: none; border: none; font-family: inherit;
+      padding: 4px 8px; border-radius: 6px; text-decoration: none;
+    }
+    .back-btn:hover { background: var(--bg-hover); }
+    .topbar h1 { font-size: 20px; font-weight: 600; }
+
+    .main { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+
+    /* 统计卡片 */
+    .stat-row { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+    .stat-card {
+      flex: 1; min-width: 140px; background: var(--bg-card);
+      border: 1px solid var(--border-light); border-radius: 14px;
+      padding: 20px; box-shadow: var(--shadow); text-align: center;
+    }
+    .stat-card .num { font-size: 32px; font-weight: 700; color: var(--accent); }
+    .stat-card .lbl { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+    /* 区块 */
+    .section { margin-bottom: 36px; }
+    .section h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .section .desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; }
+
+    /* 表格 */
+    .table-wrap {
+      background: var(--bg-card); border: 1px solid var(--border-light);
+      border-radius: 14px; box-shadow: var(--shadow); overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-light); }
+    th { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+    td { font-size: 14px; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg-hover); }
+
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 6px;
+      font-size: 12px; font-weight: 500;
+    }
+    .badge-green { background: #30d158; color: #fff; }
+    .badge-gray { background: var(--border); color: var(--text-secondary); }
+    .badge-blue { background: var(--accent); color: #fff; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 500;
+      font-family: inherit; cursor: pointer; border: none;
+      transition: all 0.25s ease-in-out;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-outline { background: none; color: var(--danger); border: 1px solid var(--border); }
+    .btn-outline:hover { background: rgba(255,59,48,0.06); }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 100; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: var(--bg-card); border-radius: 14px; padding: 28px;
+      width: 420px; max-width: 94vw; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      border: 1px solid var(--border-light);
+    }
+    .modal h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+
+    .modal .field { margin-bottom: 14px; }
+    .modal .field label {
+      display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;
+    }
+    .modal .field input {
+      width: 100%; font-size: 15px; font-family: inherit; padding: 8px 12px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--input-bg); color: var(--text); outline: none;
+      transition: border-color 0.25s;
+    }
+    .modal .field input:focus { border-color: var(--accent); }
+
+    .modal .btn-row { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+    /* Toast */
+    .toast {
+      position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+      padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 500;
+      z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+      box-shadow: var(--shadow);
+    }
+    .toast.show { opacity: 1; }
+    .toast.success { background: #30d158; color: #fff; }
+    .toast.error { background: var(--danger); color: #fff; }
+  </style>
+</head>
+<body>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h3 id="modalTitle">添加成员</h3>
+      <div class="field">
+        <label>昵称 (display_name)</label>
+        <input type="text" id="mDisplayName" placeholder="成员的游戏昵称" />
+      </div>
+      <div class="field">
+        <label>唯一 ID (uid)</label>
+        <input type="text" id="mUid" placeholder="管理员分配的唯一ID" />
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" onclick="handleCreateMember()">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 顶部 -->
+  <div class="topbar">
+    <div class="left">
+      <a href="index.html" class="back-btn">← 返回</a>
+      <h1>⚙️ 管理员后台</h1>
+    </div>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="main">
+
+    <!-- 统计 -->
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="num" id="statTotal">0</div>
+        <div class="lbl">成员总数</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="statAdmin">0</div>
+        <div class="lbl">管理员</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="statSet">0</div>
+        <div class="lbl">已设密码</div>
+      </div>
+    </div>
+
+    <!-- 成员管理 -->
+    <div class="section">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h2>成员管理</h2>
+          <p class="desc">查看、添加和删除公会成员</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal()">＋ 添加成员</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>昵称</th><th>UID</th><th>全赞</th><th>等级</th><th>VIP</th>
+              <th>密码状态</th><th>管理员</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="memberTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var SUPABASE_URL = 'https://nifmryfrgfdjjbrdrgpo.supabase.co';
+    var SUPABASE_ANON_KEY = 'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+
+    var API = {
+      h: function () {
+        return {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+        };
+      },
+      get: async function (p) {
+        var r = await fetch(SUPABASE_URL + '/rest/v1/' + p, { headers: this.h() });
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+      },
+      rpc: async function (fn, b) {
+        var r = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+          method: 'POST',
+          headers: Object.assign({}, this.h(), { 'Content-Type': 'application/json' }),
+          body: JSON.stringify(b),
+        });
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+      },
+      del: async function (path) {
+        var r = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+          method: 'DELETE', headers: this.h(),
+        });
+        if (!r.ok) throw new Error(await r.text());
+      },
+      patch: async function (path, body) {
+        var r = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+          method: 'PATCH',
+          headers: Object.assign({}, this.h(), { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }),
+          body: JSON.stringify(body),
+        });
+        if (!r.ok) throw new Error(await r.text());
+        var txt = await r.text();
+        return txt ? JSON.parse(txt) : null;
+      },
+    };
+
+    var members = [];
+
+    function showToast(msg, type) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + (type || 'success') + ' show';
+      clearTimeout(t._t);
+      t._t = setTimeout(function () { t.classList.remove('show'); }, 3000);
+    }
+
+    // Modal
+    function openModal() {
+      document.getElementById('modalOverlay').classList.add('show');
+      document.getElementById('mDisplayName').value = '';
+      document.getElementById('mUid').value = '';
+    }
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('show');
+    }
+
+    async function handleCreateMember() {
+      var name = document.getElementById('mDisplayName').value.trim();
+      var uid = document.getElementById('mUid').value.trim();
+      if (!name || !uid) { showToast('昵称和 UID 不能为空', 'error'); return; }
+
+      try {
+        await API.rpc('admin_create_member', {
+          p_display_name: name,
+          p_uid: uid,
+          p_password: '0000',
+        });
+        showToast('✅ 成员已创建，初始密码 0000');
+        closeModal();
+        await loadMembers();
+      } catch (err) {
+        console.error(err);
+        showToast('创建失败: ' + (err.message || '未知错误'), 'error');
+      }
+    }
+
+    async function handleDelete(id) {
+      if (!confirm('确定删除此成员？此操作不可撤销。')) return;
+      try {
+        await API.del('members?id=eq.' + id);
+        showToast('已删除');
+        await loadMembers();
+      } catch (err) {
+        showToast('删除失败: ' + (err.message || ''), 'error');
+      }
+    }
+
+    function renderTable() {
+      var html = '';
+      members.forEach(function (m) {
+        html += '<tr>' +
+          '<td>' + esc(m.display_name) + '</td>' +
+          '<td><span class="uid-cell" onclick="editUid(\'' + m.id + '\',\'' + esc(m.uid) + '\')" title="点击修改UID" style="cursor:pointer;border-bottom:1px dashed var(--border);">' + esc(m.uid) + '</span></td>' +
+          '<td><span class="badge ' + (m.is_full_like ? 'badge-green' : 'badge-gray') + '">' +
+            (m.is_full_like ? '是' : '否') + '</span></td>' +
+          '<td>' + m.level + '</td>' +
+          '<td>' + m.vip_level + '</td>' +
+          '<td><span class="badge ' + (m.password_hash ? 'badge-green' : 'badge-gray') + '">' +
+            (m.password_hash ? '已设' : '未设') + '</span></td>' +
+          '<td>' + (m.is_admin ? '<span class="badge badge-blue">管理员</span>' : '成员') + '</td>' +
+          '<td><button class="btn btn-outline" onclick="handleDelete(\'' + m.id + '\')">🗑 删除</button></td>' +
+          '</tr>';
+      });
+      document.getElementById('memberTableBody').innerHTML = html || '<tr><td colspan="8" style="text-align:center;color:var(--text-secondary)">暂无成员</td></tr>';
+    }
+
+    async function editUid(memberId, oldUid) {
+      var newUid = prompt('修改 UID：', oldUid);
+      if (!newUid || newUid.trim() === '' || newUid.trim() === oldUid) return;
+      newUid = newUid.trim();
+      try {
+        await API.patch('members?id=eq.' + memberId, { uid: newUid });
+        showToast('✅ UID 已更新');
+        await loadMembers();
+      } catch (err) {
+        showToast('修改失败: ' + (err.message || 'UID 可能重复'), 'error');
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('statTotal').textContent = members.length;
+      document.getElementById('statAdmin').textContent = members.filter(function (m) { return m.is_admin; }).length;
+      document.getElementById('statSet').textContent = members.filter(function (m) { return m.password_hash; }).length;
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    async function loadMembers() {
+      try {
+        members = await API.get('members?select=*&order=created_at.asc');
+        renderTable();
+        updateStats();
+      } catch (err) {
+        console.error(err);
+        showToast('加载成员失败', 'error');
+      }
+    }
+
+    async function init() {
+      var u = localStorage.getItem('guild_current_user');
+      if (!u) { window.location.href = 'login.html'; return; }
+      var user = JSON.parse(u);
+      if (!user.is_admin) { window.location.href = 'index.html'; return; }
+
+      await loadMembers();
+    }
+
+    init();
+  </script>
+</body>
+</html>

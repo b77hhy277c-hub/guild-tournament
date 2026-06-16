@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>任务管理</title>
+  <style>
+    :root {
+      --bg: #ffffff; --bg2: #f5f5f7; --card: #ffffff; --hover: rgba(0,0,0,0.04);
+      --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2;
+      --accent: #007AFF; --accent-h: #0062d1; --danger: #ff3b30;
+      --border: #d2d2d7; --border-l: #e5e5ea;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08); --r: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000; --bg2: #1c1c1e; --card: #1c1c1e;
+        --hover: rgba(255,255,255,0.08);
+        --text: #f5f5f7; --text2: #8e8e93; --text3: #636366;
+        --accent: #0A84FF; --accent-h: #409cff; --danger: #ff453a;
+        --border: #38383a; --border-l: #2c2c2e;
+        --shadow: 0 1px 3px rgba(255,255,255,0.05);
+      }
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif; font-size: 14px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    .navbar { display:flex; align-items:center; justify-content:space-between; height:48px; padding:0 20px; border-bottom:1px solid var(--border-l); position:sticky; top:0; background:var(--bg); z-index:10; backdrop-filter:blur(20px); }
+    .navbar a { color:var(--accent); text-decoration:none; font-size:14px; }
+    .navbar .title { font-size:16px; font-weight:600; }
+    .navbar .user { font-size:13px; color:var(--text2); }
+
+    .main { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
+
+    .toolbar { display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+    .btn { display:inline-flex; align-items:center; gap:5px; padding:7px 16px; border-radius:8px; font-size:13px; font-weight:500; font-family:inherit; cursor:pointer; border:none; transition:all 0.2s; white-space:nowrap; }
+    .btn-p { background:var(--accent); color:#fff; }
+    .btn-p:hover { background:var(--accent-h); }
+    .btn-p:disabled { opacity:0.4; cursor:not-allowed; }
+    .btn-s { background:var(--bg); color:var(--text); border:1px solid var(--border); }
+    .btn-s:hover { background:var(--hover); }
+    .btn-xs { padding:3px 10px; font-size:12px; border-radius:6px; }
+
+    /* tree */
+    .tree { background:var(--card); border:1px solid var(--border-l); border-radius:var(--r); box-shadow:var(--shadow); padding:12px 0; }
+    .tree-node { user-select:none; }
+    .tree-row { display:flex; align-items:center; padding:5px 12px; gap:6px; transition:background 0.1s; }
+    .tree-row:hover { background:var(--hover); }
+    .tree-toggle { width:20px; text-align:center; cursor:pointer; color:var(--text2); font-size:10px; flex-shrink:0; }
+    .tree-icon { font-size:14px; flex-shrink:0; }
+    .tree-name { font-size:14px; font-weight:500; }
+    .tree-name .score { color:var(--accent); font-weight:600; margin-left:4px; }
+    .tree-name .type-tag { font-size:11px; color:var(--text3); margin-left:6px; }
+    .tree-actions { margin-left:auto; display:flex; gap:4px; opacity:0; transition:opacity 0.15s; }
+    .tree-row:hover .tree-actions { opacity:1; }
+    .tree-children { padding-left:28px; }
+    .tree-children.collapsed { display:none; }
+
+    /* modal */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    .modal-overlay.show { display:flex; }
+    .modal { background:var(--card); border-radius:14px; padding:28px; width:400px; max-width:94vw; box-shadow:0 20px 60px rgba(0,0,0,0.25); border:1px solid var(--border-l); }
+    .modal h3 { font-size:18px; font-weight:600; margin-bottom:20px; }
+    .modal .field { margin-bottom:14px; }
+    .modal .field label { display:block; font-size:13px; color:var(--text2); margin-bottom:4px; }
+    .modal .field input { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-family:inherit; background:var(--bg); color:var(--text); outline:none; }
+    .modal .field input:focus { border-color:var(--accent); }
+    .modal .btn-row { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+
+    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); padding:10px 20px; border-radius:8px; font-size:14px; font-weight:500; z-index:200; opacity:0; pointer-events:none; transition:opacity 0.3s; box-shadow:var(--shadow); }
+    .toast.show { opacity:1; }
+    .toast.ok { background:#30d158; color:#fff; }
+    .toast.err { background:var(--danger); color:#fff; }
+  </style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<nav class="navbar">
+  <a href="../tournament/index.html">← 返回竞标赛首页</a>
+  <span class="title">⚙️ 任务管理</span>
+  <span class="user" id="navUser">--</span>
+</nav>
+
+<div class="main">
+  <div class="toolbar">
+    <button class="btn btn-p" id="btnAddL1" onclick="openAddL1()">＋ 新增一级分类</button>
+    <button class="btn btn-s" id="btnExpand" onclick="toggleExpand()">📂 展开全部</button>
+  </div>
+
+  <div class="tree" id="tree"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle"></h3>
+    <div class="field">
+      <label id="modalLabel">名称</label>
+      <input type="text" id="modalName" />
+    </div>
+    <div class="field" id="modalScoreField" style="display:none;">
+      <label>分数</label>
+      <input type="number" id="modalScore" value="0" min="0" />
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-s" onclick="closeModal()">取消</button>
+      <button class="btn btn-p" id="modalSubmit" onclick="submitModal()">确认</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL = 'https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API = {
+  h: function(){ return { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }; },
+  get: async function(p){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}); if(!r.ok)throw Error(await r.text()); return r.json(); },
+  post: async function(p,b){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'Prefer':'return=representation'},this.h()),body:JSON.stringify(b)}); if(!r.ok)throw Error(await r.text()); return r.json(); },
+  patch: async function(p,b){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'PATCH',headers:Object.assign({'Prefer':'return=representation'},this.h()),body:JSON.stringify(b)}); if(!r.ok)throw Error(await r.text()); return r.json(); },
+  del: async function(p){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'DELETE',headers:this.h()}); if(!r.ok)throw Error(await r.text()); },
+};
+
+var curUser = null, cats = [], defs = [];
+var expandedAll = true;
+var modalMode = '', modalParentId = '', modalEditId = '', modalIsTask = false;
+
+function toast(m,t){ var e=document.getElementById('toast'); e.textContent=m; e.className='toast '+(t||'ok')+' show'; clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove('show');},2500); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function getUser(){
+  var s=localStorage.getItem('guild_current_user');
+  if(!s){ window.location.href='../login.html'; return null; }
+  try{ var u=JSON.parse(s); if(!u.id)throw Error(); return u; }catch(_){ localStorage.removeItem('guild_current_user'); window.location.href='../login.html'; return null; }
+}
+
+// ===== Tree helpers =====
+function getChildren(parentId){ return cats.filter(function(c){ return c.parent_id===parentId; }).sort(function(a,b){ return (a.sort_order||0)-(b.sort_order||0); }); }
+function getTasks(catId){ return defs.filter(function(d){ return d.category_id===catId; }).sort(function(a,b){ return (a.sort_order||0)-(b.sort_order||0); }); }
+function hasChildren(catId){ return getChildren(catId).length>0 || getTasks(catId).length>0; }
+function countL1(){ return cats.filter(function(c){ return !c.parent_id; }).length; }
+
+// ===== Render tree =====
+function renderTree(){
+  var roots = cats.filter(function(c){ return !c.parent_id; }).sort(function(a,b){ return (a.sort_order||0)-(b.sort_order||0); });
+  var html = '';
+  roots.forEach(function(r){ html += renderNode(r, 0); });
+  document.getElementById('tree').innerHTML = html || '<div style="padding:20px;color:var(--text3);text-align:center;">暂无数据</div>';
+  updateExpandBtn();
+  // disable add L1 if >=4
+  var btn = document.getElementById('btnAddL1');
+  var count = countL1();
+  btn.disabled = count >= 4;
+  if(count >= 4) btn.title = '一级分类最多4个';
+  else btn.title = '';
+}
+
+function renderNode(cat, depth){
+  var ch = getChildren(cat.id);
+  var tasks = getTasks(cat.id);
+  var canExpand = ch.length>0 || tasks.length>0;
+  var isL1 = !cat.parent_id;
+  var isLeaf = !canExpand;
+  var isGuardianOther = false;
+  // Check if this is a L2 under 守护神 or 其他 (these don't have L3 categories, tasks hang directly)
+  if(cat.parent_id){
+    var p = cats.find(function(c){ return c.id===cat.parent_id; });
+    if(p && p.parent_id){
+      var gp = cats.find(function(c){ return c.id===p.parent_id; });
+      // Actually we just render what the data says
+    }
+  }
+
+  // Determine label
+  var icon = isLeaf ? '📋' : '📁';
+  var label = cat.name;
+  // Check if it's a task-def level (categories that hold tasks, not sub-cats)
+  var hasSubCats = ch.length > 0;
+  var displayLabel = label;
+
+  var html = '<div class="tree-node">';
+  html += '<div class="tree-row">';
+  html += '<span class="tree-toggle" onclick="toggleNode(this)" data-id="'+cat.id+'">'+(canExpand ? (expandedAll ? '▼' : '▶') : '')+'</span>';
+  html += '<span class="tree-icon">'+icon+'</span>';
+  html += '<span class="tree-name">'+esc(displayLabel)+'<span class="type-tag">'+(isL1?'一级':(hasSubCats?'分类':'分类'))+'</span></span>';
+  html += '<span class="tree-actions">';
+  html += '<button class="btn btn-s btn-xs" onclick="openAdd(\''+cat.id+'\',\''+esc(cat.name)+'\')">+子级</button>';
+  html += '<button class="btn btn-s btn-xs" onclick="openEditCat(\''+cat.id+'\',\''+esc(cat.name)+'\')">✎</button>';
+  if(!isL1){
+    html += '<button class="btn btn-s btn-xs" style="color:var(--danger);" onclick="deleteCat(\''+cat.id+'\',\''+esc(cat.name)+'\')">✕</button>';
+  }
+  html += '</span>';
+  html += '</div>';
+
+  // children
+  html += '<div class="tree-children'+(expandedAll?'':' collapsed')+'" id="kids-'+cat.id+'">';
+  // sub-categories
+  ch.forEach(function(c){ html += renderNode(c, depth+1); });
+  // task definitions
+  tasks.forEach(function(t){
+    html += '<div class="tree-node"><div class="tree-row">';
+    html += '<span class="tree-toggle"></span>';
+    html += '<span class="tree-icon">📋</span>';
+    html += '<span class="tree-name">'+esc(t.display_name||t.task_name)+'<span class="score">('+(t.default_score||0)+'分)</span><span class="type-tag">任务</span></span>';
+    html += '<span class="tree-actions">';
+    html += '<button class="btn btn-s btn-xs" onclick="openEditTask(\''+t.id+'\',\''+esc(t.display_name||t.task_name)+'\','+(t.default_score||0)+')">✎</button>';
+    html += '<button class="btn btn-s btn-xs" style="color:var(--danger);" onclick="deleteTask(\''+t.id+'\',\''+esc(t.display_name||t.task_name)+'\')">✕</button>';
+    html += '</span>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function toggleNode(el){
+  var kids = document.getElementById('kids-'+el.dataset.id);
+  if(!kids) return;
+  var isCollapsed = kids.classList.contains('collapsed');
+  if(isCollapsed){ kids.classList.remove('collapsed'); el.textContent='▼'; }
+  else { kids.classList.add('collapsed'); el.textContent='▶'; }
+  updateExpandBtn();
+}
+
+function toggleExpand(){
+  expandedAll = !expandedAll;
+  document.querySelectorAll('.tree-children').forEach(function(c){
+    if(expandedAll) c.classList.remove('collapsed');
+    else c.classList.add('collapsed');
+  });
+  document.querySelectorAll('.tree-toggle').forEach(function(t){
+    if(t.dataset.id && hasChildren(t.dataset.id)){
+      t.textContent = expandedAll ? '▼' : '▶';
+    }
+  });
+  updateExpandBtn();
+}
+
+function updateExpandBtn(){
+  document.getElementById('btnExpand').textContent = expandedAll ? '📁 收起全部' : '📂 展开全部';
+}
+
+// ===== Modals =====
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function openAddL1(){
+  var count = countL1();
+  if(count >= 4){ toast('一级分类最多4个','err'); return; }
+  modalMode = 'addL1';
+  modalParentId = '';
+  modalEditId = '';
+  modalIsTask = false;
+  document.getElementById('modalTitle').textContent = '新增一级分类';
+  document.getElementById('modalLabel').textContent = '分类名称';
+  document.getElementById('modalName').value = '';
+  document.getElementById('modalScoreField').style.display = 'none';
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('modalName').focus();
+}
+
+function openAdd(parentId, parentName){
+  modalMode = 'add';
+  modalParentId = parentId;
+  modalEditId = '';
+  modalIsTask = false;
+  // Determine if parent is a L3 category → adding a task definition
+  var parent = cats.find(function(c){ return c.id===parentId; });
+  var parentL3 = parent && parent.level >= 3;
+  // Also check: if parent has no sub-categories but has tasks, it might be an L3 that hosts tasks
+  var subCats = getChildren(parentId);
+  if(parent && subCats.length===0 && parent.level >= 3){
+    // This is a leaf category → add task definition
+    modalIsTask = true;
+  } else if(parent && subCats.length===0 && parent.level === 2){
+    // L2 with no sub-cats (守护神/其他) → add task definition
+    var l1 = cats.find(function(c){ return c.id===parent.parent_id; });
+    if(l1 && (l1.name==='守护神'||l1.name==='其他')){
+      modalIsTask = true;
+    }
+  }
+
+  if(modalIsTask){
+    document.getElementById('modalTitle').textContent = '添加任务 › '+esc(parentName);
+    document.getElementById('modalLabel').textContent = '任务名称';
+    document.getElementById('modalScoreField').style.display = '';
+    document.getElementById('modalScore').value = 0;
+  } else {
+    document.getElementById('modalTitle').textContent = '添加子分类 › '+esc(parentName);
+    document.getElementById('modalLabel').textContent = '分类名称';
+    document.getElementById('modalScoreField').style.display = 'none';
+  }
+  document.getElementById('modalName').value = '';
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('modalName').focus();
+}
+
+function openEditCat(id, name){
+  modalMode = 'editCat';
+  modalEditId = id;
+  modalIsTask = false;
+  document.getElementById('modalTitle').textContent = '编辑分类';
+  document.getElementById('modalLabel').textContent = '分类名称';
+  document.getElementById('modalName').value = name;
+  document.getElementById('modalScoreField').style.display = 'none';
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('modalName').focus();
+}
+
+function openEditTask(id, name, score){
+  modalMode = 'editTask';
+  modalEditId = id;
+  modalIsTask = true;
+  document.getElementById('modalTitle').textContent = '编辑任务';
+  document.getElementById('modalLabel').textContent = '任务名称';
+  document.getElementById('modalName').value = name;
+  document.getElementById('modalScoreField').style.display = '';
+  document.getElementById('modalScore').value = score;
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('modalName').focus();
+}
+
+async function submitModal(){
+  var name = document.getElementById('modalName').value.trim();
+  if(!name){ toast('请输入名称','err'); return; }
+  var score = modalIsTask ? (parseInt(document.getElementById('modalScore').value)||0) : 0;
+
+  try {
+    if(modalMode === 'addL1'){
+      var count = countL1();
+      if(count >= 4){ toast('一级分类最多4个','err'); return; }
+      var maxOrder = cats.filter(function(c){return !c.parent_id;}).reduce(function(m,c){return Math.max(m,c.sort_order||0);},0);
+      await API.post('task_categories', { name: name, parent_id: null, level: 1, sort_order: maxOrder+1 });
+      toast('✅ 一级分类已添加');
+    } else if(modalMode === 'add'){
+      if(modalIsTask){
+        await API.post('task_definitions', {
+          category_id: modalParentId,
+          task_code: 'custom_' + Date.now(),
+          task_name: name,
+          display_name: name,
+          default_score: score,
+          sort_order: getTasks(modalParentId).length + 1
+        });
+      } else {
+        var parent = cats.find(function(c){return c.id===modalParentId;});
+        var newLevel = (parent ? (parent.level||0) : 0) + 1;
+        var siblings = getChildren(modalParentId);
+        await API.post('task_categories', { name: name, parent_id: modalParentId, level: newLevel, sort_order: siblings.length+1 });
+      }
+      toast('✅ 已添加');
+    } else if(modalMode === 'editCat'){
+      await API.patch('task_categories?id=eq.'+modalEditId, { name: name });
+      toast('✅ 已更新');
+    } else if(modalMode === 'editTask'){
+      await API.patch('task_definitions?id=eq.'+modalEditId, { display_name: name, task_name: name, default_score: score });
+      toast('✅ 已更新');
+    }
+    closeModal();
+    await reload();
+  } catch(e){ console.error(e); toast('操作失败: '+e.message,'err'); }
+}
+
+// ===== Delete =====
+async function deleteCat(id, name){
+  var kids = getChildren(id);
+  var hasKids = kids.length > 0;
+  var msg = hasKids ? '删除「'+name+'」及其所有子级？此操作不可恢复。' : '删除分类「'+name+'」？';
+  if(!confirm(msg)) return;
+  try {
+    await API.del('task_categories?id=eq.'+id);
+    toast('✅ 已删除');
+    await reload();
+  } catch(e){ console.error(e); toast('删除失败: '+e.message,'err'); }
+}
+
+async function deleteTask(id, name){
+  if(!confirm('删除任务「'+name+'」？')) return;
+  try {
+    await API.del('task_definitions?id=eq.'+id);
+    toast('✅ 已删除');
+    await reload();
+  } catch(e){ console.error(e); toast('删除失败: '+e.message,'err'); }
+}
+
+// ===== Reload =====
+async function reload(){
+  cats = await API.get('task_categories?select=*&order=sort_order.asc');
+  defs = await API.get('task_definitions?select=*&order=sort_order.asc');
+  renderTree();
+}
+
+// ===== Init =====
+async function init(){
+  curUser = getUser();
+  if(!curUser) return;
+
+  // Permission check
+  if(!curUser.is_task_admin){
+    alert('无权限访问');
+    window.location.href = '../tournament/index.html';
+    return;
+  }
+
+  document.getElementById('navUser').textContent = curUser.display_name || curUser.uid;
+  await reload();
+}
+
+init();
+</script>
+</body>
+</html>

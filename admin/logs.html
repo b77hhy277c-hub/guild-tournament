@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>操作日志</title>
+  <style>
+    :root {
+      --bg:#fff; --bg2:#f5f5f7; --card:#fff; --hover:rgba(0,0,0,0.04);
+      --text:#1d1d1f; --text2:#6e6e73; --text3:#aeaeb2;
+      --accent:#007AFF; --accent-h:#0062d1; --danger:#ff3b30;
+      --border:#d2d2d7; --border-l:#e5e5ea;
+      --shadow:0 4px 20px rgba(0,0,0,0.08); --r:12px;
+    }
+    @media (prefers-color-scheme:dark) {
+      :root {
+        --bg:#000; --bg2:#1c1c1e; --card:#1c1c1e;
+        --hover:rgba(255,255,255,0.08);
+        --text:#f5f5f7; --text2:#8e8e93; --text3:#636366;
+        --accent:#0A84FF; --accent-h:#409cff; --danger:#ff453a;
+        --border:#38383a; --border-l:#2c2c2e;
+        --shadow:0 1px 3px rgba(255,255,255,0.05);
+      }
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif; font-size:14px; color:var(--text); background:var(--bg); -webkit-font-smoothing:antialiased; min-height:100vh; }
+
+    .navbar { display:flex; align-items:center; justify-content:space-between; height:48px; padding:0 20px; border-bottom:1px solid var(--border-l); position:sticky; top:0; background:var(--bg); z-index:10; backdrop-filter:blur(20px); }
+    .navbar a { color:var(--accent); text-decoration:none; font-size:14px; }
+    .navbar .title { font-size:16px; font-weight:600; }
+    .navbar .user { font-size:13px; color:var(--text2); display:flex; align-items:center; gap:8px; }
+    .badge-sa { display:inline-block; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:500; background:var(--danger); color:#fff; }
+
+    .main { max-width:1100px; margin:0 auto; padding:24px; }
+
+    /* filter */
+    .filters { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+    .filters select, .filters input { padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; background:var(--bg); color:var(--text); outline:none; }
+    .filters select:focus, .filters input:focus { border-color:var(--accent); }
+    .filters input[type=date] { width:140px; }
+
+    .btn { display:inline-flex; align-items:center; gap:4px; padding:7px 16px; border-radius:8px; font-size:13px; font-weight:500; font-family:inherit; cursor:pointer; border:none; transition:all 0.2s; }
+    .btn-p { background:var(--accent); color:#fff; }
+    .btn-p:hover { background:var(--accent-h); }
+    .btn-s { background:var(--bg); color:var(--text); border:1px solid var(--border); }
+    .btn-s:hover { background:var(--hover); }
+    .btn-xs { padding:3px 10px; font-size:12px; border-radius:6px; }
+
+    .card { background:var(--card); border:1px solid var(--border-l); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:10px 14px; text-align:left; border-bottom:1px solid var(--border-l); font-size:13px; }
+    th { font-size:12px; font-weight:600; color:var(--text2); background:var(--bg2); white-space:nowrap; }
+    tr:hover td { background:var(--hover); }
+    tr:last-child td { border-bottom:none; }
+
+    .tag { display:inline-block; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:500; }
+    .tag-s { background:#30d158; color:#fff; }
+    .tag-t { background:var(--accent); color:#fff; }
+    .tag-p { background:#f5a623; color:#fff; }
+    .tag-m { background:var(--border); color:var(--text2); }
+
+    .change-arrow { color:var(--accent); margin:0 4px; font-weight:600; }
+
+    .pagination { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-top:1px solid var(--border-l); font-size:13px; color:var(--text2); }
+    .pagination .btns { display:flex; gap:6px; }
+
+    /* modal */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    .modal-overlay.show { display:flex; }
+    .modal { background:var(--card); border-radius:14px; padding:28px; width:600px; max-width:94vw; max-height:80vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.25); border:1px solid var(--border-l); }
+    .modal h3 { font-size:18px; font-weight:600; margin-bottom:16px; }
+    .modal pre { background:var(--bg2); border-radius:8px; padding:14px; font-size:13px; overflow-x:auto; white-space:pre-wrap; word-break:break-all; line-height:1.6; }
+    .modal .diff-table { width:100%; border-collapse:collapse; margin-bottom:16px; }
+    .modal .diff-table th { font-size:12px; }
+    .modal .diff-table td { font-size:13px; }
+    .modal .btn-row { text-align:right; margin-top:16px; }
+
+    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); padding:10px 20px; border-radius:8px; font-size:14px; font-weight:500; z-index:200; opacity:0; pointer-events:none; transition:opacity 0.3s; box-shadow:var(--shadow); }
+    .toast.show { opacity:1; }
+    .toast.ok { background:#30d158; color:#fff; }
+    .toast.err { background:var(--danger); color:#fff; }
+  </style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<nav class="navbar">
+  <a href="../tournament/index.html">← 返回竞标赛首页</a>
+  <span class="title">📋 操作日志</span>
+  <span class="user" id="navUser"></span>
+</nav>
+
+<div class="main">
+  <!-- Filters -->
+  <div class="filters">
+    <select id="fOpType">
+      <option value="">全部操作类型</option>
+      <option value="赛季配置修改">赛季配置修改</option>
+      <option value="任务新增">任务新增</option>
+      <option value="任务编辑">任务编辑</option>
+      <option value="任务删除">任务删除</option>
+      <option value="权限变更">权限变更</option>
+      <option value="目标配置修改">目标配置修改</option>
+      <option value="能力录入">能力录入</option>
+    </select>
+    <input type="text" id="fOperator" placeholder="操作人昵称..." />
+    <select id="fTarget">
+      <option value="">全部目标类型</option>
+      <option value="season">赛季</option>
+      <option value="task">任务</option>
+      <option value="member">成员</option>
+      <option value="member_ability">成员能力</option>
+    </select>
+    <input type="date" id="fDateFrom" title="开始日期" />
+    <span style="color:var(--text2);">至</span>
+    <input type="date" id="fDateTo" title="结束日期" />
+    <button class="btn btn-p" onclick="doSearch()">🔍 查询</button>
+    <button class="btn btn-s" onclick="resetFilters()">重置</button>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>时间</th><th>操作人</th><th>操作类型</th><th>操作对象</th><th>变更内容</th><th style="width:70px;">详情</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span id="pageInfo">共 0 条</span>
+      <div class="btns">
+        <button class="btn btn-s btn-xs" onclick="prevPage()">上一页</button>
+        <span id="pageNum" style="padding:0 10px;">1/1</span>
+        <button class="btn btn-s btn-xs" onclick="nextPage()">下一页</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" id="detailContent"></div>
+</div>
+
+<script>
+var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API={
+  h:function(){return{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};},
+  get:async function(p){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()});if(!r.ok)throw Error(await r.text());return r.json();},
+};
+
+var curUser=null,logs=[],page=1,pageSize=20,totalCount=0;
+
+function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},2500);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function getUser(){
+  var s=localStorage.getItem('guild_current_user');
+  if(!s){window.location.href='../login.html';return null;}
+  try{var u=JSON.parse(s);if(!u.id)throw Error();return u;}catch(_){localStorage.removeItem('guild_current_user');window.location.href='../login.html';return null;}
+}
+
+function getOpTag(type){
+  switch(type){
+    case '赛季配置修改':return'<span class="tag tag-s">赛季配置修改</span>';
+    case '任务新增':return'<span class="tag tag-t">任务新增</span>';
+    case '任务编辑':return'<span class="tag tag-t">任务编辑</span>';
+    case '任务删除':return'<span class="tag" style="background:var(--danger);color:#fff;">任务删除</span>';
+    case '权限变更':return'<span class="tag tag-p">权限变更</span>';
+    case '目标配置修改':return'<span class="tag tag-m">目标配置修改</span>';
+    case '能力录入':return'<span class="tag tag-m">能力录入</span>';
+    default:return'<span class="tag tag-m">'+esc(type||'')+'</span>';
+  }
+}
+
+function summarizeChanges(changes){
+  if(!changes||!changes.before||!changes.after)return '-';
+  var parts=[];
+  var labelMap={season_name:'名称',target_rank:'目标',strategy:'策略',total_score:'总分',total_tasks:'完成数',rank_position:'排名',announcement:'公告',stats_updated_at:'统计时间',start_date:'开始',end_date:'结束',is_current:'当前赛季'};
+  Object.keys(changes.before).forEach(function(k){
+    var lb=labelMap[k]||k;
+    var bv=changes.before[k]!==null&&changes.before[k]!==undefined?String(changes.before[k]).slice(0,20):'空';
+    var av=changes.after[k]!==null&&changes.after[k]!==undefined?String(changes.after[k]).slice(0,20):'空';
+    if(bv!==av) parts.push(lb+': '+bv+' <span class="change-arrow">→</span> '+av);
+  });
+  return parts.length>0?parts.join('； '):(changes.before===null?'新建':'-');
+}
+
+function fmtTime(d){if(!d)return'-';var dt=new Date(d);return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');}
+
+// ===== Build query =====
+function buildQuery(countOnly){
+  var base = countOnly ? 'operation_logs?select=count' : 'operation_logs?select=*';
+  var filters=[];
+
+  var opType=document.getElementById('fOpType').value;
+  if(opType) filters.push('operation_type=eq.'+encodeURIComponent(opType));
+
+  var target=document.getElementById('fTarget').value;
+  if(target) filters.push('target_type=eq.'+target);
+
+  var opName=document.getElementById('fOperator').value.trim();
+  if(opName) filters.push('operator_name=ilike.%'+encodeURIComponent(opName)+'%');
+
+  var from=document.getElementById('fDateFrom').value;
+  if(from) filters.push('created_at=gte.'+new Date(from+'T00:00:00').toISOString());
+
+  var to=document.getElementById('fDateTo').value;
+  if(to) filters.push('created_at=lt.'+new Date(to+'T23:59:59').toISOString());
+
+  if(filters.length>0) base += '&'+filters.join('&');
+
+  if(!countOnly){
+    var start=(page-1)*pageSize;
+    base += '&order=created_at.desc&limit='+pageSize+'&offset='+start;
+  }
+  return base;
+}
+
+// ===== Load =====
+async function loadLogs(){
+  try {
+    // Get count
+    var countRes = await API.get(buildQuery(true));
+    totalCount = (countRes && countRes.length>0) ? (countRes[0].count||0) : 0;
+    // Get data
+    logs = await API.get(buildQuery(false));
+    renderTable();
+  } catch(e){ console.error(e); toast('加载失败: '+e.message,'err'); }
+}
+
+function renderTable(){
+  var html='';
+  logs.forEach(function(l){
+    html+='<tr>'+
+      '<td style="white-space:nowrap;">'+fmtTime(l.created_at)+'</td>'+
+      '<td>'+esc(l.operator_name||'')+'</td>'+
+      '<td>'+getOpTag(l.operation_type)+'</td>'+
+      '<td>'+esc(l.target_name||'')+'</td>'+
+      '<td>'+summarizeChanges(l.changes)+'</td>'+
+      '<td><button class="btn btn-p btn-xs" onclick="showDetail(\''+l.id+'\')">详情</button></td>'+
+      '</tr>';
+  });
+  document.getElementById('tbody').innerHTML=html||'<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px;">暂无日志记录</td></tr>';
+  document.getElementById('pageInfo').textContent='共 '+totalCount+' 条';
+  var totalPages=Math.max(1,Math.ceil(totalCount/pageSize));
+  document.getElementById('pageNum').textContent=page+'/'+totalPages;
+}
+
+function doSearch(){ page=1; loadLogs(); }
+function prevPage(){ if(page>1){page--;loadLogs();} }
+function nextPage(){ if(page<Math.ceil(totalCount/pageSize)){page++;loadLogs();} }
+
+function resetFilters(){
+  document.getElementById('fOpType').value='';
+  document.getElementById('fOperator').value='';
+  document.getElementById('fTarget').value='';
+  document.getElementById('fDateFrom').value='';
+  document.getElementById('fDateTo').value='';
+  page=1; loadLogs();
+}
+
+// ===== Detail =====
+function showDetail(id){
+  var l=logs.find(function(x){return x.id===id;});
+  if(!l) return;
+
+  var html='<h3>变更详情</h3>';
+  html+='<p style="color:var(--text2);margin-bottom:12px;">'+esc(l.operator_name)+' · '+getOpTag(l.operation_type)+' · '+fmtTime(l.created_at)+'</p>';
+  html+='<p style="color:var(--text2);margin-bottom:8px;">操作对象：'+esc(l.target_name||l.target_id||'')+'</p>';
+
+  if(l.changes && l.changes.before!==undefined && l.changes.after!==undefined){
+    if(l.changes.before===null){
+      html+='<pre>新建：'+JSON.stringify(l.changes.after,null,2)+'</pre>';
+    } else {
+      var labelMap={season_name:'名称',target_rank:'目标',strategy:'策略',total_score:'总分',total_tasks:'完成数',rank_position:'排名',announcement:'公告',stats_updated_at:'统计时间',start_date:'开始',end_date:'结束',is_current:'当前赛季'};
+      html+='<table class="diff-table"><thead><tr><th>字段</th><th>修改前</th><th>修改后</th></tr></thead><tbody>';
+      var allKeys={};
+      Object.keys(l.changes.before||{}).forEach(function(k){allKeys[k]=1;});
+      Object.keys(l.changes.after||{}).forEach(function(k){allKeys[k]=1;});
+      Object.keys(allKeys).forEach(function(k){
+        var bv=l.changes.before[k];
+        var av=l.changes.after[k];
+        if(String(bv)!==String(av)){
+          html+='<tr><td>'+(labelMap[k]||k)+'</td><td style="color:var(--danger);">'+(bv!==null&&bv!==undefined?esc(String(bv).slice(0,100)):'-')+'</td><td style="color:#30d158;">'+(av!==null&&av!==undefined?esc(String(av).slice(0,100)):'-')+'</td></tr>';
+        }
+      });
+      html+='</tbody></table>';
+    }
+  } else {
+    html+='<pre>'+JSON.stringify(l.changes,null,2)+'</pre>';
+  }
+
+  html+='<div class="btn-row"><button class="btn btn-p" onclick="closeDetail()">关闭</button></div>';
+  document.getElementById('detailContent').innerHTML=html;
+  document.getElementById('detailModal').classList.add('show');
+}
+
+function closeDetail(){ document.getElementById('detailModal').classList.remove('show'); }
+document.getElementById('detailModal').addEventListener('click',function(e){ if(e.target===this)closeDetail(); });
+
+// ===== Init =====
+async function init(){
+  curUser=getUser(); if(!curUser)return;
+  if(!curUser.is_admin){ alert('无权限访问'); window.location.href='../tournament/index.html'; return; }
+  document.getElementById('navUser').innerHTML=(curUser.display_name||curUser.uid)+' <span class="badge-sa">超级管理员</span>';
+  await loadLogs();
+}
+init();
+</script>
+</body>
+</html>

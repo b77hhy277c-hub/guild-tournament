@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>公会锦标赛 - 公会管理工具</title>
+  <style>
+    :root {
+      --bg: #ffffff; --bg-card: #ffffff; --bg-hover: rgba(0,0,0,0.04);
+      --text: #1d1d1f; --text-secondary: #6e6e73;
+      --accent: #007AFF; --accent-hover: #0062cc;
+      --border: #d2d2d7; --border-light: #e5e5ea;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000; --bg-card: #1c1c1e; --bg-hover: rgba(255,255,255,0.08);
+        --text: #f5f5f7; --text-secondary: #8e8e93;
+        --accent: #0A84FF; --accent-hover: #409cff;
+        --border: #38383a; --border-light: #2c2c2e;
+        --shadow: 0 1px 3px rgba(255,255,255,0.05);
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+      font-size: 15px; color: var(--text); background: var(--bg);
+      -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-light);
+      position: sticky; top: 0; background: var(--bg); z-index: 10;
+      backdrop-filter: blur(20px);
+    }
+
+    .back-btn {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 15px; color: var(--accent); cursor: pointer;
+      background: none; border: none; font-family: inherit;
+      padding: 4px 8px; border-radius: 6px;
+      transition: background 0.15s; text-decoration: none;
+    }
+    .back-btn:hover { background: var(--bg-hover); }
+
+    .topbar h1 { font-size: 20px; font-weight: 600; }
+
+    .main { max-width: 800px; margin: 0 auto; padding: 40px 24px; }
+
+    .placeholder {
+      text-align: center; padding: 80px 20px; color: var(--text-secondary);
+    }
+    .placeholder .icon { font-size: 64px; margin-bottom: 20px; }
+    .placeholder h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+    .placeholder p { font-size: 15px; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a href="index.html" class="back-btn">← 返回</a>
+    <h1>🏆 公会锦标赛</h1>
+  </div>
+
+  <div class="main">
+    <div class="placeholder">
+      <div class="icon">🏗️</div>
+      <h2>锦标赛功能开发中</h2>
+      <p>此模块将用于管理公会锦标赛的报名、分组与赛程，敬请期待。</p>
+    </div>
+  </div>
+
+  <script>
+    // 登录检查
+    (function () {
+      var u = localStorage.getItem('guild_current_user');
+      if (!u) window.location.href = 'login.html';
+    })();
+  </script>
+</body>
+</html>

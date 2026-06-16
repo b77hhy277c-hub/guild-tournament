@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>公会管理工具 - 登录</title>
+
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 40px 32px;
+      width: 400px;
+      max-width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .login-card .shield {
+      text-align: center;
+      font-size: 48px;
+      margin-bottom: 8px;
+    }
+
+    .login-card h1 {
+      text-align: center;
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .login-card .subtitle {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 13px;
+      margin-bottom: 32px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.07);
+      color: #ffffff;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .form-group select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%23ffffff80'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    .form-group select option {
+      background: #1a1a2e;
+      color: #ffffff;
+    }
+
+    .form-group select:focus,
+    .form-group input:focus {
+      border-color: rgba(99, 102, 241, 0.6);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .form-group input[readonly] {
+      color: rgba(255, 255, 255, 0.45);
+      background: rgba(255, 255, 255, 0.03);
+      cursor: default;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-wrapper input {
+      padding-right: 48px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      padding: 10px;
+      font-size: 18px;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .password-toggle:hover {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      margin-top: 8px;
+      font-family: inherit;
+    }
+
+    .btn-login:hover {
+      background: linear-gradient(135deg, #818cf8, #6366f1);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .error-toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ef4444;
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 1000;
+    }
+
+    .error-toast.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .footer-note {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 11px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 错误提示 -->
+  <div class="error-toast" id="errorToast"></div>
+
+  <!-- 登录卡片 -->
+  <div class="login-card">
+    <div class="shield">🏰</div>
+    <h1>公会任务管理</h1>
+    <p class="subtitle">选择昵称，输入口令登录</p>
+
+    <form id="loginForm" autocomplete="off">
+      <!-- 选择昵称（下拉框） -->
+      <div class="form-group">
+        <label for="displayNameSelect">选择昵称</label>
+        <select id="displayNameSelect" required>
+          <option value="">-- 加载中... --</option>
+        </select>
+      </div>
+
+      <!-- 显示 UID（只读） -->
+      <div class="form-group">
+        <label for="uidInput">唯一 ID（确认身份）</label>
+        <input type="text" id="uidInput" readonly placeholder="选择昵称后自动显示" />
+      </div>
+
+      <!-- 密码输入 -->
+      <div class="form-group">
+        <label for="passwordInput">口令</label>
+        <div class="password-wrapper">
+          <input type="password" id="passwordInput" placeholder="输入口令，初始为 0000" required />
+          <button type="button" class="password-toggle" id="passwordToggle" title="显示/隐藏密码">
+            👁️
+          </button>
+        </div>
+      </div>
+
+      <!-- 登录按钮 -->
+      <button type="submit" class="btn-login" id="loginBtn">
+        登 录
+      </button>
+    </form>
+
+    <p class="footer-note">首次登录请向管理员索取初始口令</p>
+  </div>
+
+  <script>
+    // ==========================================
+    // Supabase 配置 & 原生 fetch 封装
+    // 不用 SDK，直接用 REST API，兼容任何 key 格式
+    // ==========================================
+    const SUPABASE_URL = 'https://nifmryfrgfdjjbrdrgpo.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+
+    const API = {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+      },
+
+      async get(path) {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+          headers: this.headers,
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(err);
+        }
+        return res.json();
+      },
+
+      async rpc(fnName, params) {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fnName, {
+          method: 'POST',
+          headers: this.headers,
+          body: JSON.stringify(params),
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(err);
+        }
+        return res.json();
+      },
+    };
+
+    // ==========================================
+    // 全局状态
+    // ==========================================
+    const membersMap = new Map(); // display_name → { id, uid }
+
+    // ==========================================
+    // 加载成员列表到下拉框
+    // ==========================================
+    async function loadMembers() {
+      const select = document.getElementById('displayNameSelect');
+
+      try {
+        const data = await API.get(
+          'members?select=id,display_name,uid&order=display_name.asc'
+        );
+
+        select.innerHTML = '<option value="">-- 请选择昵称 --</option>';
+
+        if (!data || data.length === 0) {
+          select.innerHTML = '<option value="">暂无成员数据</option>';
+          return;
+        }
+
+        data.forEach(function (member) {
+          membersMap.set(member.display_name, {
+            id: member.id,
+            uid: member.uid,
+          });
+
+          var option = document.createElement('option');
+          option.value = member.display_name;
+          option.textContent = member.display_name;
+          select.appendChild(option);
+        });
+
+        console.log('✅ 已加载 ' + data.length + ' 名成员');
+      } catch (err) {
+        console.error('加载成员列表失败:', err);
+        select.innerHTML =
+          '<option value="">❌ 加载失败: ' +
+          (err.message || '未知错误') +
+          '</option>';
+      }
+    }
+
+    // ==========================================
+    // 切换密码可见性
+    // ==========================================
+    document
+      .getElementById('passwordToggle')
+      .addEventListener('click', function () {
+        var input = document.getElementById('passwordInput');
+        var isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        this.textContent = isPassword ? '🙈' : '👁️';
+      });
+
+    // ==========================================
+    // 选择昵称时自动显示 UID
+    // ==========================================
+    document
+      .getElementById('displayNameSelect')
+      .addEventListener('change', function () {
+        var uidInput = document.getElementById('uidInput');
+        var member = membersMap.get(this.value);
+        uidInput.value = member ? member.uid : '';
+      });
+
+    // ==========================================
+    // 显示错误提示
+    // ==========================================
+    function showError(message) {
+      var toast = document.getElementById('errorToast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(function () {
+        toast.classList.remove('show');
+      }, 3500);
+    }
+
+    // ==========================================
+    // 登录逻辑（RPC 服务端密码验证）
+    // ==========================================
+    document
+      .getElementById('loginForm')
+      .addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        var displayName = document.getElementById('displayNameSelect').value;
+        var password = document.getElementById('passwordInput').value;
+        var loginBtn = document.getElementById('loginBtn');
+
+        if (!displayName) {
+          showError('请先选择你的昵称');
+          return;
+        }
+        if (!password) {
+          showError('请输入口令');
+          return;
+        }
+
+        // 加载状态
+        loginBtn.disabled = true;
+        loginBtn.innerHTML =
+          '<span class="loading-spinner"></span>验证中...';
+
+        try {
+          // 调用 PostgreSQL RPC 函数 verify_member_login
+          // 密码比对在数据库内完成，password_hash 永不离开服务器
+          var data = await API.rpc('verify_member_login', {
+            display_name_input: displayName,
+            password_input: password,
+          });
+
+          // 空数组 = 密码错误或用户不存在
+          if (!data || data.length === 0) {
+            showError('❌ 密码错误，初始密码为 0000');
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = '登 录';
+            return;
+          }
+
+          var member = data[0];
+
+          // 登录成功 → 存入 localStorage
+          var userInfo = {
+            id: member.id,
+            display_name: member.display_name,
+            uid: member.uid,
+            is_admin: member.is_admin,
+            is_task_admin: member.is_task_admin,
+            is_full_like: member.is_full_like,
+            level: member.level,
+            vip_level: member.vip_level,
+            login_time: new Date().toISOString(),
+          };
+
+          localStorage.setItem(
+            'guild_current_user',
+            JSON.stringify(userInfo)
+          );
+
+          console.log('✅ 登录成功', userInfo);
+
+          // 跳转到主界面
+          window.location.href = 'index.html';
+        } catch (err) {
+          console.error('登录失败:', err);
+          showError('⚠️ ' + (err.message || '登录失败，请重试'));
+
+          loginBtn.disabled = false;
+          loginBtn.innerHTML = '登 录';
+        }
+      });
+
+    // ==========================================
+    // 页面初始化
+    // ==========================================
+    async function init() {
+      // 检查是否已登录
+      var stored = localStorage.getItem('guild_current_user');
+      if (stored) {
+        try {
+          var user = JSON.parse(stored);
+          var loginTime = new Date(user.login_time);
+          var now = new Date();
+          var hoursSinceLogin = (now - loginTime) / (1000 * 60 * 60);
+
+          if (hoursSinceLogin < 24) {
+            window.location.href = 'index.html';
+            return;
+          }
+        } catch (_) {
+          localStorage.removeItem('guild_current_user');
+        }
+      }
+
+      await loadMembers();
+    }
+
+    init();
+  </script>
+</body>
+</html>
