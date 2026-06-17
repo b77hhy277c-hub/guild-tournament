@@ -442,7 +442,7 @@
             myBiz.push(a.business_name+' ('+a.capacity+')');
           }
         });
-        document.getElementById('sideBizList').innerHTML = myBiz.length>0 ? myBiz.map(function(b){return '<div style="padding:2px 0;">🔹 '+esc(b)+'</div>';}).join('') : '今日无副业安排';
+        document.getElementById('sideBizList').innerHTML = myBiz.length>0 ? myBiz.map(function(b){return '<div style="padding:2px 0;">🔹 '+b+'</div>';}).join('') : '今日无副业安排';
       } catch(e){ console.error('loadSideBiz error:', e); document.getElementById('sideBizList').innerHTML='加载失败: '+e.message; }
     }
 
