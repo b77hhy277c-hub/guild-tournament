@@ -111,6 +111,13 @@
     .toast.ok { background:#30d158; color:#fff; }
     .toast.err { background:var(--danger); color:#fff; }
 
+    /* Loading */
+    .loading-overlay { display:none; position:fixed; inset:0; background:var(--bg); z-index:300; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
+    .loading-overlay.show { display:flex; }
+    .loading-spin { width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:lds 0.8s linear infinite; }
+    @keyframes lds { to { transform:rotate(360deg); } }
+    .loading-text { font-size:14px; color:var(--text2); }
+
     /* 汉堡按钮（桌面隐藏，移动端显示） */
     .hamburger-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text); padding: 8px 12px; line-height: 1; min-height: 44px; min-width: 44px; flex-shrink: 0; }
     .panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 89; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
@@ -136,6 +143,12 @@
   </style>
 </head>
 <body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spin"></div>
+  <div class="loading-text">加载中...</div>
+</div>
 
 <div class="panel-overlay" id="panelOverlay" onclick="togglePanel()"></div>
 <div class="toast" id="toast"></div>
@@ -232,6 +245,7 @@ function getUser(){
 }
 
 async function loadAll(){
+  document.getElementById('loadingOverlay').classList.add('show');
   try {
     var mid = effId();
 
@@ -263,9 +277,10 @@ async function loadAll(){
     }
     if(allMembersData){ allMembers = allMembersData; renderProxy(); }
     recalc();
+    document.getElementById('loadingOverlay').classList.remove('show');
     renderL1();
     updateLeft();
-  } catch(e){ console.error(e); toast('加载失败: '+e.message,'err'); }
+  } catch(e){ document.getElementById('loadingOverlay').classList.remove('show'); console.error(e); toast('加载失败: '+e.message,'err'); }
 }
 
 // ===== LEFT PANEL =====
