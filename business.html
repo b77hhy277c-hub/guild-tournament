@@ -122,7 +122,7 @@
     </div>
     <div class="field">
       <label>参与成员</label>
-      <div id="mMembersCheckboxes" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;"></div>
+      <div id="mMembersCheckboxes" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);background:var(--bg);"></div>
     </div>
     <div class="btn-row">
       <button class="btn btn-d" id="btnDelete" onclick="deleteRow()">删除</button>
@@ -254,15 +254,15 @@ function popCheckboxes(selected){
   var fz=allMembers.filter(function(m){return m.position==='副会长';}).map(function(m){return m.display_name;}).join('、')||'无';
   var html='';
   // 会长/副会长单独选项
-  html+='<label style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:13px;cursor:pointer;font-weight:500;">'+
+  html+='<label style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:13px;cursor:pointer;color:var(--text);font-weight:500;">'+
     '<input type="checkbox" value="会长" '+(names.indexOf('会长')>=0?'checked':'')+' style="accent-color:var(--accent);" />会长（'+esc(hz)+'）</label>';
-  html+='<label style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:13px;cursor:pointer;font-weight:500;">'+
+  html+='<label style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:13px;cursor:pointer;color:var(--text);font-weight:500;">'+
     '<input type="checkbox" value="副会长" '+(names.indexOf('副会长')>=0?'checked':'')+' style="accent-color:var(--accent);" />副会长（'+esc(fz)+'）</label>';
   html+='<div style="border-top:1px solid var(--border-l);margin:4px 0;"></div>';
   // 所有成员
   allMembers.forEach(function(m){
     var checked=names.indexOf(m.display_name)>=0?'checked':'';
-    html+='<label style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:13px;cursor:pointer;">'+
+    html+='<label style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:13px;cursor:pointer;color:var(--text);">'+
       '<input type="checkbox" value="'+esc(m.display_name)+'" '+checked+' style="accent-color:var(--accent);" />'+esc(m.display_name)+'</label>';
   });
   document.getElementById('mMembersCheckboxes').innerHTML=html;
