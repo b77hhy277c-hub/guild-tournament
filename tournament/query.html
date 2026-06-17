@@ -241,20 +241,39 @@ function onS3(){
   var l1 = cats.find(function(c){ return c.id===l1id; });
   var isTalentOrArtist = l1 && (l1.name==='人才'||l1.name==='艺人');
 
-  // Determine which category_id to use for task_definitions
-  var catId;
+  // Determine which category_id(s) to use for task_definitions
+  var tasks = [];
   if(isTalentOrArtist){
-    catId = s3val; // L3 category → task_definitions reference this
+    tasks = defs.filter(function(d){ return d.category_id===s3val; });
   } else {
-    catId = l2id; // L2 category → task_definitions reference this directly
+    // Check if L2 has L3 children (守护神组合 → 个体)
+    var l3s = cats.filter(function(c){ return c.parent_id===l2id; });
+    if(l3s.length>0){
+      // Collect all tasks from all L3 children
+      l3s.forEach(function(l3){
+        var sub = defs.filter(function(d){ return d.category_id===l3.id; });
+        sub.forEach(function(t){ tasks.push({ task: t, l3name: l3.name }); });
+      });
+    } else {
+      tasks = defs.filter(function(d){ return d.category_id===l2id; }).map(function(t){ return { task: t, l3name: null }; });
+    }
   }
 
-  var tasks = defs.filter(function(d){ return d.category_id===catId; });
   var s4 = document.getElementById('s4');
-  s4.innerHTML = tasks.map(function(t){
-    var label = (t.display_name||t.task_name) + ' (' + (t.default_score||0) + '分)';
-    return '<option value="'+t.id+'">'+esc(label)+'</option>';
-  }).join('');
+  if(!isTalentOrArtist && tasks.length>0 && tasks[0].l3name){
+    // Show L3 name prefix for aggregated tasks
+    s4.innerHTML = tasks.map(function(item){
+      var t = item.task;
+      var label = item.l3name + ' - ' + (t.display_name||t.task_name) + ' (' + (t.default_score||0) + '分)';
+      return '<option value="'+t.id+'">'+esc(label)+'</option>';
+    }).join('');
+  } else {
+    s4.innerHTML = tasks.map(function(t){
+      var d = t.task || t;
+      var label = (d.display_name||d.task_name) + ' (' + (d.default_score||0) + '分)';
+      return '<option value="'+d.id+'">'+esc(label)+'</option>';
+    }).join('');
+  }
   s4.disabled = tasks.length===0;
 }
 
