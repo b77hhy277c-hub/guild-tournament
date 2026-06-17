@@ -98,7 +98,7 @@
   <!-- Stats -->
   <div class="stats">
     <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">成员总数</div></div>
-    <div class="stat"><div class="num" id="statAble">0</div><div class="lbl">已录入能力</div></div>
+    <div class="stat"><div class="num" id="statAble">0</div><div class="lbl">已录入任务</div></div>
     <div class="stat"><div class="num" id="statTarget">0</div><div class="lbl">已设目标</div></div>
     <div class="stat"><div class="num" id="statAdmin">0</div><div class="lbl">竞标赛管理</div></div>
   </div>
@@ -107,12 +107,12 @@
   <div class="toolbar">
     <input type="text" id="searchInput" placeholder="搜索昵称或UID..." oninput="renderTable()" />
     <select id="filterTarget" onchange="renderTable()">
-      <option value="">全部目标状态</option>
+      <option value="">目标状态</option>
       <option value="set">已设目标</option>
       <option value="unset">未设目标</option>
     </select>
     <select id="filterAble" onchange="renderTable()">
-      <option value="">全部能力状态</option>
+      <option value="">任务状态</option>
       <option value="yes">有勾选任务</option>
       <option value="no">无勾选任务</option>
     </select>
