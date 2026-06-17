@@ -77,7 +77,12 @@
     <span id="dateDisplay">📅 --</span>
     <span class="sep">｜</span>
     <span id="openTimeDisp">⏰ 开启时间：20:00</span>
-    <button class="btn btn-s" id="btnEditOpenTime" style="padding:2px 8px;font-size:11px;display:none;" onclick="editOpenTime()">编辑</button>
+    <span id="openTimeEditWrap" style="display:none;">
+      <input type="text" id="openTimeInput" style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-family:inherit;text-align:center;" />
+      <button class="btn btn-p" style="padding:2px 8px;font-size:11px;" onclick="saveOpenTime()">✓</button>
+      <button class="btn btn-s" style="padding:2px 8px;font-size:11px;" onclick="cancelOpenTimeEdit()">✕</button>
+    </span>
+    <button class="btn btn-s" id="btnEditOpenTime" style="padding:2px 8px;font-size:11px;display:none;" onclick="startOpenTimeEdit()">编辑</button>
   </div>
 
   <!-- Table -->
@@ -208,9 +213,11 @@ function renderTable(){
   // Extra time row
   var extraTime=currentVersion? (currentVersion.extra_time||'22:05') : '22:05';
   html+='<tr class="extra-row">'+
-    '<td colspan="2">⏱️ 补副业时间：'+esc(extraTime)+'</td>'+
+    '<td colspan="2"><span id="extraTimeDisp">⏱️ 补副业时间：'+esc(extraTime)+'</span>'+
+    (showActions?' <span id="extraTimeEditWrap" style="display:none;"><input type="text" id="extraTimeInput" value="'+esc(extraTime)+'" style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:13px;text-align:center;" /><button class="btn btn-p" style="padding:2px 8px;font-size:11px;" onclick="saveExtraTime()">✓</button><button class="btn btn-s" style="padding:2px 8px;font-size:11px;" onclick="cancelExtraTimeEdit()">✕</button></span>':'')+
+    '</td>'+
     '<td></td>'+
-    (showActions?'<td><button class="btn btn-s" style="padding:3px 10px;font-size:12px;" onclick="editExtraTime()">编辑</button></td>':'')+
+    (showActions?'<td id="extraTimeBtnTd"><button class="btn btn-s" style="padding:3px 10px;font-size:12px;" onclick="startExtraTimeEdit()">编辑</button></td>':'')+
     '</tr>';
 
   document.getElementById('tbody').innerHTML=html;
@@ -294,32 +301,52 @@ async function deleteRow(){
   } catch(e){ console.error(e); toast('删除失败: '+e.message,'err'); }
 }
 
-// ===== Open time =====
-async function editOpenTime(){
-  if(!currentVersion){ toast('未加载版本数据','err'); return; }
-  var t=currentVersion.open_time||'20:00';
-  var newTime=prompt('输入副业开启时间（如 20:00）：',t);
-  if(!newTime||newTime.trim()===t) return;
+// ===== Open time inline edit =====
+function startOpenTimeEdit(){
+  document.getElementById('openTimeDisp').style.display='none';
+  document.getElementById('btnEditOpenTime').style.display='none';
+  document.getElementById('openTimeEditWrap').style.display='inline';
+  var t=(currentVersion&&currentVersion.open_time)||'20:00';
+  document.getElementById('openTimeInput').value=t;
+}
+function cancelOpenTimeEdit(){
+  document.getElementById('openTimeDisp').style.display='inline';
+  document.getElementById('btnEditOpenTime').style.display='inline-flex';
+  document.getElementById('openTimeEditWrap').style.display='none';
+}
+async function saveOpenTime(){
+  var newTime=document.getElementById('openTimeInput').value.trim();
+  if(!newTime){ toast('请输入时间','err'); return; }
   try {
-    await API.patch('side_business_versions?id=eq.'+currentVersion.id,{open_time:newTime.trim()});
-    currentVersion.open_time=newTime.trim();
+    await API.patch('side_business_versions?id=eq.'+currentVersion.id,{open_time:newTime});
+    currentVersion.open_time=newTime;
+    document.getElementById('openTimeDisp').textContent='⏰ 开启时间：'+newTime;
+    cancelOpenTimeEdit();
     toast('✅ 已更新');
-    renderDate();
     updateTime();
   } catch(e){ console.error(e); toast('更新失败: '+e.message,'err'); }
 }
 
-// ===== Extra time =====
-async function editExtraTime(){
-  if(!currentVersion){ toast('未加载版本数据','err'); return; }
-  var t=currentVersion.extra_time||'22:05';
-  var newTime=prompt('输入补副业时间（如 22:05）：',t);
-  if(!newTime||newTime.trim()===t) return;
+// ===== Extra time inline edit =====
+function startExtraTimeEdit(){
+  document.getElementById('extraTimeDisp').style.display='none';
+  document.getElementById('extraTimeBtnTd').querySelector('button').style.display='none';
+  document.getElementById('extraTimeEditWrap').style.display='inline';
+}
+function cancelExtraTimeEdit(){
+  document.getElementById('extraTimeDisp').style.display='inline';
+  document.getElementById('extraTimeBtnTd').querySelector('button').style.display='inline-flex';
+  document.getElementById('extraTimeEditWrap').style.display='none';
+}
+async function saveExtraTime(){
+  var newTime=document.getElementById('extraTimeInput').value.trim();
+  if(!newTime){ toast('请输入时间','err'); return; }
   try {
-    await API.patch('side_business_versions?id=eq.'+currentVersion.id,{extra_time:newTime.trim()});
-    currentVersion.extra_time=newTime.trim();
+    await API.patch('side_business_versions?id=eq.'+currentVersion.id,{extra_time:newTime});
+    currentVersion.extra_time=newTime;
+    document.getElementById('extraTimeDisp').textContent='⏱️ 补副业时间：'+newTime;
+    cancelExtraTimeEdit();
     toast('✅ 已更新');
-    renderTable();
     updateTime();
   } catch(e){ console.error(e); toast('更新失败: '+e.message,'err'); }
 }
