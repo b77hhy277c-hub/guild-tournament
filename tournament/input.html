@@ -423,30 +423,47 @@ function renderL2Grid(items){
 function selectL2(catId, catName){
   activeL2=catId;
   document.querySelectorAll('.l2-item').forEach(function(i){ i.classList.toggle('sel',i.dataset.id===catId); });
-  // Check if this L2 has sub-categories (L3) — 守护神/其他 may have L3 children
+  // Check if this L2 has sub-categories (L3) — e.g. 守护神组合下有多个体
   var l3s = cats.filter(function(c){ return c.parent_id===catId; });
   if(l3s.length>0){
-    // Has L3 children → show another grid
-    renderL3Grid(l3s, catName);
+    // Collect ALL task_definitions from ALL L3 children and render together
+    renderL3Multi(l3s, catName);
   } else {
     // No children → directly show task_definitions
     renderL3(catId, catName);
   }
 }
 
-function renderL3Grid(items, parentName){
+function renderL3Multi(l3cats, parentName){
   document.getElementById('l3Area').style.display='block';
-  document.getElementById('l3Title').textContent = parentName + '（点击选择）';
-  var h='<div class="l2-grid">';
-  items.forEach(function(it){ h+='<div class="l2-item" data-id="'+it.id+'" onclick="clickL3(\''+it.id+'\',\''+esc(it.name)+'\')">'+esc(it.name)+'</div>'; });
-  h+='</div>';
-  document.getElementById('l3Tasks').innerHTML = h;
-  updateCnt();
-}
+  document.getElementById('l3Title').textContent = parentName;
+  var allTasks = [];
+  l3cats.forEach(function(l3){
+    var tasks = defs.filter(function(d){ return d.category_id===l3.id; });
+    tasks.forEach(function(t){ allTasks.push({ task: t, l3name: l3.name }); });
+  });
 
-function clickL3(catId, catName){
-  document.querySelectorAll('#l3Tasks .l2-item').forEach(function(i){ i.classList.toggle('sel',i.dataset.id===catId); });
-  renderL3(catId, catName);
+  var l1 = cats.find(function(c){return c.id===activeL1;});
+  var isOther = l1 && l1.name==='其他';
+
+  var h='';
+  allTasks.forEach(function(item){
+    var t = item.task;
+    var ab = abilities[t.id] || { is_able:false, quantity:0 };
+    var chk = ab.is_able?'checked':'';
+    var score = t.default_score||0;
+    var label = item.l3name + ' - ' + (t.display_name||t.task_name);
+
+    h+='<div class="l3-task">';
+    h+='<input type="checkbox" data-defid="'+t.id+'" '+chk+' onchange="onToggle(this)" />';
+    h+='<span class="lbl">'+esc(label);
+    if(isOther) h+=' <span class="muted">（非必要不推荐做）</span>';
+    h+='</span>';
+    h+='<span class="sc">'+score+'分</span>';
+    h+='</div>';
+  });
+  document.getElementById('l3Tasks').innerHTML = h || '<div style="color:var(--text3);padding:10px;">此分类下暂无任务</div>';
+  updateCnt();
 }
 
 // ===== L3 CHECKBOXES =====
