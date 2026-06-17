@@ -431,12 +431,11 @@
     async function loadSideBiz(){
       try {
         var cur = await API.get('side_business_versions?is_current=eq.true&select=id&limit=1');
-        if(!cur||!cur.length){ document.getElementById('sideBizList').innerHTML='暂无数据'; return; }
+        if(!cur||!cur.length){ document.getElementById('sideBizList').innerHTML='暂无版本数据'; return; }
         var allocs = await API.get('side_business_allocation?version_id=eq.'+cur[0].id+'&select=business_name,capacity,members&order=sort_order.asc');
         var myBiz = [];
         allocs.forEach(function(a){
           var members=a.members||'';
-          // match by display_name or by position keyword (会长/副会长)
           var matchByName=members.indexOf(currentUser.display_name)>=0;
           var matchByPos=(currentUser.position==='会长'&&members.indexOf('会长')>=0)||(currentUser.position==='副会长'&&members.indexOf('副会长')>=0);
           if(matchByName||matchByPos){
@@ -444,7 +443,7 @@
           }
         });
         document.getElementById('sideBizList').innerHTML = myBiz.length>0 ? myBiz.map(function(b){return '<div style="padding:2px 0;">🔹 '+esc(b)+'</div>';}).join('') : '今日无副业安排';
-      } catch(e){ document.getElementById('sideBizList').innerHTML='加载失败'; }
+      } catch(e){ console.error('loadSideBiz error:', e); document.getElementById('sideBizList').innerHTML='加载失败: '+e.message; }
     }
 
     async function loadPositions(){
