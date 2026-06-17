@@ -183,8 +183,8 @@
     <!-- target config -->
     <div class="sec">
       <h3>当期目标配置</h3>
-      <div class="field"><label>目标分数</label><input type="number" id="cfgScore" value="0" min="0" oninput="recalc()" /></div>
-      <div class="field"><label>可接次数</label><input type="number" id="cfgAttempts" value="1" min="1" oninput="recalc()" /></div>
+      <div class="field"><label>目标分数</label><input type="number" id="cfgScore" value="0" min="0" oninput="recalc()" onblur="saveConfig(true)" /></div>
+      <div class="field"><label>可接次数</label><input type="number" id="cfgAttempts" value="1" min="1" oninput="recalc()" onblur="saveConfig(true)" /></div>
       <div class="avg" id="avgDisp">-- 分</div>
       <div class="hint" id="avgHint">💡 需接平均分 ≥ -- 分的任务</div>
     </div>
@@ -340,8 +340,8 @@ function renderRec(avg){
   list.innerHTML = h;
 }
 
-async function saveConfig(){
-  var mid=effId(); if(!mid||!seasons.length){ toast('无当前赛季','err'); return; }
+async function saveConfig(silent){
+  var mid=effId(); if(!mid||!seasons.length){ if(!silent) toast('无当前赛季','err'); return; }
   var sc=parseInt(document.getElementById('cfgScore').value)||0;
   var at=parseInt(document.getElementById('cfgAttempts').value)||1;
   if(at<1) at=1;
@@ -352,8 +352,8 @@ async function saveConfig(){
     var ex=await API.get('member_season_config?member_id=eq.'+mid+'&season_id=eq.'+seasons[0].id+'&select=id&limit=1');
     if(ex&&ex.length) await API.patch('member_season_config?id=eq.'+ex[0].id, payload);
     else await API.post('member_season_config', payload);
-    toast('✅ 配置已保存'); recalc();
-  } catch(e){ console.error(e); toast('保存失败: '+e.message,'err'); }
+    if(!silent) toast('✅ 配置已保存'); recalc();
+  } catch(e){ console.error(e); if(!silent) toast('保存失败: '+e.message,'err'); }
 }
 
 function renderProxy(){
