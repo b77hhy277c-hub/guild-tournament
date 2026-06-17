@@ -114,8 +114,8 @@
     .toast.err { background:var(--danger); color:#fff; }
 
     /* 汉堡按钮（桌面隐藏，移动端显示） */
-    .hamburger-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text); padding: 8px 12px; line-height: 1; min-height: 44px; min-width: 44px; flex-shrink: 0; }
-    .panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 89; }
+    .hamburger-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text); padding: 8px 12px; line-height: 1; min-height: 44px; min-width: 44px; flex-shrink: 0; margin-left: auto; }
+    .panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 89; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
     .back-link { display: inline; }
 
     @media (max-width: 768px) {
@@ -431,10 +431,6 @@ function renderL3(catId, catName){
     if(isOther) h+=' <span class="muted">（非必要不推荐做）</span>';
     h+='</span>';
     h+='<span class="sc">'+score+'分</span>';
-    if(isSkin){
-      var qty = ab.quantity||0;
-      h+='<input type="number" min="0" value="'+qty+'" data-defid="'+t.id+'" onchange="onQty(this)" '+(chk?'':'disabled')+' />';
-    }
     h+='</div>';
   });
   document.getElementById('l3Tasks').innerHTML = h;
@@ -537,20 +533,10 @@ function onToggle(cb){
     }
   }
 
-  // skin qty enable
-  var row=cb.closest('.l3-task'); if(row){ var qi=row.querySelector('input[type=number]'); if(qi){ qi.disabled=!ok; if(ok&&!qi.value)qi.value=1; } }
   updateCnt(); recalc();
   // refresh display
   var nm=document.getElementById('l3Title').textContent;
   renderL3(activeL2, nm);
-}
-
-function onQty(inp){
-  var did=inp.dataset.defid; var v=parseInt(inp.value)||0;
-  if(!abilities[did]) abilities[did]={is_able:false,quantity:0};
-  abilities[did].quantity=v;
-  abilities[did].is_able = v>0;
-  updateCnt(); recalc();
 }
 
 function updateCnt(){
@@ -561,7 +547,7 @@ function updateCnt(){
 // ===== SAVE =====
 async function saveAbilities(){
   var mid=effId(); if(!mid){ toast('未找到成员','err'); return; }
-  var rows=[]; Object.keys(abilities).forEach(function(did){ var a=abilities[did]; rows.push({ member_id:mid, task_definition_id:did, is_able:a.is_able, quantity:a.quantity||0, updated_at:new Date().toISOString() }); });
+  var rows=[]; Object.keys(abilities).forEach(function(did){ var a=abilities[did]; rows.push({ member_id:mid, task_definition_id:did, is_able:a.is_able, updated_at:new Date().toISOString() }); });
   try {
     await API.del('member_task_abilities?member_id=eq.'+mid);
     for(var i=0;i<rows.length;i+=100){ await API.post('member_task_abilities', rows.slice(i,i+100)); }

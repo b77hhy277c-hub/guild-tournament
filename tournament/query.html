@@ -150,8 +150,7 @@
             <th>UID</th>
             <th>等级</th>
             <th>状态</th>
-            <th>皮肤数量</th>
-          </tr>
+                      </tr>
         </thead>
         <tbody id="resultBody"></tbody>
       </table>
@@ -266,13 +265,11 @@ async function doQuery(){
 
   var task = defs.find(function(d){ return d.id===taskId; });
   var taskScore = task ? (task.default_score||0) : 0;
-  var isSkin = task ? task.is_skin : false;
-
   try {
     document.getElementById('emptyHint').style.display = 'none';
 
     // 1. Get abilities for this task
-    var abilities = await API.get('member_task_abilities?task_definition_id=eq.'+taskId+'&is_able=eq.true&select=member_id,quantity');
+    var abilities = await API.get('member_task_abilities?task_definition_id=eq.'+taskId+'&is_able=eq.true&select=member_id');
 
     if(!abilities || abilities.length===0){
       showEmpty('该任务无人可接，请大胆刷新或删除');
@@ -280,8 +277,6 @@ async function doQuery(){
     }
 
     var memberIds = abilities.map(function(a){ return a.member_id; });
-    var qtyMap = {};
-    abilities.forEach(function(a){ qtyMap[a.member_id] = a.quantity||0; });
 
     // 2. Get member details (use in.() for batch)
     var members = [];
@@ -326,16 +321,12 @@ async function doQuery(){
       var canAccept = cfg.can_accept !== false; // default true
       var statusLabel = canAccept ? '可接' : '已满';
       var statusCls = canAccept ? 'badge-ok' : 'badge-full';
-      var qty = qtyMap[m.id] || 0;
-      var qtyStr = isSkin ? String(qty) : '-';
-
       html += '<tr>' +
         '<td>'+(i+1)+'</td>' +
         '<td><strong>'+esc(m.display_name)+'</strong></td>' +
         '<td>'+esc(m.uid)+'</td>' +
         '<td>Lv.'+(m.level||0)+'</td>' +
         '<td><span class="badge '+statusCls+'">'+statusLabel+'</span></td>' +
-        '<td>'+qtyStr+'</td>' +
         '</tr>';
     });
     document.getElementById('resultBody').innerHTML = html;
