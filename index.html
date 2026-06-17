@@ -278,6 +278,16 @@
           <span class="field-label">管理员</span>
           <span class="field-value" id="fiAdmin">--</span>
         </div>
+        <div class="field">
+          <span class="field-label">职务</span>
+          <span class="field-value" id="fiPosition">--</span>
+        </div>
+      </div>
+
+      <!-- 今日副业 -->
+      <div class="sidebar-info" id="sideBizSection">
+        <div class="section-label">📋 今日副业</div>
+        <div id="sideBizList" style="font-size:13px;color:var(--text2);padding:4px 0;">加载中...</div>
       </div>
 
       <!-- 区域三：操作区 -->
@@ -383,6 +393,7 @@
       document.getElementById('fiLevel').textContent = u.level;
       document.getElementById('fiVip').textContent = u.vip_level;
       document.getElementById('fiAdmin').textContent = u.is_admin ? '是' : '否';
+      document.getElementById('fiPosition').textContent = u.position || '成员';
 
       // 管理员入口
       if (u.is_admin) {
@@ -413,6 +424,22 @@
 
       updateSidebar(currentUser);
       loadPositions();
+      loadSideBiz();
+    }
+
+    async function loadSideBiz(){
+      try {
+        var cur = await API.get('side_business_versions?is_current=eq.true&select=id&limit=1');
+        if(!cur||!cur.length){ document.getElementById('sideBizList').innerHTML='暂无数据'; return; }
+        var allocs = await API.get('side_business_allocation?version_id=eq.'+cur[0].id+'&select=business_name,capacity,members&order=sort_order.asc');
+        var myBiz = [];
+        allocs.forEach(function(a){
+          if(a.members && a.members.indexOf(currentUser.display_name)>=0){
+            myBiz.push(a.business_name+' ('+a.capacity+')');
+          }
+        });
+        document.getElementById('sideBizList').innerHTML = myBiz.length>0 ? myBiz.map(function(b){return '<div style="padding:2px 0;">🔹 '+esc(b)+'</div>';}).join('') : '今日无副业安排';
+      } catch(e){ document.getElementById('sideBizList').innerHTML='加载失败'; }
     }
 
     async function loadPositions(){
