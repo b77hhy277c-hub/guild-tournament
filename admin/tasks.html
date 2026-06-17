@@ -56,6 +56,15 @@
     .tree-children { padding-left:28px; }
     .tree-children.collapsed { display:none; }
 
+    @media (max-width: 768px) {
+      .tree-row { padding:10px 8px; min-height:44px; }
+      .tree-toggle { width:32px; font-size:12px; }
+      .tree-name { font-size:13px; }
+      .tree-actions { opacity:1; }
+      .tree-actions .btn { padding:4px 8px; font-size:11px; min-height:32px; }
+      .tree-children { padding-left:16px; }
+    }
+
     /* modal */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
     .modal-overlay.show { display:flex; }
@@ -172,17 +181,15 @@ function renderNode(cat, depth){
   }
 
   // Determine label
-  var icon = isLeaf ? '📋' : '📁';
   var label = cat.name;
   // Check if it's a task-def level (categories that hold tasks, not sub-cats)
   var hasSubCats = ch.length > 0;
-  var displayLabel = label;
+  var label = label;
 
   var html = '<div class="tree-node">';
   html += '<div class="tree-row">';
   html += '<span class="tree-toggle" onclick="toggleNode(this)" data-id="'+cat.id+'">'+(canExpand ? (expandedAll ? '▼' : '▶') : '')+'</span>';
-  html += '<span class="tree-icon">'+icon+'</span>';
-  html += '<span class="tree-name">'+esc(displayLabel)+'<span class="type-tag">'+(isL1?'一级':(hasSubCats?'分类':'分类'))+'</span></span>';
+  html += '<span class="tree-name">'+esc(label)+'<span class="type-tag">'+(isL1?'一级':(hasSubCats?'分类':'分类'))+'</span></span>';
   html += '<span class="tree-actions">';
   html += '<button class="btn btn-s btn-xs" onclick="openAdd(\''+cat.id+'\',\''+esc(cat.name)+'\')">+子级</button>';
   html += '<button class="btn btn-s btn-xs" onclick="openEditCat(\''+cat.id+'\',\''+esc(cat.name)+'\')">✎</button>';
@@ -200,7 +207,7 @@ function renderNode(cat, depth){
   tasks.forEach(function(t){
     html += '<div class="tree-node"><div class="tree-row">';
     html += '<span class="tree-toggle"></span>';
-    html += '<span class="tree-icon">📋</span>';
+    
     html += '<span class="tree-name">'+esc(t.display_name||t.task_name)+'<span class="score">('+(t.default_score||0)+'分)</span><span class="type-tag">任务</span></span>';
     html += '<span class="tree-actions">';
     html += '<button class="btn btn-s btn-xs" onclick="openEditTask(\''+t.id+'\',\''+esc(t.display_name||t.task_name)+'\','+(t.default_score||0)+')">✎</button>';
@@ -237,7 +244,7 @@ function toggleExpand(){
 }
 
 function updateExpandBtn(){
-  document.getElementById('btnExpand').textContent = expandedAll ? '📁 收起全部' : '📂 展开全部';
+  document.getElementById('btnExpand').textContent = expandedAll ? '收起全部' : '展开全部';
 }
 
 // ===== Modals =====
