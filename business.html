@@ -76,6 +76,8 @@
   <div class="info-bar">
     <span id="dateDisplay">📅 --</span>
     <span class="sep">｜</span>
+    <span id="versionDisp">📋 --</span>
+    <span class="sep">｜</span>
     <span id="openTimeDisp">⏰ 开启时间：20:00</span>
     <span id="openTimeEditWrap" style="display:none;">
       <input type="text" id="openTimeInput" style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-family:inherit;text-align:center;" />
@@ -189,6 +191,7 @@ function renderVersionTabs(){
 function renderDate(){
   var now=new Date();
   document.getElementById('dateDisplay').textContent='📅 '+now.getFullYear()+'年'+String(now.getMonth()+1).padStart(2,'0')+'月'+String(now.getDate()).padStart(2,'0')+'日（'+getWeekdayCN(now)+'）';
+  document.getElementById('versionDisp').textContent='📋 '+(currentVersion?currentVersion.version_name:'未知版本');
   var openTime=(currentVersion&&currentVersion.open_time)||'20:00';
   document.getElementById('openTimeDisp').textContent='⏰ 开启时间：'+openTime;
   document.getElementById('btnEditOpenTime').style.display=canManage()?'inline-flex':'none';
