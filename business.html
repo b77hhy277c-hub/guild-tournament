@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>副业查询</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .navbar { display:flex; align-items:center; justify-content:space-between; height:48px; padding:0 20px; border-bottom:1px solid var(--border-l); position:sticky; top:0; background:var(--bg); z-index:10; backdrop-filter:blur(20px); }
+    .navbar a { color:var(--accent); text-decoration:none; font-size:14px; }
+    .navbar .title { font-size:16px; font-weight:600; }
+    .navbar .user { font-size:13px; color:var(--text2); }
+
+    .main { max-width: 720px; margin: 0 auto; padding: 24px; }
+
+    .info-bar { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:16px; font-size:15px; color:var(--text); }
+    .info-bar .sep { color:var(--border); }
+
+    .version-tabs { display:flex; gap:8px; margin-bottom:20px; }
+    .version-tab { padding:8px 20px; border-radius:20px; font-size:14px; font-weight:500; cursor:pointer; border:1.5px solid var(--border); background:var(--bg); color:var(--text); transition:all 0.2s; font-family:inherit; }
+    .version-tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .version-tab:not(.active):hover { border-color:var(--accent); color:var(--accent); }
+
+    .card { background:var(--card); border:1px solid var(--border-l); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:12px 16px; text-align:left; border-bottom:1px solid var(--border-l); font-size:14px; }
+    th { font-size:12px; font-weight:600; color:var(--text2); background:var(--bg2); }
+    tr:hover td { background:var(--hover); }
+    tr:last-child td { border-bottom:none; }
+    .extra-row td { background:var(--bg2); font-weight:500; }
+
+    .btn { display:inline-flex; align-items:center; gap:4px; padding:6px 14px; border-radius:8px; font-size:13px; font-weight:500; font-family:inherit; cursor:pointer; border:none; transition:all 0.2s; }
+    .btn-p { background:var(--accent); color:#fff; }
+    .btn-p:hover { background:var(--accent-h); }
+    .btn-s { background:var(--bg); color:var(--text); border:1px solid var(--border); }
+    .btn-s:hover { background:var(--hover); }
+    .btn-d { background:none; color:var(--danger); }
+    .btn-d:hover { background:rgba(255,59,48,0.06); }
+
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    .modal-overlay.show { display:flex; }
+    .modal { background:var(--card); border-radius:14px; padding:28px; width:420px; max-width:94vw; box-shadow:0 20px 60px rgba(0,0,0,0.25); border:1px solid var(--border-l); }
+    .modal h3 { font-size:18px; font-weight:600; margin-bottom:20px; }
+    .modal .field { margin-bottom:14px; }
+    .modal .field label { display:block; font-size:13px; color:var(--text2); margin-bottom:4px; }
+    .modal .field input { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-family:inherit; background:var(--bg); color:var(--text); outline:none; }
+    .modal .field input:focus { border-color:var(--accent); }
+    .modal .btn-row { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+
+    .footer { text-align:center; padding:20px 0; font-size:12px; color:var(--text3); }
+
+    .empty { text-align:center; padding:32px; color:var(--text2); font-size:14px; }
+
+    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); padding:10px 20px; border-radius:8px; font-size:14px; font-weight:500; z-index:200; opacity:0; pointer-events:none; transition:opacity 0.3s; box-shadow:var(--shadow); }
+    .toast.show { opacity:1; }
+    .toast.ok { background:#30d158; color:#fff; }
+    .toast.err { background:var(--danger); color:#fff; }
+
+    @media (max-width:600px) { .info-bar { font-size:14px; } }
+  </style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<nav class="navbar">
+  <a href="index.html">← 返回主界面</a>
+  <span class="title">🔧 副业查询</span>
+  <span class="user" id="navUser">--</span>
+</nav>
+
+<div class="main">
+  <!-- Version tabs (admin only) -->
+  <div class="version-tabs" id="versionTabs" style="display:none;"></div>
+
+  <!-- Info bar -->
+  <div class="info-bar">
+    <span id="dateDisplay">📅 --</span>
+    <span class="sep">｜</span>
+    <span>⏰ 开启时间：20:00</span>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>副业名称</th><th>能力额度</th><th>参与成员</th>
+          <th style="width:60px;" id="thActions"></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="emptyHint" style="display:none;">当前版本暂无分配方案</div>
+  </div>
+
+  <!-- Add button (admin only) -->
+  <div style="margin-top:14px;" id="addBtnWrap" class="version-tabs"></div>
+
+  <div class="footer" id="updateTime">数据更新时间：--</div>
+</div>
+
+<!-- Edit/Add Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3 id="modalTitle">编辑副业分配</h3>
+    <div class="field">
+      <label>副业名称</label>
+      <input type="text" id="mName" />
+    </div>
+    <div class="field">
+      <label>能力额度（人数）</label>
+      <input type="number" id="mCap" min="1" value="1" />
+    </div>
+    <div class="field">
+      <label>参与成员（逗号分隔）</label>
+      <input type="text" id="mMembers" placeholder="张三,李四,王五" />
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-d" id="btnDelete" onclick="deleteRow()">删除</button>
+      <button class="btn btn-s" onclick="closeModal()">取消</button>
+      <button class="btn btn-p" onclick="saveRow()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API={
+  h:function(){return{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json'};},
+  get:async function(p){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()});if(!r.ok)throw Error(await r.text());return r.json();},
+  post:async function(p,b){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'Prefer':'return=representation'},this.h()),body:JSON.stringify(b)});if(!r.ok)throw Error(await r.text());return r.json();},
+  patch:async function(p,b){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'PATCH',headers:this.h(),body:JSON.stringify(b)});var t=await r.text();if(!r.ok)throw Error(t);return t?JSON.parse(t):null;},
+  del:async function(p){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'DELETE',headers:this.h()});if(!r.ok)throw Error(await r.text());},
+};
+
+var curUser=null,versions=[],currentVersion=null,allocations=[];
+var editId=null;
+
+function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},2500);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function getUser(){
+  var s=localStorage.getItem('guild_current_user');
+  if(!s){window.location.href='login.html';return null;}
+  try{var u=JSON.parse(s);if(!u.id)throw Error();return u;}catch(_){localStorage.removeItem('guild_current_user');window.location.href='login.html';return null;}
+}
+
+function canManage(){return curUser&&(curUser.is_admin||curUser.is_task_admin);}
+
+// ===== Format weekday =====
+function getWeekdayCN(d){
+  var days=['日','一','二','三','四','五','六'];
+  return '周'+days[d.getDay()];
+}
+
+// ===== Load =====
+async function loadData(){
+  try {
+    versions=await API.get('side_business_versions?select=*&order=created_at.asc');
+    if(versions.length===0){ document.getElementById('tbody').innerHTML='<tr><td colspan="4" class="empty">暂无副业版本数据，请联系管理员</td></tr>';return; }
+
+    currentVersion=versions.find(function(v){return v.is_current;})||versions[0];
+    allocations=await API.get('side_business_allocation?version_id=eq.'+currentVersion.id+'&select=*&order=sort_order.asc');
+
+    renderVersionTabs();
+    renderDate();
+    renderTable();
+    updateTime();
+  } catch(e){ console.error(e); toast('加载失败: '+e.message,'err'); }
+}
+
+function renderVersionTabs(){
+  if(!canManage()) return;
+  document.getElementById('versionTabs').style.display='flex';
+  var h='';
+  versions.forEach(function(v){
+    h+='<button class="version-tab'+(v.id===currentVersion.id?' active':'')+'" onclick="switchVersion(\''+v.id+'\',\''+esc(v.version_name)+'\')">'+esc(v.version_name)+'</button>';
+  });
+  document.getElementById('versionTabs').innerHTML=h;
+}
+
+function renderDate(){
+  var now=new Date();
+  document.getElementById('dateDisplay').textContent='📅 '+now.getFullYear()+'年'+String(now.getMonth()+1).padStart(2,'0')+'月'+String(now.getDate()).padStart(2,'0')+'日（'+getWeekdayCN(now)+'）';
+}
+
+function renderTable(){
+  var showActions=canManage();
+  document.getElementById('thActions').innerHTML=showActions?'操作':'';
+  var html='';
+  if(allocations.length===0){
+    html='<tr><td colspan="4" class="empty">当前版本暂无分配方案</td></tr>';
+  } else {
+    allocations.forEach(function(a){
+      html+='<tr>'+
+        '<td>'+esc(a.business_name)+'</td>'+
+        '<td>'+(a.capacity||0)+'人</td>'+
+        '<td>'+esc(a.members||'')+'</td>'+
+        (showActions?'<td><button class="btn btn-s" style="padding:3px 10px;font-size:12px;" onclick="openEdit(\''+a.id+'\')">编辑</button></td>':'')+
+        '</tr>';
+    });
+  }
+  // Extra time row
+  var extraTime=currentVersion? (currentVersion.extra_time||'22:05') : '22:05';
+  html+='<tr class="extra-row">'+
+    '<td colspan="2">⏱️ 补副业时间：'+esc(extraTime)+'</td>'+
+    '<td></td>'+
+    (showActions?'<td><button class="btn btn-s" style="padding:3px 10px;font-size:12px;" onclick="editExtraTime()">编辑</button></td>':'')+
+    '</tr>';
+
+  document.getElementById('tbody').innerHTML=html;
+
+  // Add button
+  if(showActions){
+    document.getElementById('addBtnWrap').style.display='flex';
+    document.getElementById('addBtnWrap').innerHTML='<button class="btn btn-p" onclick="openAdd()">＋ 添加副业</button>';
+  }
+}
+
+// ===== Version switch =====
+async function switchVersion(id, name){
+  if(!confirm('确认切换到【'+name+'】？')) return;
+  try {
+    // Unset all, set one
+    for(var i=0;i<versions.length;i++){
+      await API.patch('side_business_versions?id=eq.'+versions[i].id,{is_current:versions[i].id===id});
+    }
+    toast('✅ 已切换到 '+name);
+    await loadData();
+  } catch(e){ console.error(e); toast('切换失败: '+e.message,'err'); }
+}
+
+// ===== Edit/Add =====
+function openEdit(id){
+  var a=allocations.find(function(x){return x.id===id;});
+  if(!a) return;
+  editId=id;
+  document.getElementById('modalTitle').textContent='编辑副业分配';
+  document.getElementById('mName').value=a.business_name||'';
+  document.getElementById('mCap').value=a.capacity||1;
+  document.getElementById('mMembers').value=a.members||'';
+  document.getElementById('btnDelete').style.display='inline-flex';
+  document.getElementById('editModal').classList.add('show');
+}
+
+function openAdd(){
+  editId=null;
+  document.getElementById('modalTitle').textContent='添加副业';
+  document.getElementById('mName').value='';
+  document.getElementById('mCap').value=1;
+  document.getElementById('mMembers').value='';
+  document.getElementById('btnDelete').style.display='none';
+  document.getElementById('editModal').classList.add('show');
+}
+
+function closeModal(){ document.getElementById('editModal').classList.remove('show'); }
+
+async function saveRow(){
+  var name=document.getElementById('mName').value.trim();
+  var cap=parseInt(document.getElementById('mCap').value)||1;
+  var members=document.getElementById('mMembers').value.trim();
+  if(!name){ toast('请输入副业名称','err'); return; }
+
+  try {
+    if(editId){
+      await API.patch('side_business_allocation?id=eq.'+editId,{business_name:name,capacity:cap,members:members,updated_at:new Date().toISOString()});
+    } else {
+      var order=allocations.length+1;
+      await API.post('side_business_allocation',{version_id:currentVersion.id,business_name:name,capacity:cap,members:members,sort_order:order});
+    }
+    toast('✅ 已保存');
+    closeModal();
+    allocations=await API.get('side_business_allocation?version_id=eq.'+currentVersion.id+'&select=*&order=sort_order.asc');
+    renderTable();
+    updateTime();
+  } catch(e){ console.error(e); toast('保存失败: '+e.message,'err'); }
+}
+
+async function deleteRow(){
+  if(!editId) return;
+  if(!confirm('确认删除此副业分配？')) return;
+  try {
+    await API.del('side_business_allocation?id=eq.'+editId);
+    toast('✅ 已删除');
+    closeModal();
+    allocations=await API.get('side_business_allocation?version_id=eq.'+currentVersion.id+'&select=*&order=sort_order.asc');
+    renderTable();
+    updateTime();
+  } catch(e){ console.error(e); toast('删除失败: '+e.message,'err'); }
+}
+
+// ===== Extra time =====
+function editExtraTime(){
+  var t=(currentVersion&&currentVersion.extra_time)||'22:05';
+  var newTime=prompt('输入补副业时间（如 22:05）：',t);
+  if(!newTime||newTime.trim()===t) return;
+  (async function(){
+    try {
+      await API.patch('side_business_versions?id=eq.'+currentVersion.id,{extra_time:newTime.trim()});
+      currentVersion.extra_time=newTime.trim();
+      toast('✅ 已更新');
+      renderTable();
+      updateTime();
+    } catch(e){ console.error(e); toast('更新失败: '+e.message,'err'); }
+  })();
+}
+
+// ===== Update time =====
+function updateTime(){
+  var now=new Date();
+  document.getElementById('updateTime').textContent='数据更新时间：'+now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+}
+
+// ===== Init =====
+async function init(){
+  curUser=getUser(); if(!curUser) return;
+  document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
+  await loadData();
+}
+init();
+</script>
+</body>
+</html>
