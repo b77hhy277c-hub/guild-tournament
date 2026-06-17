@@ -572,7 +572,7 @@ async function saveAbilities(){
   try {
     await API.del('member_task_abilities?member_id=eq.'+mid);
     for(var i=0;i<rows.length;i+=100){ await API.post('member_task_abilities', rows.slice(i,i+100)); }
-    toast('✅ 能力已保存'); await loadAll();
+    toast('✅ 任务已保存'); await loadAll();
     if(activeL2){ var nm=document.getElementById('l3Title').textContent; renderL3(activeL2,nm); }
   } catch(e){ console.error(e); toast('保存失败: '+e.message,'err'); }
 }
