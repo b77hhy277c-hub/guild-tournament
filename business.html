@@ -295,35 +295,33 @@ async function deleteRow(){
 }
 
 // ===== Open time =====
-function editOpenTime(){
-  var t=(currentVersion&&currentVersion.open_time)||'20:00';
+async function editOpenTime(){
+  if(!currentVersion){ toast('未加载版本数据','err'); return; }
+  var t=currentVersion.open_time||'20:00';
   var newTime=prompt('输入副业开启时间（如 20:00）：',t);
   if(!newTime||newTime.trim()===t) return;
-  (async function(){
-    try {
-      await API.patch('side_business_versions?id=eq.'+currentVersion.id,{open_time:newTime.trim()});
-      currentVersion.open_time=newTime.trim();
-      toast('✅ 已更新');
-      renderDate();
-      updateTime();
-    } catch(e){ console.error(e); toast('更新失败: '+e.message,'err'); }
-  })();
+  try {
+    await API.patch('side_business_versions?id=eq.'+currentVersion.id,{open_time:newTime.trim()});
+    currentVersion.open_time=newTime.trim();
+    toast('✅ 已更新');
+    renderDate();
+    updateTime();
+  } catch(e){ console.error(e); toast('更新失败: '+e.message,'err'); }
 }
 
 // ===== Extra time =====
-function editExtraTime(){
-  var t=(currentVersion&&currentVersion.extra_time)||'22:05';
+async function editExtraTime(){
+  if(!currentVersion){ toast('未加载版本数据','err'); return; }
+  var t=currentVersion.extra_time||'22:05';
   var newTime=prompt('输入补副业时间（如 22:05）：',t);
   if(!newTime||newTime.trim()===t) return;
-  (async function(){
-    try {
-      await API.patch('side_business_versions?id=eq.'+currentVersion.id,{extra_time:newTime.trim()});
-      currentVersion.extra_time=newTime.trim();
-      toast('✅ 已更新');
-      renderTable();
-      updateTime();
-    } catch(e){ console.error(e); toast('更新失败: '+e.message,'err'); }
-  })();
+  try {
+    await API.patch('side_business_versions?id=eq.'+currentVersion.id,{extra_time:newTime.trim()});
+    currentVersion.extra_time=newTime.trim();
+    toast('✅ 已更新');
+    renderTable();
+    updateTime();
+  } catch(e){ console.error(e); toast('更新失败: '+e.message,'err'); }
 }
 
 // ===== Update time =====
