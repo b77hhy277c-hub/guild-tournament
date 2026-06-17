@@ -416,6 +416,7 @@
           currentUser.level = db.level;
           currentUser.vip_level = db.vip_level;
           currentUser.is_admin = db.is_admin;
+          currentUser.position = db.position;
           localStorage.setItem('guild_current_user', JSON.stringify(currentUser));
         }
       } catch (err) {
@@ -434,7 +435,11 @@
         var allocs = await API.get('side_business_allocation?version_id=eq.'+cur[0].id+'&select=business_name,capacity,members&order=sort_order.asc');
         var myBiz = [];
         allocs.forEach(function(a){
-          if(a.members && a.members.indexOf(currentUser.display_name)>=0){
+          var members=a.members||'';
+          // match by display_name or by position keyword (会长/副会长)
+          var matchByName=members.indexOf(currentUser.display_name)>=0;
+          var matchByPos=(currentUser.position==='会长'&&members.indexOf('会长')>=0)||(currentUser.position==='副会长'&&members.indexOf('副会长')>=0);
+          if(matchByName||matchByPos){
             myBiz.push(a.business_name+' ('+a.capacity+')');
           }
         });
