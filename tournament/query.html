@@ -300,8 +300,8 @@ async function doQuery(){
         // No config → include by default
         return true;
       }
-      // Has config → avg_score must be <= task score
-      return cfg.avg_score <= taskScore;
+      // Has config → avg_score must be <= task score + 2
+      return cfg.avg_score <= (taskScore + 2);
     });
 
     if(filtered.length===0){

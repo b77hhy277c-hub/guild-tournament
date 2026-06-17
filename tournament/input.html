@@ -331,11 +331,12 @@ function renderRec(avg){
   });
   items.sort(function(a,b){return b.score-a.score;});
   if(!items.length){ list.innerHTML = '<div style="font-size:12px;color:var(--text3);">暂无已录入的可接任务</div>'; return; }
-  var hi=items.filter(function(i){return i.score>=avg;}), lo=items.filter(function(i){return i.score<avg;});
+  var threshold=Math.max(0, avg-2);
+  var hi=items.filter(function(i){return i.score>=threshold;}), lo=items.filter(function(i){return i.score<threshold;});
   var h='';
-  if(!hi.length) h+='<div style="font-size:12px;color:var(--danger);margin-bottom:6px;">⚠️ 无达标任务</div>';
+  if(!hi.length) h+='<div style="font-size:12px;color:var(--danger);margin-bottom:6px;">⚠️ 无达标任务（均分-2范围内）</div>';
   else hi.forEach(function(i){ h+='<div class="rec-item"><span><span style="color:var(--text3);font-size:11px;">'+esc(i.path)+' › </span>'+esc(i.name)+'</span><span class="sc">'+i.score+'分</span></div>'; });
-  if(lo.length){ h+='<div style="font-size:10px;color:var(--text3);margin:6px 0 2px;">其他（低于均分）</div>'; lo.forEach(function(i){ h+='<div class="rec-item dim"><span><span style="color:var(--text3);font-size:11px;">'+esc(i.path)+' › </span>'+esc(i.name)+'</span><span class="sc">'+i.score+'分</span></div>'; }); }
+  if(lo.length){ h+='<div style="font-size:10px;color:var(--text3);margin:6px 0 2px;">其他（低于均分-2范围）</div>'; lo.forEach(function(i){ h+='<div class="rec-item dim"><span><span style="color:var(--text3);font-size:11px;">'+esc(i.path)+' › </span>'+esc(i.name)+'</span><span class="sc">'+i.score+'分</span></div>'; }); }
   list.innerHTML = h;
 }
 
@@ -458,7 +459,7 @@ function renderL3(catId, catName){
 }
 
 // ===== Cascade Logic =====
-var LEVEL_CODES = ['own','lv500','lv600','lv700','lv750'];
+var LEVEL_CODES = ['own','lv400','lv500','lv600','lv700','lv750'];
 var AWAKEN_CODES = ['awaken1','awaken2'];
 
 // Find a def by task_code within the same category
