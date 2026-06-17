@@ -198,7 +198,7 @@
         <table>
           <thead>
             <tr>
-              <th>昵称</th><th>UID</th><th>满赞</th><th>等级</th><th>VIP</th>
+              <th>昵称</th><th>UID</th><th>职务</th><th>满赞</th><th>等级</th><th>VIP</th>
               <th>密码状态</th><th>管理员</th><th>操作</th>
             </tr>
           </thead>
@@ -308,6 +308,11 @@
         html += '<tr>' +
           '<td>' + esc(m.display_name) + '</td>' +
           '<td><span class="uid-cell" onclick="editUid(\'' + m.id + '\',\'' + esc(m.uid) + '\')" title="点击修改UID" style="cursor:pointer;border-bottom:1px dashed var(--border);">' + esc(m.uid) + '</span></td>' +
+          '<td><select onchange="updatePosition(\'' + m.id + '\',this.value)" style="padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:13px;">' +
+            '<option value="会长" ' + (m.position==='会长'?'selected':'') + '>会长</option>' +
+            '<option value="副会长" ' + (m.position==='副会长'?'selected':'') + '>副会长</option>' +
+            '<option value="成员" ' + (!m.position||m.position==='成员'?'selected':'') + '>成员</option>' +
+          '</select></td>' +
           '<td><span class="badge ' + (m.is_full_like ? 'badge-green' : 'badge-gray') + '">' +
             (m.is_full_like ? '是' : '否') + '</span></td>' +
           '<td>' + m.level + '</td>' +
@@ -319,6 +324,16 @@
           '</tr>';
       });
       document.getElementById('memberTableBody').innerHTML = html || '<tr><td colspan="8" style="text-align:center;color:var(--text-secondary)">暂无成员</td></tr>';
+    }
+
+    async function updatePosition(memberId, newPos) {
+      try {
+        await API.patch('members?id=eq.' + memberId, { position: newPos });
+        toast('✅ 职务已更新');
+        await loadMembers();
+      } catch (err) {
+        toast('更新失败: ' + (err.message || ''), 'error');
+      }
     }
 
     async function editUid(memberId, oldUid) {
