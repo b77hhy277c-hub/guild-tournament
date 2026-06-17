@@ -6,27 +6,128 @@
   <title>点赞指南</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .topbar { display:flex; align-items:center; gap:16px; padding:14px 20px; border-bottom:1px solid var(--border-l); position:sticky; top:0; background:var(--bg); z-index:10; backdrop-filter:blur(20px); }
-    .topbar a { color:var(--accent); text-decoration:none; font-size:14px; }
-    .topbar h1 { font-size:18px; font-weight:600; }
-    .main { max-width:720px; margin:0 auto; padding:40px 24px; text-align:center; }
-    .main .icon { font-size:64px; margin-bottom:20px; }
-    .main h2 { font-size:22px; font-weight:600; margin-bottom:8px; color:var(--text); }
-    .main p { font-size:15px; color:var(--text2); }
+    .navbar { display:flex; align-items:center; justify-content:space-between; height:48px; padding:0 20px; border-bottom:1px solid var(--border-l); position:sticky; top:0; background:var(--bg); z-index:10; backdrop-filter:blur(20px); }
+    .navbar a { color:var(--accent); text-decoration:none; font-size:14px; }
+    .navbar .title { font-size:16px; font-weight:600; }
+    .navbar .user { font-size:13px; color:var(--text2); }
+
+    .main { max-width: 800px; margin: 0 auto; padding: 28px 24px; }
+
+    .guide-msg { text-align:center; font-size:16px; font-weight:500; color:var(--text); margin-bottom:28px; }
+
+    .columns { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    @media (max-width:600px) { .columns { grid-template-columns:1fr; } }
+
+    .col {
+      background:var(--card); border:1px solid var(--border-l);
+      border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden;
+    }
+    .col h2 { padding:16px 20px; font-size:16px; font-weight:600; border-bottom:1px solid var(--border-l); }
+    .col .count { color:var(--text2); font-weight:400; }
+
+    .member-list { padding:8px 0; }
+    .member-row {
+      display:flex; align-items:center; gap:10px;
+      padding:10px 20px; border-bottom:1px solid var(--border-l);
+      font-size:15px; transition:background 0.1s;
+    }
+    .member-row:last-child { border-bottom:none; }
+    .member-row:hover { background:var(--hover); }
+    .dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .dot-green { background:#30d158; }
+    .dot-gray { background:var(--border); }
+
+    .empty-msg { padding:20px; text-align:center; color:var(--text2); font-size:14px; }
+
+    .footer { text-align:center; padding:20px 0 40px; }
+    .footer .update-time { font-size:12px; color:var(--text3); }
+    .btn { display:inline-flex; align-items:center; gap:4px; padding:7px 16px; border-radius:8px; font-size:13px; font-weight:500; font-family:inherit; cursor:pointer; border:1px solid var(--border); background:var(--bg); color:var(--text); transition:all 0.2s; margin-top:8px; }
+    .btn:hover { background:var(--hover); }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <a href="index.html">← 返回主界面</a>
-    <h1>👍 点赞指南</h1>
+
+<nav class="navbar">
+  <a href="index.html">← 返回主界面</a>
+  <span class="title">👍 点赞指南</span>
+  <span class="user" id="navUser">--</span>
+</nav>
+
+<div class="main">
+  <div class="guide-msg">没满赞的伙伴点个赞吧！</div>
+
+  <div class="columns">
+    <!-- 满赞 -->
+    <div class="col">
+      <h2>✅ 满赞 <span class="count" id="fullCount">(0人)</span></h2>
+      <div class="member-list" id="fullList"></div>
+    </div>
+
+    <!-- 无满赞 -->
+    <div class="col">
+      <h2>⭕ 无满赞 <span class="count" id="notFullCount">(0人)</span></h2>
+      <div class="member-list" id="notFullList"></div>
+    </div>
   </div>
-  <div class="main">
-    <div class="icon">👍</div>
-    <h2>功能开发中</h2>
-    <p>该给谁点，一目了然 — 敬请期待</p>
+
+  <div class="footer">
+    <div class="update-time" id="updateTime">数据更新时间：--</div>
+    <button class="btn" onclick="loadData()">🔄 刷新</button>
   </div>
-  <script>
-    if(!localStorage.getItem('guild_current_user')) window.location.href='login.html';
-  </script>
+</div>
+
+<script>
+var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API={
+  h:function(){return{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};},
+  get:async function(p){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()});if(!r.ok)throw Error(await r.text());return r.json();},
+};
+
+function getUser(){
+  var s=localStorage.getItem('guild_current_user');
+  if(!s){window.location.href='login.html';return null;}
+  try{var u=JSON.parse(s);if(!u.id)throw Error();return u;}catch(_){localStorage.removeItem('guild_current_user');window.location.href='login.html';return null;}
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+async function loadData(){
+  try {
+    var data=await API.get('members?select=display_name,is_full_like&order=display_name.asc');
+
+    var full=[], notFull=[];
+    data.forEach(function(m){
+      if(m.is_full_like) full.push(m.display_name);
+      else notFull.push(m.display_name);
+    });
+
+    // Render full list
+    document.getElementById('fullCount').textContent='('+full.length+'人)';
+    var fh='';
+    if(full.length===0) fh='<div class="empty-msg">暂无成员满赞</div>';
+    else full.forEach(function(n){ fh+='<div class="member-row"><span class="dot dot-green"></span>'+esc(n)+'</div>'; });
+    document.getElementById('fullList').innerHTML=fh;
+
+    // Render not-full list
+    document.getElementById('notFullCount').textContent='('+notFull.length+'人)';
+    var nh='';
+    if(notFull.length===0) nh='<div class="empty-msg">🎉 所有成员都有满赞！</div>';
+    else notFull.forEach(function(n){ nh+='<div class="member-row"><span class="dot dot-gray"></span>'+esc(n)+'</div>'; });
+    document.getElementById('notFullList').innerHTML=nh;
+
+    // Update time
+    var now=new Date();
+    document.getElementById('updateTime').textContent='数据更新时间：'+now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  } catch(e){ console.error(e); }
+}
+
+async function init(){
+  var u=getUser(); if(!u) return;
+  document.getElementById('navUser').textContent=u.display_name||u.uid;
+  await loadData();
+}
+init();
+</script>
 </body>
 </html>
