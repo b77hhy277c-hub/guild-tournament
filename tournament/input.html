@@ -436,12 +436,11 @@ function selectL2(catId, catName){
 
 function renderL3Grid(items, parentName){
   document.getElementById('l3Area').style.display='block';
-  document.getElementById('l3Title').textContent = parentName;
+  document.getElementById('l3Title').textContent = parentName + '（点击选择）';
   var h='<div class="l2-grid">';
   items.forEach(function(it){ h+='<div class="l2-item" data-id="'+it.id+'" onclick="clickL3(\''+it.id+'\',\''+esc(it.name)+'\')">'+esc(it.name)+'</div>'; });
   h+='</div>';
   document.getElementById('l3Tasks').innerHTML = h;
-  if(items.length>0) clickL3(items[0].id, items[0].name);
   updateCnt();
 }
 
