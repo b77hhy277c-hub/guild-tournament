@@ -60,6 +60,7 @@
     /* checkbox list */
     #mMembersCheckboxes label { display:flex; align-items:center; gap:6px; padding:3px 0; font-size:14px; cursor:pointer; color:var(--text); }
     #mMembersCheckboxes label.strong { font-weight:500; }
+    #mMembersCheckboxes label span { color:var(--text); }
 
     @media (max-width:600px) { .info-bar { font-size:14px; } }
   </style>
@@ -258,14 +259,15 @@ function popCheckboxes(selected){
   var fz=allMembers.filter(function(m){return m.position==='副会长';}).map(function(m){return m.display_name;}).join('、')||'无';
   var html='';
   // 会长/副会长单独选项
-  html+='<label class="strong"><input type="checkbox" value="会长" '+(names.indexOf('会长')>=0?'checked':'')+' />会长（'+esc(hz)+'）</label>';
-  html+='<label class="strong"><input type="checkbox" value="副会长" '+(names.indexOf('副会长')>=0?'checked':'')+' />副会长（'+esc(fz)+'）</label>';
+  html+='<label class="strong"><input type="checkbox" value="会长" '+(names.indexOf('会长')>=0?'checked':'')+' /><span>会长（'+esc(hz)+'）</span></label>';
+  html+='<label class="strong"><input type="checkbox" value="副会长" '+(names.indexOf('副会长')>=0?'checked':'')+' /><span>副会长（'+esc(fz)+'）</span></label>';
   html+='<div style="border-top:1px solid var(--border-l);margin:4px 0;"></div>';
   allMembers.forEach(function(m){
     var checked=names.indexOf(m.display_name)>=0?'checked':'';
-    html+='<label><input type="checkbox" value="'+esc(m.display_name)+'" '+checked+' />'+esc(m.display_name)+'</label>';
+    html+='<label><input type="checkbox" value="'+esc(m.display_name)+'" '+checked+' /><span>'+esc(m.display_name)+'</span></label>';
   });
   document.getElementById('mMembersCheckboxes').innerHTML=html;
+  console.log('popCheckboxes rendered',allMembers.length,'members');
 }
 
 function getCheckedMembers(){
