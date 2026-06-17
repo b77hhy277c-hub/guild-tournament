@@ -234,27 +234,34 @@ function getUser(){
 async function loadAll(){
   try {
     var mid = effId();
-    cats = await API.get('task_categories?select=*&order=sort_order.asc');
-    defs = await API.get('task_definitions?select=*&order=sort_order.asc');
-    var sd = await API.get('seasons?is_current=eq.true&select=*&limit=1'); seasons = sd || [];
+
+    // 并行：分类、任务定义、赛季、管理员成员列表同时请求
+    var parallel = [API.get('task_categories?select=*&order=sort_order.asc'), API.get('task_definitions?select=*&order=sort_order.asc'), API.get('seasons?is_current=eq.true&select=*&limit=1')];
+    if(curUser && curUser.is_admin) parallel.push(API.get('members?select=id,display_name,uid&order=display_name.asc'));
+
+    var results = await Promise.all(parallel);
+    cats = results[0]; defs = results[1];
+    seasons = results[2] || [];
+    var allMembersData = results[3] || null;
+
     if(mid){
-      var ad = await API.get('member_task_abilities?member_id=eq.'+mid+'&select=*');
+      // 并行：成员能力 + 赛季配置
+      var memberParallel = [API.get('member_task_abilities?member_id=eq.'+mid+'&select=*')];
+      if(seasons.length>0) memberParallel.push(API.get('member_season_config?member_id=eq.'+mid+'&season_id=eq.'+seasons[0].id+'&select=*&limit=1'));
+
+      var memberResults = await Promise.all(memberParallel);
+      var ad = memberResults[0];
       abilities = {}; (ad||[]).forEach(function(a){ abilities[a.task_definition_id] = { is_able: a.is_able, quantity: a.quantity || 0 }; });
-      if(seasons.length>0){
-        var cd = await API.get('member_season_config?member_id=eq.'+mid+'&season_id=eq.'+seasons[0].id+'&select=*&limit=1');
-        if(cd && cd.length>0){
-          var c = cd[0];
-          document.getElementById('cfgScore').value = c.target_score || 0;
-          document.getElementById('cfgAttempts').value = c.available_attempts || 1;
-          document.getElementById('canAcceptToggle').checked = c.can_accept !== false;
-          onCanAcceptToggle();
-        }
+
+      if(seasons.length>0 && memberResults[1] && memberResults[1].length>0){
+        var c = memberResults[1][0];
+        document.getElementById('cfgScore').value = c.target_score || 0;
+        document.getElementById('cfgAttempts').value = c.available_attempts || 1;
+        document.getElementById('canAcceptToggle').checked = c.can_accept !== false;
+        onCanAcceptToggle();
       }
     }
-    if(curUser && curUser.is_admin){
-      allMembers = await API.get('members?select=id,display_name,uid&order=display_name.asc');
-      renderProxy();
-    }
+    if(allMembersData){ allMembers = allMembersData; renderProxy(); }
     recalc();
     renderL1();
     updateLeft();
