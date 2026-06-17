@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../style.css" />
   <title>我的竞标赛</title>
   <style>
     :root {
@@ -112,14 +113,36 @@
     .toast.ok { background:#30d158; color:#fff; }
     .toast.err { background:var(--danger); color:#fff; }
 
-    @media (max-width:768px) { .left { width:260px; } .l2-grid { grid-template-columns:repeat(auto-fill,minmax(80px,1fr)); } }
+    /* 汉堡按钮（桌面隐藏，移动端显示） */
+    .hamburger-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text); padding: 8px 12px; line-height: 1; min-height: 44px; min-width: 44px; flex-shrink: 0; }
+    .panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 89; }
+    .back-link { display: inline; }
+
+    @media (max-width: 768px) {
+      .hamburger-btn { display: flex; align-items: center; justify-content: center; }
+      .back-link { display: none; }
+      .left {
+        position: fixed; top: 0; left: 0; bottom: 0; z-index: 95;
+        transform: translateX(-100%); transition: transform 0.3s ease;
+        width: 280px !important; padding-top: 56px;
+      }
+      .left.open { transform: translateX(0); }
+      .panel-overlay.show { display: block; }
+      .right { margin-left: 0 !important; }
+      .l2-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+      .l3-area { max-height: 35vh; }
+      .navbar .title { font-size: 13px; }
+    }
   </style>
 </head>
 <body>
+
+<div class="panel-overlay" id="panelOverlay" onclick="togglePanel()"></div>
 <div class="toast" id="toast"></div>
 
 <nav class="navbar">
-  <a href="index.html">← 返回竞标赛首页</a>
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="togglePanel()" aria-label="菜单">☰</button>
+  <a href="index.html" class="back-link">← 返回</a>
   <span class="title">📝 我的竞标赛</span>
   <span class="user" id="navUser">--</span>
 </nav>
@@ -201,6 +224,7 @@ var activeL1 = null, activeAttr = null, activeL2 = null;
 function effId(){ return proxyId || (curUser ? curUser.id : null); }
 function toast(m,t){ var e=document.getElementById('toast'); e.textContent=m; e.className='toast '+(t||'ok')+' show'; clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove('show');},2500); }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function togglePanel(){ document.querySelector('.left').classList.toggle('open'); document.getElementById('panelOverlay').classList.toggle('show'); var b=document.getElementById('hamburgerBtn'); b.textContent=document.querySelector('.left').classList.contains('open')?'✕':'☰'; }
 
 function getUser(){
   var s=localStorage.getItem('guild_current_user');

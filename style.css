@@ -1,0 +1,133 @@
+/* ==========================================
+   公会竞标赛管理工具 - 共享样式
+   Apple Sequoia 设计语言 · 响应式移动端适配
+   ========================================== */
+
+/* ── CSS 变量 ── */
+:root {
+  --bg: #ffffff; --bg2: #f5f5f7; --card: #ffffff;
+  --hover: rgba(0,0,0,0.04); --active: rgba(0,122,255,0.08);
+  --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2;
+  --accent: #007AFF; --accent-h: #0062d1; --danger: #ff3b30;
+  --border: #d2d2d7; --border-l: #e5e5ea;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08); --r: 12px;
+  --toggle-off: #e5e5ea;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000; --bg2: #1c1c1e; --card: #1c1c1e;
+    --hover: rgba(255,255,255,0.08); --active: rgba(10,132,255,0.15);
+    --text: #f5f5f7; --text2: #8e8e93; --text3: #636366;
+    --accent: #0A84FF; --accent-h: #409cff; --danger: #ff453a;
+    --border: #38383a; --border-l: #2c2c2e;
+    --shadow: 0 1px 3px rgba(255,255,255,0.05); --toggle-off: #3a3a3c;
+  }
+}
+
+/* ── 全局重置 ── */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+  font-size: 15px; color: var(--text); background: var(--bg);
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh; overflow-x: hidden;
+}
+
+/* ── 移动端基础优化 ── */
+
+/* 确保所有按钮/链接至少 44px 触控区域 */
+@media (max-width: 768px) {
+  .btn, button, [role="button"], nav a, .nav-item, .l2-item, .attr-tag, .l1-tab {
+    min-height: 44px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  /* 表格横向滚动 */
+  table { min-width: 600px; }
+  .table-wrap, div:has(> table) { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* 输入框字体不小于 16px 防止 iOS 缩放 */
+  input, select, textarea { font-size: 16px !important; }
+
+  /* 卡片单列 */
+  .card-grid { grid-template-columns: 1fr !important; }
+
+  /* 下拉框全宽 */
+  .selects { flex-direction: column !important; }
+  .selects .select-group { min-width: 100% !important; }
+
+  /* 筛选工具栏换行 */
+  .filters, .toolbar { flex-direction: column; }
+  .filters input, .filters select, .toolbar input, .toolbar select { width: 100% !important; }
+
+  /* 表单行堆叠 */
+  .field-row { flex-direction: column !important; }
+
+  /* 侧边栏内容区全宽 */
+  .content, .main { margin-left: 0 !important; padding: 16px !important; max-width: 100% !important; }
+
+  /* 弹窗全屏 */
+  .modal { width: 100% !important; max-width: 100vw !important; border-radius: 16px 16px 0 0 !important; max-height: 90vh !important; }
+
+  /* 导航栏 */
+  .navbar { padding: 0 12px; }
+  .navbar .title { font-size: 15px; }
+}
+
+/* ── 汉堡菜单通用样式 ── */
+.hamburger-btn {
+  display: none;
+  background: none; border: none; font-size: 22px; cursor: pointer;
+  color: var(--text); padding: 8px; line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .hamburger-btn { display: flex; align-items: center; justify-content: center; }
+}
+
+/* 移动端侧边栏滑出 */
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 90;
+}
+@media (max-width: 768px) {
+  .sidebar-overlay.show { display: block; }
+}
+
+/* 移动端左侧面板 */
+@media (max-width: 768px) {
+  .sidebar, .left-panel, .left {
+    position: fixed !important; top: 0; left: 0; bottom: 0;
+    z-index: 95 !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    width: 280px !important;
+  }
+  .sidebar.open, .left-panel.open, .left.open {
+    transform: translateX(0);
+  }
+}
+
+/* ── Badge 通用 ── */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 6px;
+  font-size: 12px; font-weight: 500;
+}
+.badge-ok { background: #30d158; color: #fff; }
+.badge-no { background: var(--border); color: var(--text2); }
+.badge-sa { background: var(--danger); color: #fff; }
+.badge-ta { background: var(--accent); color: #fff; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 500;
+  z-index: 200; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease; box-shadow: var(--shadow);
+}
+.toast.show { opacity: 1; }
+.toast.ok, .toast.success { background: #30d158; color: #fff; }
+.toast.err, .toast.error { background: var(--danger); color: #fff; }
+.toast.info { background: var(--accent); color: #fff; }
