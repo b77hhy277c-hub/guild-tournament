@@ -114,16 +114,17 @@
     .toast.err { background:var(--danger); color:#fff; }
 
     /* 汉堡按钮（桌面隐藏，移动端显示） */
-    .hamburger-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text); padding: 8px 12px; line-height: 1; min-height: 44px; min-width: 44px; flex-shrink: 0; margin-left: auto; }
+    .hamburger-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text); padding: 8px 12px; line-height: 1; min-height: 44px; min-width: 44px; flex-shrink: 0; }
     .panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 89; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
-    .back-link { display: inline; }
+    .back-link { display: inline; flex-shrink: 0; }
+    .navbar .user { margin-left: auto; }
 
     @media (max-width: 768px) {
       .hamburger-btn { display: flex; align-items: center; justify-content: center; }
-      .back-link { display: none; }
+      .back-link { font-size: 13px; flex-shrink: 0; display: inline; }
       .left {
-        position: fixed; top: 0; left: 0; bottom: 0; z-index: 95;
-        transform: translateX(-100%); transition: transform 0.3s ease;
+        position: fixed; top: 0; right: 0; bottom: 0; left: auto; z-index: 95;
+        transform: translateX(100%); transition: transform 0.3s ease;
         width: 280px !important; padding-top: 56px;
       }
       .left.open { transform: translateX(0); }
@@ -132,6 +133,7 @@
       .l2-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
       .l3-area { max-height: 35vh; }
       .navbar .title { font-size: 13px; }
+      .navbar .user { margin-left: 4px; font-size: 12px; }
     }
   </style>
 </head>
@@ -141,10 +143,10 @@
 <div class="toast" id="toast"></div>
 
 <nav class="navbar">
-  <button class="hamburger-btn" id="hamburgerBtn" onclick="togglePanel()" aria-label="菜单">☰</button>
   <a href="index.html" class="back-link">← 返回</a>
   <span class="title">📝 我的竞标赛</span>
   <span class="user" id="navUser">--</span>
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="togglePanel()" aria-label="菜单">☰</button>
 </nav>
 
 <div class="layout">
