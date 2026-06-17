@@ -76,7 +76,8 @@
   <div class="info-bar">
     <span id="dateDisplay">📅 --</span>
     <span class="sep">｜</span>
-    <span>⏰ 开启时间：20:00</span>
+    <span id="openTimeDisp">⏰ 开启时间：20:00</span>
+    <button class="btn btn-s" id="btnEditOpenTime" style="padding:2px 8px;font-size:11px;display:none;" onclick="editOpenTime()">编辑</button>
   </div>
 
   <!-- Table -->
@@ -146,7 +147,7 @@ function getUser(){
   try{var u=JSON.parse(s);if(!u.id)throw Error();return u;}catch(_){localStorage.removeItem('guild_current_user');window.location.href='login.html';return null;}
 }
 
-function canManage(){return curUser&&(curUser.is_admin||curUser.is_task_admin);}
+function canManage(){return curUser&&curUser.is_admin;}
 
 // ===== Format weekday =====
 function getWeekdayCN(d){
@@ -183,6 +184,9 @@ function renderVersionTabs(){
 function renderDate(){
   var now=new Date();
   document.getElementById('dateDisplay').textContent='📅 '+now.getFullYear()+'年'+String(now.getMonth()+1).padStart(2,'0')+'月'+String(now.getDate()).padStart(2,'0')+'日（'+getWeekdayCN(now)+'）';
+  var openTime=(currentVersion&&currentVersion.open_time)||'20:00';
+  document.getElementById('openTimeDisp').textContent='⏰ 开启时间：'+openTime;
+  document.getElementById('btnEditOpenTime').style.display=canManage()?'inline-flex':'none';
 }
 
 function renderTable(){
@@ -288,6 +292,22 @@ async function deleteRow(){
     renderTable();
     updateTime();
   } catch(e){ console.error(e); toast('删除失败: '+e.message,'err'); }
+}
+
+// ===== Open time =====
+function editOpenTime(){
+  var t=(currentVersion&&currentVersion.open_time)||'20:00';
+  var newTime=prompt('输入副业开启时间（如 20:00）：',t);
+  if(!newTime||newTime.trim()===t) return;
+  (async function(){
+    try {
+      await API.patch('side_business_versions?id=eq.'+currentVersion.id,{open_time:newTime.trim()});
+      currentVersion.open_time=newTime.trim();
+      toast('✅ 已更新');
+      renderDate();
+      updateTime();
+    } catch(e){ console.error(e); toast('更新失败: '+e.message,'err'); }
+  })();
 }
 
 // ===== Extra time =====
