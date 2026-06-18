@@ -188,7 +188,7 @@ function renderNode(cat, depth){
   var label = label;
 
   var html = '<div class="tree-node">';
-  html += '<div class="tree-row">';
+  html += '<div class="tree-row" data-search="'+esc(label)+'">';
   html += '<span class="tree-toggle" onclick="toggleNode(this)" data-id="'+cat.id+'">'+(canExpand ? (expandedAll ? '▼' : '▶') : '')+'</span>';
   html += '<span class="tree-name">'+esc(label)+'<span class="type-tag">'+(isL1?'一级':(hasSubCats?'分类':'分类'))+'</span></span>';
   html += '<span class="tree-actions">';
@@ -206,7 +206,7 @@ function renderNode(cat, depth){
   ch.forEach(function(c){ html += renderNode(c, depth+1); });
   // task definitions
   tasks.forEach(function(t){
-    html += '<div class="tree-node"><div class="tree-row">';
+    html += '<div class="tree-node"><div class="tree-row" data-search="'+esc(t.display_name||t.task_name)+'">';
     html += '<span class="tree-toggle"></span>';
     
     html += '<span class="tree-name">'+esc(t.display_name||t.task_name)+'<span class="score">('+(t.default_score||0)+'分)</span><span class="type-tag">任务</span></span>';
@@ -250,37 +250,17 @@ function restoreExpanded(ids){
 
 function filterTree(){
   var q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
-  var rows = document.querySelectorAll('.tree-row');
-  console.log('filterTree q="'+q+'" rows='+rows.length);
-  document.querySelectorAll('.tree-name mark').forEach(function(m){ m.replaceWith(m.textContent); });
 
-  if(!q){
-    // No search → show all
-    document.querySelectorAll('.tree-node').forEach(function(n){ n.style.display=''; });
-    return;
-  }
-
-  // Search: hide non-matching, show and expand matching
   document.querySelectorAll('.tree-row').forEach(function(row){
-    var nameEl = row.querySelector('.tree-name');
-    if(!nameEl) return;
-    var text = (nameEl.textContent||'').toLowerCase();
-    var match = text.indexOf(q) >= 0;
+    var searchText = (row.getAttribute('data-search')||'').toLowerCase();
+    var match = !q || searchText.indexOf(q) >= 0;
 
-    // Find parent tree-node (walk up)
-    var node = row;
+    var node = row.parentElement;
     while(node && !node.classList.contains('tree-node')){ node = node.parentElement; }
     if(!node) return;
 
     if(match){
       node.style.display = '';
-      // Highlight match
-      var origText = nameEl.textContent;
-      var idx = origText.toLowerCase().indexOf(q);
-      if(idx >= 0){
-        nameEl.innerHTML = origText.substring(0,idx) + '<mark style="background:#f5a623;color:#000;border-radius:2px;padding:0 2px;">' + origText.substring(idx,idx+q.length) + '</mark>' + origText.substring(idx+q.length);
-      }
-      // Expand all ancestors
       var p = node.parentElement;
       while(p){
         if(p.classList.contains('tree-children')){ p.classList.remove('collapsed'); }
@@ -289,6 +269,12 @@ function filterTree(){
     } else {
       node.style.display = 'none';
     }
+  });
+
+  document.querySelectorAll('.tree-children:not(.collapsed)').forEach(function(c){
+    var pid = c.id.replace('kids-','');
+    var t = document.querySelector('.tree-toggle[data-id="'+pid+'"]');
+    if(t) t.textContent='▼';
   });
 }
 
