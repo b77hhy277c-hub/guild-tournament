@@ -250,6 +250,7 @@ function restoreExpanded(ids){
 
 function filterTree(){
   var q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
+  console.log('filterTree called, q="'+q+'", data-search exists='+(document.querySelector('.tree-row')?!!document.querySelector('.tree-row').getAttribute('data-search'):'no rows'));
 
   document.querySelectorAll('.tree-row').forEach(function(row){
     var searchText = (row.getAttribute('data-search')||'').toLowerCase();
