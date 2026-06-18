@@ -277,6 +277,8 @@ function showDetail(id){
   if(l.changes && l.changes.before!==undefined && l.changes.after!==undefined){
     if(l.changes.before===null){
       html+='<pre>新建：'+JSON.stringify(l.changes.after,null,2)+'</pre>';
+    } else if(l.changes.after===null){
+      html+='<pre>已删除，删除前数据：'+JSON.stringify(l.changes.before,null,2)+'</pre>';
     } else {
       var labelMap={season_name:'名称',target_rank:'目标',strategy:'策略',total_score:'总分',total_tasks:'完成数',rank_position:'排名',announcement:'公告',stats_updated_at:'统计时间',start_date:'开始',end_date:'结束',is_current:'当前赛季'};
       html+='<table class="diff-table"><thead><tr><th>字段</th><th>修改前</th><th>修改后</th></tr></thead><tbody>';
