@@ -250,7 +250,6 @@ function restoreExpanded(ids){
 
 function filterTree(){
   var q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
-  console.log('filterTree called, q="'+q+'", data-search exists='+(document.querySelector('.tree-row')?!!document.querySelector('.tree-row').getAttribute('data-search'):'no rows'));
 
   document.querySelectorAll('.tree-row').forEach(function(row){
     var searchText = (row.getAttribute('data-search')||'').toLowerCase();
@@ -261,10 +260,12 @@ function filterTree(){
     if(!node) return;
 
     if(match){
+      // Show this node AND all ancestors
       node.style.display = '';
       var p = node.parentElement;
       while(p){
         if(p.classList.contains('tree-children')){ p.classList.remove('collapsed'); }
+        if(p.classList.contains('tree-node')){ p.style.display = ''; }
         p = p.parentElement;
       }
     } else {
