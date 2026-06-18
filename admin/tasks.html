@@ -205,7 +205,7 @@ function renderNode(cat, depth){
   ch.forEach(function(c){ html += renderNode(c, depth+1); });
   // task definitions
   tasks.forEach(function(t){
-    html += '<div class="tree-node"><div class="tree-row" data-search="'+esc(t.display_name||t.task_name)+'">';
+    html += '<div class="tree-node"><div class="tree-row" data-search="'+esc(t.display_name||t.task_name)+' '+(t.default_score||0)+'分">';
     html += '<span class="tree-toggle"></span>';
     
     html += '<span class="tree-name">'+esc(t.display_name||t.task_name)+'<span class="score">('+(t.default_score||0)+'分)</span><span class="type-tag">任务</span></span>';
