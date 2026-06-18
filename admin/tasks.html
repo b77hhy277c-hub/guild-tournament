@@ -132,6 +132,8 @@ var API = {
 
 var curUser = null, cats = [], defs = [];
 var expandedAll = true;
+var savedExpandedIds = [];
+var searchExpandedSaved = false;
 var modalMode = '', modalParentId = '', modalEditId = '', modalIsTask = false;
 
 function toast(m,t){ var e=document.getElementById('toast'); e.textContent=m; e.className='toast '+(t||'ok')+' show'; clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove('show');},2500); }
@@ -244,11 +246,40 @@ function restoreExpanded(ids){
 function filterTree(){
   var q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
 
+  // ---- Empty search: restore full tree ----
+  if(!q) {
+    document.querySelectorAll('.tree-node').forEach(function(n){ n.style.display = ''; });
+    if(searchExpandedSaved) {
+      // Restore expansion state from before the search
+      restoreExpanded(savedExpandedIds);
+    } else {
+      // No search was ever performed; respect current expandedAll
+      document.querySelectorAll('.tree-children').forEach(function(c){
+        if(expandedAll) c.classList.remove('collapsed');
+        else c.classList.add('collapsed');
+      });
+    }
+    // Update all toggle indicators
+    document.querySelectorAll('.tree-toggle').forEach(function(t){
+      if(t.dataset.id && hasChildren(t.dataset.id)){
+        var kids = document.getElementById('kids-'+t.dataset.id);
+        t.textContent = (kids && !kids.classList.contains('collapsed')) ? '▼' : '▶';
+      }
+    });
+    searchExpandedSaved = false;
+    savedExpandedIds = [];
+    return;
+  }
+
+  // ---- Save expansion state on first keystroke ----
+  if(!searchExpandedSaved) {
+    savedExpandedIds = getExpandedIds();
+    searchExpandedSaved = true;
+  }
+
   // First hide ALL nodes
   document.querySelectorAll('.tree-node').forEach(function(n){ n.style.display = 'none'; });
   document.querySelectorAll('.tree-children').forEach(function(c){ c.classList.add('collapsed'); });
-
-  if(!q) return; // Empty search resets to all collapsed
 
   // Then show matching nodes + ancestors + descendants
   var matches = document.querySelectorAll('.tree-row');
