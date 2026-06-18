@@ -161,7 +161,7 @@ function getUser(){
 }
 
 function fmtDate(d){ if(!d) return ''; var dt=new Date(d); return dt.toISOString().split('T')[0]; }
-function fmtDateTime(d){ if(!d) return ''; var dt=new Date(d); return dt.toISOString().slice(0,16); }
+function fmtDateTime(d){ if(!d) return ''; var dt=new Date(d); return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+'T'+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0'); }
 
 // ===== Log operation =====
 async function logOp(type, targetType, targetId, targetName, changes){
