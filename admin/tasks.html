@@ -151,6 +151,18 @@ function getTasks(catId){ return defs.filter(function(d){ return d.category_id==
 function hasChildren(catId){ return getChildren(catId).length>0 || getTasks(catId).length>0; }
 function countL1(){ return cats.filter(function(c){ return !c.parent_id; }).length; }
 
+// Build full hierarchy path for a category or task, e.g. "人才 > 农 > 武力 > 攻击力"
+function getFullPath(catId, taskName){
+  var parts = [];
+  var current = cats.find(function(c){ return c.id === catId; });
+  while(current){
+    parts.unshift(current.name);
+    current = cats.find(function(c){ return c.id === current.parent_id; });
+  }
+  if(taskName) parts.push(taskName);
+  return parts.join(' > ');
+}
+
 // ===== Render tree =====
 function renderTree(){
   var roots = cats.filter(function(c){ return !c.parent_id; }).sort(function(a,b){ return (a.sort_order||0)-(b.sort_order||0); });
@@ -435,25 +447,25 @@ async function submitModal(){
           default_score: score,
           sort_order: getTasks(modalParentId).length + 1
         });
-        logOp('任务新增','task','-',name,{after:{name:name,score:score}});
+        logOp('任务新增','task','-',getFullPath(modalParentId,name),{after:{name:name,score:score}});
       } else {
         var parent = cats.find(function(c){return c.id===modalParentId;});
         var newLevel = (parent ? (parent.level||0) : 0) + 1;
         var siblings = getChildren(modalParentId);
         await API.post('task_categories', { name: name, parent_id: modalParentId, level: newLevel, sort_order: siblings.length+1 });
-        logOp('任务新增','task','-',name,{after:{name:name,level:newLevel}});
+        logOp('任务新增','task','-',getFullPath(modalParentId,name),{after:{name:name,level:newLevel}});
       }
       toast('✅ 已添加');
     } else if(modalMode === 'editCat'){
       var oldCat = cats.find(function(c){return c.id===modalEditId;});
       await API.patch('task_categories?id=eq.'+modalEditId, { name: name });
       toast('✅ 已更新');
-      logOp('任务编辑','task',modalEditId,name,{before:{name:oldCat?oldCat.name:''},after:{name:name}});
+      logOp('任务编辑','task',modalEditId,getFullPath(oldCat?oldCat.parent_id:null,oldCat?oldCat.name:name),{before:{name:oldCat?oldCat.name:''},after:{name:name}});
     } else if(modalMode === 'editTask'){
       var oldTask = defs.find(function(d){return d.id===modalEditId;});
       await API.patch('task_definitions?id=eq.'+modalEditId, { display_name: name, task_name: name, default_score: score });
       toast('✅ 已更新');
-      logOp('任务编辑','task',modalEditId,name,{before:{name:oldTask?oldTask.display_name||oldTask.task_name:'',score:oldTask?oldTask.default_score:0},after:{name:name,score:score}});
+      logOp('任务编辑','task',modalEditId,getFullPath(oldTask?oldTask.category_id:null,oldTask?oldTask.display_name||oldTask.task_name:name),{before:{name:oldTask?oldTask.display_name||oldTask.task_name:'',score:oldTask?oldTask.default_score:0},after:{name:name,score:score}});
     }
     closeModal();
     await reload();
@@ -484,7 +496,8 @@ async function deleteCat(id, name){
   try {
     await API.del('task_categories?id=eq.'+id);
     toast('✅ 已删除');
-    logOp('任务删除','task',id,name,{before:{name:name,hasChildren:hasKids},after:null});
+    var catDel = cats.find(function(c){ return c.id===id; });
+    logOp('任务删除','task',id,catDel?getFullPath(catDel.parent_id,name):name,{before:{name:name,hasChildren:hasKids},after:null});
     await reload();
   } catch(e){ console.error(e); toast('删除失败: '+e.message,'err'); }
 }
@@ -494,7 +507,8 @@ async function deleteTask(id, name){
   try {
     await API.del('task_definitions?id=eq.'+id);
     toast('✅ 已删除');
-    logOp('任务删除','task',id,name,{before:{name:name},after:null});
+    var taskDel = defs.find(function(d){ return d.id===id; });
+    logOp('任务删除','task',id,taskDel?getFullPath(taskDel.category_id,name):name,{before:{name:name},after:null});
     await reload();
   } catch(e){ console.error(e); toast('删除失败: '+e.message,'err'); }
 }
