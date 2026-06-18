@@ -438,8 +438,8 @@
       if (currentUser.is_admin || currentUser.position === '副会长' || currentUser.is_task_admin) {
         document.getElementById('adminFooter').style.display = 'block';
       }
-      // 操作日志仅超级管理员/副会长可见
-      if (!currentUser.is_admin && currentUser.position !== '副会长') {
+      // 操作日志：超级管理员/副会长/竞标赛管理员可见
+      if (!currentUser.is_admin && currentUser.position !== '副会长' && !currentUser.is_task_admin) {
         document.getElementById('sepLogs').style.display = 'none';
         document.getElementById('linkLogs').style.display = 'none';
       }

@@ -307,7 +307,7 @@ document.getElementById('detailModal').addEventListener('click',function(e){ if(
 // ===== Init =====
 async function init(){
   curUser=getUser(); if(!curUser)return;
-  if(!curUser.is_admin && curUser.position !== '副会长'){ alert('无权限访问'); window.location.href='../tournament/index.html'; return; }
+  if(!curUser.is_admin && curUser.position !== '副会长' && !curUser.is_task_admin){ alert('无权限访问'); window.location.href='../tournament/index.html'; return; }
   document.getElementById('navUser').innerHTML=(curUser.display_name||curUser.uid)+' <span class="badge-sa">超级管理员</span>';
   await loadLogs();
 }
