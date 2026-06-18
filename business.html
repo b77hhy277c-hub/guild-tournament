@@ -169,7 +169,7 @@ function getUser(){
   try{var u=JSON.parse(s);if(!u.id)throw Error();return u;}catch(_){localStorage.removeItem('guild_current_user');window.location.href='login.html';return null;}
 }
 
-function canManage(){return curUser&&curUser.is_admin;}
+function canManage(){return curUser&&(curUser.is_admin||curUser.position==='副会长');}
 
 // ===== Format weekday =====
 function getWeekdayCN(d){

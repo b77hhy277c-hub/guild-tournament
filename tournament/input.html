@@ -252,7 +252,7 @@ async function loadAll(){
 
     // 并行：分类、任务定义、赛季、管理员成员列表同时请求
     var parallel = [API.get('task_categories?select=*&order=sort_order.asc'), API.get('task_definitions?select=*&order=sort_order.asc'), API.get('seasons?is_current=eq.true&select=*&limit=1')];
-    if(curUser && curUser.is_admin) parallel.push(API.get('members?select=id,display_name,uid&order=display_name.asc'));
+    if(curUser && (curUser.is_admin || curUser.position==='副会长')) parallel.push(API.get('members?select=id,display_name,uid&order=display_name.asc'));
 
     var results = await Promise.all(parallel);
     cats = results[0]; defs = results[1];
@@ -360,7 +360,7 @@ async function saveConfig(silent){
 function renderProxy(){
   var s=document.getElementById('proxySel'); s.innerHTML='<option value="">-- 本人 --</option>';
   allMembers.forEach(function(m){ s.innerHTML+='<option value="'+m.id+'">'+esc(m.display_name)+' ('+esc(m.uid)+')</option>'; });
-  if(curUser&&curUser.is_admin) document.getElementById('adminSec').style.display='block';
+  if(curUser&&(curUser.is_admin||curUser.position==='副会长')) document.getElementById('adminSec').style.display='block';
 }
 async function switchProxy(){
   proxyId = document.getElementById('proxySel').value || null;

@@ -344,7 +344,7 @@ async function openNewSeason(){
 async function init(){
   curUser = getUser();
   if(!curUser) return;
-  if(!curUser.is_admin && !curUser.is_task_admin){
+  if(!curUser.is_admin && curUser.position !== '副会长' && !curUser.is_task_admin){
     alert('无权限访问');
     window.location.href = '../tournament/index.html';
     return;

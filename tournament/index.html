@@ -435,11 +435,11 @@
         currentUser.display_name || currentUser.uid;
 
       // 管理员底部入口
-      if (currentUser.is_admin || currentUser.is_task_admin) {
+      if (currentUser.is_admin || currentUser.position === '副会长' || currentUser.is_task_admin) {
         document.getElementById('adminFooter').style.display = 'block';
       }
-      // 操作日志仅超级管理员可见
-      if (!currentUser.is_admin) {
+      // 操作日志仅超级管理员/副会长可见
+      if (!currentUser.is_admin && currentUser.position !== '副会长') {
         document.getElementById('sepLogs').style.display = 'none';
         document.getElementById('linkLogs').style.display = 'none';
       }

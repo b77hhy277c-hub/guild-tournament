@@ -374,7 +374,7 @@
       var u = localStorage.getItem('guild_current_user');
       if (!u) { window.location.href = 'login.html'; return; }
       var user = JSON.parse(u);
-      if (!user.is_admin) { window.location.href = 'index.html'; return; }
+      if (!user.is_admin && user.position !== '副会长') { window.location.href = 'index.html'; return; }
 
       await loadMembers();
     }

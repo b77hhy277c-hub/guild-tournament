@@ -402,7 +402,7 @@
       document.getElementById('fiPosition').textContent = u.position || '成员';
 
       // 管理员入口
-      if (u.is_admin) {
+      if (u.is_admin || u.position === '副会长') {
         document.getElementById('btnAdmin').style.display = 'flex';
       }
     }

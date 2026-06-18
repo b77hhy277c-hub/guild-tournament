@@ -159,12 +159,13 @@ function getUser(){
 
 function getRoleLabel(u){
   if(u.is_admin) return '<span class="badge badge-sa">超级管理员</span>';
+  if(u.position==='副会长') return '<span class="badge badge-sa">副会长</span>';
   if(u.is_task_admin) return '<span class="badge badge-ta">项目管理员</span>';
   return '<span class="badge badge-m">成员</span>';
 }
 
 function canManage(){
-  return curUser && (curUser.is_admin || curUser.is_task_admin);
+  return curUser && (curUser.is_admin || curUser.position==='副会长' || curUser.is_task_admin);
 }
 
 // ===== Load =====
