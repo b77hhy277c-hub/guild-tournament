@@ -229,6 +229,24 @@ function toggleNode(el){
   updateExpandBtn();
 }
 
+function getExpandedIds(){
+  var ids=[];
+  document.querySelectorAll('.tree-children:not(.collapsed)').forEach(function(c){
+    var id=c.id.replace('kids-','');
+    if(id) ids.push(id);
+  });
+  return ids;
+}
+
+function restoreExpanded(ids){
+  ids.forEach(function(id){
+    var kids=document.getElementById('kids-'+id);
+    if(kids){ kids.classList.remove('collapsed'); }
+    var toggle=document.querySelector('.tree-toggle[data-id="'+id+'"]');
+    if(toggle) toggle.textContent='▼';
+  });
+}
+
 function toggleExpand(){
   expandedAll = !expandedAll;
   document.querySelectorAll('.tree-children').forEach(function(c){
@@ -393,9 +411,11 @@ async function deleteTask(id, name){
 
 // ===== Reload =====
 async function reload(){
+  var expanded=getExpandedIds();
   cats = await API.get('task_categories?select=*&order=sort_order.asc');
   defs = await API.get('task_definitions?select=*&order=sort_order.asc');
   renderTree();
+  restoreExpanded(expanded);
 }
 
 // ===== Init =====
