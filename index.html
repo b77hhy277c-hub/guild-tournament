@@ -331,6 +331,12 @@
           <div class="card-desc">来看看今天副业怎么上</div>
         </a>
 
+        <a href="visits.html" class="card" id="cardVisits" style="display:none;">
+          <div class="card-icon">📊</div>
+          <div class="card-title">访问记录</div>
+          <div class="card-desc">看看谁来过</div>
+        </a>
+
         <div class="card disabled">
           <div class="card-icon">🔜</div>
           <div class="card-title">敬请期待</div>
@@ -432,6 +438,22 @@
       updateSidebar(currentUser);
       loadPositions();
       loadSideBiz();
+      // 访问记录入口（仅超级管理员/副会长）
+      if(currentUser.is_admin || currentUser.position==='副会长') {
+        document.getElementById('cardVisits').style.display='block';
+      }
+      // 记录访问
+      logVisit();
+    }
+
+    function logVisit(){
+      try {
+        fetch(SUPABASE_URL+'/rest/v1/visit_logs',{
+          method:'POST',
+          headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify({member_id:currentUser.id,member_name:currentUser.display_name||currentUser.uid,page:'主界面'})
+        });
+      } catch(e){}
     }
 
     async function loadSideBiz(){
