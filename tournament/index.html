@@ -131,6 +131,39 @@
     .season-bar .season-row2 {
       font-size: 13px; color: var(--text-secondary);
       display: flex; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .season-bar .season-row3 {
+      font-size: 13px; color: var(--text);
+      display: flex; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .season-bar .season-row3 .stat-val {
+      color: var(--accent); font-weight: 600;
+    }
+
+    .season-bar .season-row4 {
+      font-size: 12px; color: var(--text-tertiary);
+      display: flex; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .season-bar .season-strategy {
+      font-size: 13px; color: var(--text-secondary);
+      margin-top: 8px; padding-top: 8px;
+      border-top: 1px solid var(--border-light);
+      line-height: 1.6;
+    }
+
+    .season-bar .season-announce {
+      font-size: 13px; color: var(--text-secondary);
+      margin-top: 8px; padding-top: 8px;
+      border-top: 1px solid var(--border-light);
+      line-height: 1.6;
+      white-space: pre-wrap;
     }
 
     .season-bar.empty {
@@ -354,6 +387,16 @@
         String(d.getDate()).padStart(2, '0');
     }
 
+    function formatDateTime(str) {
+      if (!str) return '未知';
+      var d = new Date(str);
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0') + ' ' +
+        String(d.getHours()).padStart(2, '0') + ':' +
+        String(d.getMinutes()).padStart(2, '0');
+    }
+
     // ==========================================
     // 渲染赛季栏
     // ==========================================
@@ -369,18 +412,47 @@
       bar.className = 'season-bar';
       var cd = calcCountdown(season.end_date);
 
-      bar.innerHTML =
-        '<div class="season-row1">' +
-          '<span>🏆 ' + esc(season.season_name) + '</span>' +
-          '<span class="divider">｜</span>' +
-          '<span>🎯 目标：' + esc(season.target_rank || '未设定') + '</span>' +
-          '<span class="divider">｜</span>' +
-          '<span class="' + cd.cls + '">' + cd.text + '</span>' +
-        '</div>' +
-        '<div class="season-row2">' +
-          '<span>开始：' + formatDate(season.start_date) + '</span>' +
-          '<span>结束：' + formatDate(season.end_date) + '</span>' +
+      var html = '';
+      // Row 1: 名称 + 目标 + 倒计时
+      html += '<div class="season-row1">' +
+        '<span>🏆 ' + esc(season.season_name) + '</span>' +
+        '<span class="divider">｜</span>' +
+        '<span>🎯 目标：' + esc(season.target_rank || '未设定') + '</span>' +
+        '<span class="divider">｜</span>' +
+        '<span class="' + cd.cls + '">' + cd.text + '</span>' +
+      '</div>';
+
+      // Row 2: 开始 / 结束时间
+      html += '<div class="season-row2">' +
+        '<span>📅 开始：' + formatDate(season.start_date) + '</span>' +
+        '<span>📅 结束：' + formatDate(season.end_date) + '</span>' +
+      '</div>';
+
+      // Row 3: 统计数据
+      html += '<div class="season-row3">' +
+        '<span>📊 当前公会总分：<span class="stat-val">' + (season.total_score || 0) + '</span></span>' +
+        '<span>✅ 当前任务完成总数：<span class="stat-val">' + (season.total_tasks || 0) + '</span></span>' +
+        '<span>🏅 当前排名：<span class="stat-val">' + esc(season.rank_position || '未设定') + '</span></span>' +
+      '</div>';
+
+      // Row 4: 数据更新时间
+      if (season.stats_updated_at) {
+        html += '<div class="season-row4">' +
+          '<span>🕐 数据更新于：' + formatDateTime(season.stats_updated_at) + '</span>' +
         '</div>';
+      }
+
+      // Strategy
+      if (season.strategy && season.strategy.trim()) {
+        html += '<div class="season-strategy">📋 <b>当轮策略：</b>' + esc(season.strategy) + '</div>';
+      }
+
+      // Announcement
+      if (season.announcement && season.announcement.trim()) {
+        html += '<div class="season-announce">📢 <b>公告：</b>' + esc(season.announcement) + '</div>';
+      }
+
+      bar.innerHTML = html;
     }
 
     function esc(s) {
