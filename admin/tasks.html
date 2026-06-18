@@ -245,11 +245,6 @@ function filterTree(){
 
   // First hide ALL nodes
   document.querySelectorAll('.tree-node').forEach(function(n){ n.style.display = 'none'; });
-  document.querySelectorAll('.tree-children').forEach(function(c){ c.classList.add('collapsed'); });function filterTree(){
-  var q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
-
-  // First hide ALL nodes
-  document.querySelectorAll('.tree-node').forEach(function(n){ n.style.display = 'none'; });
   document.querySelectorAll('.tree-children').forEach(function(c){ c.classList.add('collapsed'); });
 
   if(!q) return; // Empty search resets to all collapsed
