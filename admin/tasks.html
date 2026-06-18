@@ -156,13 +156,6 @@ function renderTree(){
   roots.forEach(function(r){ html += renderNode(r, 0); });
   document.getElementById('tree').innerHTML = html || '<div style="padding:20px;color:var(--text3);text-align:center;">暂无数据</div>';
   updateExpandBtn();
-  // disable add L1 if >=4
-  var btn = document.getElementById('btnAddL1');
-  var count = countL1();
-  btn.disabled = count >= 4;
-  if(count >= 4) btn.title = '一级分类最多4个';
-  else btn.title = '';
-}
 
 function renderNode(cat, depth){
   var ch = getChildren(cat.id);
