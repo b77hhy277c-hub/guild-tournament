@@ -184,8 +184,11 @@
     <div class="sec">
       <h3>当期目标配置</h3>
       <div class="field"><label>目标分数</label><input type="number" id="cfgScore" value="0" min="0" oninput="recalc()" onblur="saveConfig(true)" /></div>
-      <div class="field"><label>可接次数</label><input type="number" id="cfgAttempts" value="1" min="1" oninput="recalc()" onblur="saveConfig(true)" /></div>
+      <div class="field"><label>已取得分数</label><input type="number" id="cfgCurrentScore" value="0" min="0" oninput="recalc()" onblur="saveConfig(true)" /></div>
+      <div class="field"><label>目标次数</label><input type="number" id="cfgTargetAttempts" value="1" min="1" oninput="recalc()" onblur="saveConfig(true)" /></div>
+      <div class="field"><label>已接任务次数</label><input type="number" id="cfgTakenAttempts" value="0" min="0" oninput="recalc()" onblur="saveConfig(true)" /></div>
       <div class="avg" id="avgDisp">-- 分</div>
+      <div class="hint">默认所有任务翻倍接取</div>
       <div class="hint" id="avgHint">💡 需接平均分 ≥ -- 分的任务</div>
     </div>
 
@@ -271,7 +274,9 @@ async function loadAll(){
       if(seasons.length>0 && memberResults[1] && memberResults[1].length>0){
         var c = memberResults[1][0];
         document.getElementById('cfgScore').value = c.target_score || 0;
-        document.getElementById('cfgAttempts').value = c.available_attempts || 1;
+        document.getElementById('cfgCurrentScore').value = c.current_score || 0;
+        document.getElementById('cfgTargetAttempts').value = c.available_attempts || 1;
+        document.getElementById('cfgTakenAttempts').value = c.taken_attempts || 0;
         document.getElementById('canAcceptToggle').checked = c.can_accept !== false;
         onCanAcceptToggle();
       }
@@ -301,11 +306,18 @@ function onCanAcceptToggle(){
 
 function recalc(){
   var sc = parseInt(document.getElementById('cfgScore').value)||0;
-  var at = parseInt(document.getElementById('cfgAttempts').value)||1;
-  if(at<1) at=1;
-  var avg = Math.ceil(sc/at/2);
+  var cs = parseInt(document.getElementById('cfgCurrentScore').value)||0;
+  var ta = parseInt(document.getElementById('cfgTargetAttempts').value)||1;
+  var taa = parseInt(document.getElementById('cfgTakenAttempts').value)||0;
+  if(ta<1) ta=1;
+  var remainingScore = sc - cs;
+  var remainingAttempts = ta - taa;
+  var avg = 0;
+  if(remainingAttempts > 0 && remainingScore > 0){
+    avg = Math.ceil(remainingScore / remainingAttempts / 2);
+  }
   document.getElementById('avgDisp').textContent = avg + ' 分';
-  document.getElementById('avgHint').innerHTML = '💡 默认所有任务翻倍接取 · 需接平均分 ≥ <b>'+avg+'</b> 分的任务';
+  document.getElementById('avgHint').innerHTML = '💡 剩余 ' + remainingScore + ' 分 / ' + remainingAttempts + ' 次 · 需接平均分 ≥ <b>'+avg+'</b> 分的任务';
   renderRec(avg);
 }
 
@@ -344,11 +356,18 @@ function renderRec(avg){
 async function saveConfig(silent){
   var mid=effId(); if(!mid||!seasons.length){ if(!silent) toast('无当前赛季','err'); return; }
   var sc=parseInt(document.getElementById('cfgScore').value)||0;
-  var at=parseInt(document.getElementById('cfgAttempts').value)||1;
-  if(at<1) at=1;
-  var avg=Math.ceil(sc/at/2);
+  var cs=parseInt(document.getElementById('cfgCurrentScore').value)||0;
+  var ta=parseInt(document.getElementById('cfgTargetAttempts').value)||1;
+  var taa=parseInt(document.getElementById('cfgTakenAttempts').value)||0;
+  if(ta<1) ta=1;
+  var remainingScore = sc - cs;
+  var remainingAttempts = ta - taa;
+  var avg = 0;
+  if(remainingAttempts > 0 && remainingScore > 0){
+    avg = Math.ceil(remainingScore / remainingAttempts / 2);
+  }
   var can=document.getElementById('canAcceptToggle').checked;
-  var payload={ member_id:mid, season_id:seasons[0].id, can_accept:can, target_score:sc, available_attempts:at, avg_score:avg, updated_at:new Date().toISOString() };
+  var payload={ member_id:mid, season_id:seasons[0].id, can_accept:can, target_score:sc, current_score:cs, available_attempts:ta, taken_attempts:taa, avg_score:avg, updated_at:new Date().toISOString() };
   try {
     var ex=await API.get('member_season_config?member_id=eq.'+mid+'&season_id=eq.'+seasons[0].id+'&select=id&limit=1');
     if(ex&&ex.length) await API.patch('member_season_config?id=eq.'+ex[0].id, payload);
