@@ -250,7 +250,8 @@ function restoreExpanded(ids){
 
 function filterTree(){
   var q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
-  // Clear previous highlights
+  var rows = document.querySelectorAll('.tree-row');
+  console.log('filterTree q="'+q+'" rows='+rows.length);
   document.querySelectorAll('.tree-name mark').forEach(function(m){ m.replaceWith(m.textContent); });
 
   if(!q){
