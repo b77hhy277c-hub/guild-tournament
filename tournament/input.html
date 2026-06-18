@@ -303,9 +303,9 @@ function recalc(){
   var sc = parseInt(document.getElementById('cfgScore').value)||0;
   var at = parseInt(document.getElementById('cfgAttempts').value)||1;
   if(at<1) at=1;
-  var avg = Math.ceil(sc/at);
+  var avg = Math.ceil(sc/at/2);
   document.getElementById('avgDisp').textContent = avg + ' 分';
-  document.getElementById('avgHint').innerHTML = '💡 需接平均分 ≥ <b>'+avg+'</b> 分的任务';
+  document.getElementById('avgHint').innerHTML = '💡 默认所有任务翻倍接取 · 需接平均分 ≥ <b>'+avg+'</b> 分的任务';
   renderRec(avg);
 }
 
@@ -346,7 +346,7 @@ async function saveConfig(silent){
   var sc=parseInt(document.getElementById('cfgScore').value)||0;
   var at=parseInt(document.getElementById('cfgAttempts').value)||1;
   if(at<1) at=1;
-  var avg=Math.ceil(sc/at);
+  var avg=Math.ceil(sc/at/2);
   var can=document.getElementById('canAcceptToggle').checked;
   var payload={ member_id:mid, season_id:seasons[0].id, can_accept:can, target_score:sc, available_attempts:at, avg_score:avg, updated_at:new Date().toISOString() };
   try {
