@@ -93,6 +93,7 @@
 
 <div class="main">
   <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="🔍 搜索任务..." oninput="filterTree()" style="flex:1;min-width:160px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;" />
     <button class="btn btn-p" id="btnAddL1" onclick="openAddL1()">＋ 新增一级分类</button>
     <button class="btn btn-s" id="btnExpand" onclick="toggleExpand()">📂 展开全部</button>
   </div>
@@ -244,6 +245,60 @@ function restoreExpanded(ids){
     if(kids){ kids.classList.remove('collapsed'); }
     var toggle=document.querySelector('.tree-toggle[data-id="'+id+'"]');
     if(toggle) toggle.textContent='▼';
+  });
+}
+
+function filterTree(){
+  var q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
+  if(!q){
+    // No search → show all, collapse
+    document.querySelectorAll('.tree-node').forEach(function(n){ n.style.display=''; });
+    document.querySelectorAll('.tree-name mark').forEach(function(m){
+      m.replaceWith(m.textContent);
+    });
+    document.querySelectorAll('.tree-children').forEach(function(c){ c.classList.add('collapsed'); });
+    document.querySelectorAll('.tree-toggle').forEach(function(t){ if(t.dataset.id) t.textContent='▶'; });
+    expandedAll = false; updateExpandBtn();
+    return;
+  }
+  // Expand all first
+  document.querySelectorAll('.tree-children').forEach(function(c){ c.classList.remove('collapsed'); });
+  document.querySelectorAll('.tree-toggle').forEach(function(t){ if(t.dataset.id) t.textContent='▼'; });
+  expandedAll = true; updateExpandBtn();
+
+  // Filter nodes
+  document.querySelectorAll('.tree-row').forEach(function(row){
+    var nameEl = row.querySelector('.tree-name');
+    if(!nameEl) return;
+    var text = nameEl.textContent.replace(/一级|分类|任务/g,'').toLowerCase();
+    var match = text.indexOf(q) >= 0;
+    var node = row.closest('.tree-node');
+    if(!node) return;
+
+    // Restore any existing mark
+    var existingMark = nameEl.querySelector('mark');
+    if(existingMark) existingMark.replaceWith(existingMark.textContent);
+
+    if(match){
+      node.style.display = '';
+      // Highlight
+      var orig = nameEl.innerHTML;
+      var idx = orig.toLowerCase().indexOf(q);
+      if(idx>=0){
+        nameEl.innerHTML = orig.substring(0,idx) + '<mark style="background:#f5a623;color:#000;border-radius:2px;padding:0 2px;">' + orig.substring(idx,idx+q.length) + '</mark>' + orig.substring(idx+q.length);
+      }
+      // Expand ancestors
+      var p = node.parentElement;
+      while(p && p.classList.contains('tree-children')){
+        p.classList.remove('collapsed');
+        var pid = p.id.replace('kids-','');
+        var t = document.querySelector('.tree-toggle[data-id="'+pid+'"]');
+        if(t) t.textContent='▼';
+        p = p.parentElement.closest('.tree-children');
+      }
+    } else {
+      node.style.display = 'none';
+    }
   });
 }
 
@@ -440,6 +495,9 @@ async function reload(){
   defs = await API.get('task_definitions?select=*&order=sort_order.asc');
   renderTree();
   restoreExpanded(expanded);
+  // Re-apply search if active
+  var q = document.getElementById('searchInput').value.trim();
+  if(q) filterTree();
 }
 
 // ===== Init =====
