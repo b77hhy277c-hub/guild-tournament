@@ -126,7 +126,7 @@ var API = {
   h: function(){ return { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }; },
   get: async function(p){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}); if(!r.ok)throw Error(await r.text()); return r.json(); },
   post: async function(p,b){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'Prefer':'return=minimal'},this.h()),body:JSON.stringify(b)}); if(!r.ok)throw Error(await r.text()); var t=await r.text(); return t?JSON.parse(t):null; },
-  patch: async function(p,b){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'PATCH',headers:Object.assign({'Prefer':'return=minimal'},this.h()),body:JSON.stringify(b)}); if(!r.ok)throw Error(await r.text()); var t=await r.text(); return t?JSON.parse(t):null; },
+  patch: async function(p,b){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'X-HTTP-Method-Override':'PATCH','Prefer':'return=minimal'},this.h()),body:JSON.stringify(b)}); if(!r.ok)throw Error(await r.text()); var t=await r.text(); return t?JSON.parse(t):null; },
   del: async function(p){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'DELETE',headers:this.h()}); if(!r.ok)throw Error(await r.text()); },
 };
 
