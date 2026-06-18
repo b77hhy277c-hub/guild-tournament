@@ -259,11 +259,10 @@ function filterTree(){
     if(!node) return;
 
     if(match){
-      // Show this node, expand ancestors AND show children
+      // Show this node, expand ancestors, show all descendants
       node.style.display = '';
-      // Expand children of matched node
-      var kids = node.querySelector('.tree-children');
-      if(kids) kids.classList.remove('collapsed');
+      node.querySelectorAll('.tree-node').forEach(function(n){ n.style.display = ''; });
+      node.querySelectorAll('.tree-children').forEach(function(c){ c.classList.remove('collapsed'); });
       var p = node.parentElement;
       while(p){
         if(p.classList.contains('tree-children')){ p.classList.remove('collapsed'); }
