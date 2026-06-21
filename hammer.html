@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>大锤一览</title>
+  <style>
+    :root {
+      --bg: #ffffff; --bg2: #f5f5f7; --card: #ffffff; --hover: rgba(0,0,0,0.04);
+      --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2;
+      --accent: #007AFF; --accent-h: #0062d1;
+      --border: #d2d2d7; --border-l: #e5e5ea;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08); --r: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000; --bg2: #1c1c1e; --card: #1c1c1e;
+        --hover: rgba(255,255,255,0.08);
+        --text: #f5f5f7; --text2: #8e8e93; --text3: #636366;
+        --accent: #0A84FF; --accent-h: #409cff;
+        --border: #38383a; --border-l: #2c2c2e;
+        --shadow: 0 1px 3px rgba(255,255,255,0.05);
+      }
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif; font-size: 15px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    .navbar { display:flex; align-items:center; justify-content:space-between; height:48px; padding:0 20px; border-bottom:1px solid var(--border-l); position:sticky; top:0; background:var(--bg); z-index:10; backdrop-filter:blur(20px); }
+    .navbar a { color:var(--accent); text-decoration:none; font-size:14px; }
+    .navbar .title { font-size:16px; font-weight:600; }
+    .navbar .user { font-size:13px; color:var(--text2); }
+
+    .main { max-width: 800px; margin: 0 auto; padding: 32px 24px; }
+
+    .card { background:var(--card); border:1px solid var(--border-l); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; }
+    .card h2 { font-size:20px; font-weight:600; padding:20px 20px 0; }
+    .card .sub { font-size:13px; color:var(--text2); padding:4px 20px 16px; }
+
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:12px 16px; text-align:left; border-bottom:1px solid var(--border-l); font-size:14px; }
+    th { font-size:13px; font-weight:600; color:var(--text2); background:var(--bg2); }
+    tr:hover td { background:var(--hover); }
+    tr:last-child td { border-bottom:none; }
+    .num { text-align:right; font-weight:600; }
+    .num.big { color:var(--accent); }
+    .time { font-size:12px; color:var(--text3); }
+
+    .empty { text-align:center; padding:40px 20px; color:var(--text2); }
+
+    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); padding:10px 20px; border-radius:8px; font-size:14px; font-weight:500; z-index:200; opacity:0; pointer-events:none; transition:opacity 0.3s; box-shadow:var(--shadow); }
+    .toast.show { opacity:1; }
+    .toast.ok { background:#30d158; color:#fff; }
+    .toast.err { background:#ff3b30; color:#fff; }
+  </style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<nav class="navbar">
+  <a href="index.html">← 返回主界面</a>
+  <span class="title">🔨 大锤一览</span>
+  <span class="user" id="navUser">--</span>
+</nav>
+
+<div class="main">
+  <div class="card">
+    <h2>全公会大锤/小锤数量</h2>
+    <p class="sub">按大锤数量降序 → 小锤数量降序排列</p>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px;">#</th>
+            <th>昵称</th>
+            <th class="num">🔨 大锤</th>
+            <th class="num">🔧 小锤</th>
+            <th>更新时间</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL = 'https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API = {
+  h: function(){ return { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY }; },
+  get: async function(p){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}); if(!r.ok)throw Error(await r.text()); return r.json(); },
+};
+
+var curUser = null;
+
+function toast(m,t){ var e=document.getElementById('toast'); e.textContent=m; e.className='toast '+(t||'ok')+' show'; clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove('show');},2500); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function getUser(){
+  var s=localStorage.getItem('guild_current_user');
+  if(!s){ window.location.href='login.html'; return null; }
+  try{ var u=JSON.parse(s); if(!u.id)throw Error(); return u; }catch(_){ localStorage.removeItem('guild_current_user'); window.location.href='login.html'; return null; }
+}
+
+function fmtTime(d){
+  if(!d) return '--';
+  var dt=new Date(d);
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+}
+
+async function loadData(){
+  try {
+    var members = await API.get('members?select=display_name,big_hammer,small_hammer,hammer_updated_at&order=big_hammer.desc,small_hammer.desc');
+    var html = '';
+    if(!members || members.length===0){
+      html = '<tr><td colspan="5" class="empty">暂无数据</td></tr>';
+    } else {
+      members.forEach(function(m, i){
+        html += '<tr>'+
+          '<td>'+(i+1)+'</td>'+
+          '<td><strong>'+esc(m.display_name)+'</strong></td>'+
+          '<td class="num big">'+(m.big_hammer||0)+'</td>'+
+          '<td class="num">'+(m.small_hammer||0)+'</td>'+
+          '<td class="time">'+fmtTime(m.hammer_updated_at)+'</td>'+
+        '</tr>';
+      });
+    }
+    document.getElementById('tbody').innerHTML = html;
+  } catch(e){ console.error(e); toast('加载失败: '+e.message,'err'); }
+}
+
+async function init(){
+  curUser = getUser();
+  if(!curUser) return;
+  document.getElementById('navUser').textContent = curUser.display_name || curUser.uid;
+  await loadData();
+}
+init();
+</script>
+</body>
+</html>

@@ -282,6 +282,10 @@
           <span class="field-label">职务</span>
           <span class="field-value" id="fiPosition">--</span>
         </div>
+        <div class="field">
+          <span class="field-label">大锤</span>
+          <span class="field-value" id="fiHammer">--</span>
+        </div>
       </div>
 
       <!-- 今日副业 -->
@@ -337,11 +341,11 @@
           <div class="card-desc">看看谁来过</div>
         </a>
 
-        <div class="card disabled">
-          <div class="card-icon">🔜</div>
-          <div class="card-title">敬请期待</div>
-          <div class="card-desc">更多功能即将上线</div>
-        </div>
+        <a href="hammer.html" class="card">
+          <div class="card-icon">🔨</div>
+          <div class="card-title">大锤一览</div>
+          <div class="card-desc">全公会大锤小锤数量</div>
+        </a>
       </div>
     </main>
   </div>
@@ -406,6 +410,7 @@
       document.getElementById('fiVip').textContent = u.vip_level;
       document.getElementById('fiAdmin').textContent = u.is_admin ? '是' : '否';
       document.getElementById('fiPosition').textContent = u.position || '成员';
+      document.getElementById('fiHammer').textContent = (u.big_hammer||0)+'大/'+(u.small_hammer||0)+'小';
 
       // 管理员入口
       if (u.is_admin || u.position === '副会长') {
@@ -429,6 +434,9 @@
           currentUser.vip_level = db.vip_level;
           currentUser.is_admin = db.is_admin;
           currentUser.position = db.position;
+          currentUser.big_hammer = db.big_hammer || 0;
+          currentUser.small_hammer = db.small_hammer || 0;
+          currentUser.hammer_updated_at = db.hammer_updated_at;
           localStorage.setItem('guild_current_user', JSON.stringify(currentUser));
         }
       } catch (err) {

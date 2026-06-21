@@ -237,7 +237,13 @@
     }
 
     function esc(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function fmtTime(d){
+      if(!d) return '--';
+      var dt=new Date(d);
+      return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
     }
 
     function render() {
@@ -258,7 +264,16 @@
         '<input type="number" id="editLevel" value="' + u.level + '" /></div>' +
 
         '<div class="field"><span class="label">VIP 等级</span>' +
-        '<input type="number" id="editVip" value="' + u.vip_level + '" /></div>';
+        '<input type="number" id="editVip" value="' + u.vip_level + '" /></div>' +
+
+        '<div class="field"><span class="label">大锤</span>' +
+        '<input type="number" id="editBigHammer" value="' + (u.big_hammer || 0) + '" /></div>' +
+
+        '<div class="field"><span class="label">小锤</span>' +
+        '<input type="number" id="editSmallHammer" value="' + (u.small_hammer || 0) + '" /></div>' +
+
+        '<div class="field" style="color:var(--text-tertiary);font-size:12px;">' +
+        '<span class="label"></span>上次更新：' + (u.hammer_updated_at ? fmtTime(u.hammer_updated_at) : '从未') + '</div>';
 
       document.getElementById('profileCard').innerHTML = html;
     }
@@ -272,13 +287,20 @@
         if (newPw !== cfmPw) { showToast('两次密码不一致', 'error'); return; }
       }
 
+      var bigH = parseInt(document.getElementById('editBigHammer').value)||0;
+      var smallH = parseInt(document.getElementById('editSmallHammer').value)||0;
+      var hammerChanged = (bigH !== (currentUser.big_hammer||0)) || (smallH !== (currentUser.small_hammer||0));
+
       var updates = {
         display_name: document.getElementById('editName').value.trim(),
         uid: document.getElementById('editUid').value.trim(),
         is_full_like: document.getElementById('editFullLike').checked,
         level: parseInt(document.getElementById('editLevel').value) || 0,
         vip_level: parseInt(document.getElementById('editVip').value) || 0,
+        big_hammer: bigH,
+        small_hammer: smallH,
       };
+      if(hammerChanged) updates.hammer_updated_at = new Date().toISOString();
 
       if (!updates.display_name || !updates.uid) {
         showToast('昵称和 UID 不能为空', 'error'); return;
@@ -300,6 +322,9 @@
         currentUser.is_full_like = fresh.is_full_like;
         currentUser.level = fresh.level;
         currentUser.vip_level = fresh.vip_level;
+        currentUser.big_hammer = fresh.big_hammer;
+        currentUser.small_hammer = fresh.small_hammer;
+        currentUser.hammer_updated_at = fresh.hammer_updated_at;
         localStorage.setItem('guild_current_user', JSON.stringify(currentUser));
 
         showToast('✅ 保存成功');
