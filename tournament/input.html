@@ -271,7 +271,15 @@ async function loadAll(){
 
       var memberResults = await Promise.all(memberParallel);
       var ad = memberResults[0];
-      abilities = {}; (ad||[]).forEach(function(a){ abilities[a.task_definition_id] = { is_able: a.is_able, quantity: a.quantity || 0 }; });
+      abilities = {};
+      // 构建有效任务ID集合，过滤掉已删除任务的脏数据
+      var validDefIds = {};
+      defs.forEach(function(d){ validDefIds[d.id] = true; });
+      (ad||[]).forEach(function(a){
+        if(validDefIds[a.task_definition_id]){
+          abilities[a.task_definition_id] = { is_able: a.is_able, quantity: a.quantity || 0 };
+        }
+      });
 
       if(seasons.length>0 && memberResults[1] && memberResults[1].length>0){
         var c = memberResults[1][0];

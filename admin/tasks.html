@@ -505,6 +505,8 @@ async function deleteCat(id, name){
 async function deleteTask(id, name){
   if(!confirm('删除任务「'+name+'」？')) return;
   try {
+    // 先清理成员已录入的能力数据，避免外键违规
+    await API.del('member_task_abilities?task_definition_id=eq.'+id);
     await API.del('task_definitions?id=eq.'+id);
     toast('✅ 已删除');
     var taskDel = defs.find(function(d){ return d.id===id; });
