@@ -90,6 +90,10 @@
     .empty .icon { font-size: 48px; margin-bottom: 12px; }
     .empty p { font-size: 15px; margin-bottom: 4px; }
 
+    .row-meet { }
+    .row-nomeet { opacity:0.55; }
+    .qty-col { text-align:center; font-weight:500; color:var(--accent); }
+
     .filter-note { font-size: 12px; color: var(--text3); padding: 12px 20px; border-top: 1px solid var(--border-l); }
 
     .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); padding:10px 20px; border-radius:8px; font-size:14px; font-weight:500; z-index:999; opacity:0; pointer-events:none; transition:opacity 0.3s; box-shadow:var(--shadow); }
@@ -150,12 +154,13 @@
             <th>UID</th>
             <th>等级</th>
             <th>状态</th>
+            <th id="qtyTh" style="display:none;">数量</th>
                       </tr>
         </thead>
         <tbody id="resultBody"></tbody>
       </table>
     </div>
-    <div class="filter-note">💡 筛选说明：已设置目标分数的成员，仅当任务分数 ≥ 其均分−2 时显示。未设置目标分数的成员默认显示。</div>
+    <div class="filter-note">💡 显示所有勾选此任务的成员。高亮=均分达标（任务分数 ≥ 均分−2），灰色=均分不达标（后方标注均分）。未设目标的成员默认达标。</div>
   </div>
 
   <!-- Empty state (pre-query) -->
@@ -284,11 +289,12 @@ async function doQuery(){
 
   var task = defs.find(function(d){ return d.id===taskId; });
   var taskScore = task ? (task.default_score||0) : 0;
+  var isSkin = task ? task.is_skin === true : false;
   try {
     document.getElementById('emptyHint').style.display = 'none';
 
-    // 1. Get abilities for this task
-    var abilities = await API.get('member_task_abilities?task_definition_id=eq.'+taskId+'&is_able=eq.true&select=member_id');
+    // 1. Get abilities for this task (include quantity)
+    var abilities = await API.get('member_task_abilities?task_definition_id=eq.'+taskId+'&is_able=eq.true&select=member_id,quantity');
 
     if(!abilities || abilities.length===0){
       showEmpty('该任务无人可接，请大胆刷新或删除');
@@ -296,11 +302,12 @@ async function doQuery(){
     }
 
     var memberIds = abilities.map(function(a){ return a.member_id; });
+    var qtyMap = {};
+    abilities.forEach(function(a){ qtyMap[a.member_id] = a.quantity || 0; });
 
     // 2. Get member details (use in.() for batch)
-    var members = [];
     var idList = memberIds.join(',');
-    members = await API.get('members?id=in.('+idList+')&select=id,display_name,uid,level&order=level.desc');
+    var members = await API.get('members?id=in.('+idList+')&select=id,display_name,uid,level&order=level.desc');
 
     // 3. Get season configs for these members
     var currentSeason = await API.get('seasons?is_current=eq.true&select=id&limit=1');
@@ -312,40 +319,51 @@ async function doQuery(){
       (configs||[]).forEach(function(c){ configMap[c.member_id] = c; });
     }
 
-    // 4. Filter by avg_score rule
-    var filtered = members.filter(function(m){
+    // 4. Separate: meeting avg criteria vs not
+    var meet=[], notMeet=[];
+    members.forEach(function(m){
       var cfg = configMap[m.id];
-      if(!cfg || cfg.avg_score === null || cfg.avg_score === undefined || cfg.avg_score === 0){
-        // No config → include by default
-        return true;
-      }
-      // Has config → avg_score must be <= task score + 2
-      return cfg.avg_score <= (taskScore + 2);
+      var qualifies = !cfg || cfg.avg_score === null || cfg.avg_score === undefined || cfg.avg_score === 0 || cfg.avg_score <= (taskScore + 2);
+      if(qualifies) meet.push(m);
+      else notMeet.push(m);
     });
 
-    if(filtered.length===0){
-      showEmpty('该任务无人可接（均分要求不满足），请大胆刷新或删除');
+    if(meet.length===0 && notMeet.length===0){
+      showEmpty('该任务无人可接，请大胆刷新或删除');
       return;
     }
 
     // 5. Render
     document.getElementById('resultCard').style.display = 'block';
+    var totalLabel = meet.length+' 人达标';
+    if(notMeet.length>0) totalLabel += '，'+notMeet.length+' 人不达标';
     document.getElementById('resultHeader').innerHTML =
-      '查询结果：<span class="count">共 '+filtered.length+' 人</span>可接此任务 · ' +
-      esc(task.display_name||task.task_name) + ' ('+taskScore+'分)';
+      '查询结果：<span class="count">共 '+members.length+' 人</span>勾选此任务 · ' +
+      esc(task.display_name||task.task_name) + ' ('+taskScore+'分) · ' + totalLabel;
+
+    // Show/hide quantity column
+    var qtyTh = document.getElementById('qtyTh');
+    if(qtyTh) qtyTh.style.display = isSkin ? '' : 'none';
 
     var html = '';
-    filtered.forEach(function(m, i){
+    // Render meets first (highlighted), then not-meet
+    var ordered = meet.concat(notMeet);
+    ordered.forEach(function(m, i){
       var cfg = configMap[m.id] || {};
-      var canAccept = cfg.can_accept !== false; // default true
+      var canAccept = cfg.can_accept !== false;
       var statusLabel = canAccept ? '可接' : '已满';
       var statusCls = canAccept ? 'badge-ok' : 'badge-full';
-      html += '<tr>' +
+      var qualifies = i < meet.length;
+      var avgScore = (cfg.avg_score !== null && cfg.avg_score !== undefined && cfg.avg_score !== 0) ? cfg.avg_score : null;
+      var note = !qualifies && avgScore ? '（均分'+avgScore+'）' : '';
+
+      html += '<tr class="'+(qualifies?'row-meet':'row-nomeet')+'">' +
         '<td>'+(i+1)+'</td>' +
-        '<td><strong>'+esc(m.display_name)+'</strong></td>' +
+        '<td><strong>'+esc(m.display_name)+'</strong>'+note+'</td>' +
         '<td>'+esc(m.uid)+'</td>' +
         '<td>Lv.'+(m.level||0)+'</td>' +
         '<td><span class="badge '+statusCls+'">'+statusLabel+'</span></td>' +
+        (isSkin ? '<td class="qty-col">'+(qtyMap[m.id]||0)+'</td>' : '<td style="display:none;"></td>') +
         '</tr>';
     });
     document.getElementById('resultBody').innerHTML = html;

@@ -100,6 +100,8 @@
     .l3-task .lbl { flex:1; font-size:14px; }
     .l3-task .lbl .muted { color:var(--text3); font-size:12px; }
     .l3-task .sc { font-size:13px; color:var(--accent); font-weight:500; min-width:40px; text-align:right; }
+    .l3-task .qty-input { width:48px; padding:3px 6px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--bg); color:var(--text); text-align:center; outline:none; flex-shrink:0; }
+    .l3-task .qty-input:focus { border-color:var(--accent); }
 
     /* bottom */
     .bot { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-top:1px solid var(--border-l); background:var(--bg2); position:sticky; bottom:0; z-index:5; }
@@ -468,16 +470,20 @@ function renderL3Multi(l3cats, parentName){
   var h='';
   allTasks.forEach(function(item){
     var t = item.task;
-    var ab = abilities[t.id] || { is_able:false, quantity:0 };
+    var ab = abilities[t.id] || { is_able:false, quantity:1 };
     var chk = ab.is_able?'checked':'';
     var score = t.default_score||0;
     var label = item.l3name + ' - ' + (t.display_name||t.task_name);
+    var isSkinBasic = t.is_skin === true;
 
     h+='<div class="l3-task">';
-    h+='<input type="checkbox" data-defid="'+t.id+'" '+chk+' onchange="onToggle(this)" />';
+    h+='<input type="checkbox" data-defid="'+t.id+'" '+(isSkinBasic?'data-skin="1"':'')+' '+chk+' onchange="onToggle(this)" />';
     h+='<span class="lbl">'+esc(label);
     if(isOther) h+=' <span class="muted">（非必要不推荐做）</span>';
     h+='</span>';
+    if(isSkinBasic && chk){
+      h+='<input type="number" class="qty-input" value="'+(ab.quantity||1)+'" min="1" max="99" data-defid="'+t.id+'" onchange="onQtyChange(this)" onclick="event.stopPropagation()" />';
+    }
     h+='<span class="sc">'+score+'分</span>';
     h+='</div>';
   });
@@ -501,7 +507,7 @@ function renderL3(catId, catName){
 
   var h='';
   tasks.forEach(function(t){
-    var ab = abilities[t.id] || { is_able:false, quantity:0 };
+    var ab = abilities[t.id] || { is_able:false, quantity:1 };
     var chk = ab.is_able?'checked':'';
     var score = t.default_score||0;
     var isSkin = t.is_skin === true;
@@ -511,6 +517,9 @@ function renderL3(catId, catName){
     h+='<span class="lbl">'+esc(t.display_name||t.task_name);
     if(isOther) h+=' <span class="muted">（非必要不推荐做）</span>';
     h+='</span>';
+    if(isSkin && chk){
+      h+='<input type="number" class="qty-input" value="'+(ab.quantity||1)+'" min="1" max="99" data-defid="'+t.id+'" onchange="onQtyChange(this)" onclick="event.stopPropagation()" />';
+    }
     h+='<span class="sc">'+score+'分</span>';
     h+='</div>';
   });
@@ -529,8 +538,17 @@ function findSibling(catId, code){
 
 // Set ability state
 function setAb(did, val){
-  if(!abilities[did]) abilities[did]={is_able:false,quantity:0};
+  if(!abilities[did]) abilities[did]={is_able:false,quantity:1};
   abilities[did].is_able = val;
+}
+
+function onQtyChange(inp){
+  var did = inp.dataset.defid;
+  var qty = parseInt(inp.value)||1;
+  if(qty<1) qty=1;
+  if(!abilities[did]) abilities[did]={is_able:true,quantity:qty};
+  else abilities[did].quantity = qty;
+  recalc();
 }
 
 function onToggle(cb){
@@ -617,7 +635,9 @@ function onToggle(cb){
   updateCnt(); recalc();
   // refresh display
   var nm=document.getElementById('l3Title').textContent;
-  renderL3(activeL2, nm);
+  var l3s = cats.filter(function(c){ return c.parent_id===activeL2; });
+  if(l3s.length>0) renderL3Multi(l3s, nm);
+  else renderL3(activeL2, nm);
 }
 
 function updateCnt(){
@@ -628,7 +648,7 @@ function updateCnt(){
 // ===== SAVE =====
 async function saveAbilities(){
   var mid=effId(); if(!mid){ toast('未找到成员','err'); return; }
-  var rows=[]; Object.keys(abilities).forEach(function(did){ var a=abilities[did]; rows.push({ member_id:mid, task_definition_id:did, is_able:a.is_able, updated_at:new Date().toISOString() }); });
+  var rows=[]; Object.keys(abilities).forEach(function(did){ var a=abilities[did]; rows.push({ member_id:mid, task_definition_id:did, is_able:a.is_able, quantity:a.quantity||0, updated_at:new Date().toISOString() }); });
   try {
     await API.del('member_task_abilities?member_id=eq.'+mid);
     for(var i=0;i<rows.length;i+=100){ await API.post('member_task_abilities', rows.slice(i,i+100)); }
