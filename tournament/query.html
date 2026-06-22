@@ -203,10 +203,37 @@ function onSearchTask(){
     container.style.display = 'none';
     return;
   }
-  var matches = defs.filter(function(d){
-    var name = (d.display_name||d.task_name||'').toLowerCase();
-    return name.indexOf(q) >= 0;
+
+  // Collect all descendant category IDs for a given category
+  function getDescendantCatIds(catId){
+    var ids = [catId];
+    var children = cats.filter(function(c){ return c.parent_id===catId; });
+    children.forEach(function(ch){
+      ids = ids.concat(getDescendantCatIds(ch.id));
+    });
+    return ids;
+  }
+
+  // Find matching categories (any level)
+  var matchedCatIds = {};
+  cats.forEach(function(c){
+    if(c.name.toLowerCase().indexOf(q) >= 0){
+      var desc = getDescendantCatIds(c.id);
+      desc.forEach(function(id){ matchedCatIds[id] = true; });
+    }
   });
+
+  // Find tasks: match by name OR belong to matched category
+  var seen = {};
+  var matches = [];
+  defs.forEach(function(d){
+    var name = (d.display_name||d.task_name||'').toLowerCase();
+    if(name.indexOf(q) >= 0 || matchedCatIds[d.category_id]){
+      var key = d.id;
+      if(!seen[key]){ seen[key]=true; matches.push(d); }
+    }
+  });
+
   if(!matches.length){
     container.style.display = 'none';
     return;
