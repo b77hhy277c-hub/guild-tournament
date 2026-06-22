@@ -99,7 +99,7 @@
     <div class="table-wrap"><table>
       <thead>
         <tr>
-          <th>副业名称</th><th>能力额度</th><th>参与成员</th>
+          <th>副业名称</th><th>能力额度</th><th style="width:50px;">人数</th><th>参与成员</th>
           <th style="width:60px;" id="thActions"></th>
         </tr>
       </thead>
@@ -182,10 +182,20 @@ async function loadData(){
   try {
     versions=await API.get('side_business_versions?select=*&order=created_at.asc');
     allMembers=await API.get('members?select=display_name,position&order=display_name.asc');
-    if(versions.length===0){ document.getElementById('tbody').innerHTML='<tr><td colspan="4" class="empty">暂无副业版本数据，请联系管理员</td></tr>';return; }
+    if(versions.length===0){ document.getElementById('tbody').innerHTML='<tr><td colspan="5" class="empty">暂无副业版本数据，请联系管理员</td></tr>';return; }
 
     currentVersion=versions.find(function(v){return v.is_current;})||versions[0];
-    allocations=await API.get('side_business_allocation?version_id=eq.'+currentVersion.id+'&select=*&order=sort_order.asc');
+    allocations=await API.get('side_business_allocation?version_id=eq.'+currentVersion.id+'&select=*');
+    // 固定排序
+    var FIXED_ORDER=['割麦子','洗盘子','捕鱼','摘水果','摆地摊','干工地','挖矿','运输队'];
+    var orderMap={};
+    FIXED_ORDER.forEach(function(name,i){ orderMap[name]=i; });
+    allocations.sort(function(a,b){
+      var oa=orderMap.hasOwnProperty(a.business_name)?orderMap[a.business_name]:999;
+      var ob=orderMap.hasOwnProperty(b.business_name)?orderMap[b.business_name]:999;
+      if(oa!==ob) return oa-ob;
+      return (a.sort_order||0)-(b.sort_order||0);
+    });
 
     renderVersionTabs();
     renderDate();
@@ -215,16 +225,29 @@ function renderDate(){
 
 function renderTable(){
   var showActions=canManage();
+  // Build position lookup: display_name → position
+  var posMap={};
+  allMembers.forEach(function(m){ posMap[m.display_name]=m.position; });
+
   document.getElementById('thActions').innerHTML=showActions?'操作':'';
   var html='';
   if(allocations.length===0){
-    html='<tr><td colspan="4" class="empty">当前版本暂无分配方案</td></tr>';
+    html='<tr><td colspan="5" class="empty">当前版本暂无分配方案</td></tr>';
   } else {
     allocations.forEach(function(a){
+      var cnt = (a.members||'').split(',').filter(function(s){return s.trim();}).length;
+      var displayMembers = (a.members||'').split(',').map(function(s){
+        var name=s.trim(); if(!name) return '';
+        var p=posMap[name];
+        if(p==='会长') return '会长('+name+')';
+        if(p==='副会长') return '副会长('+name+')';
+        return name;
+      }).filter(Boolean).join(',');
       html+='<tr>'+
         '<td>'+esc(a.business_name)+'</td>'+
         '<td>'+esc(String(a.capacity||''))+'</td>'+
-        '<td>'+esc(a.members||'')+'</td>'+
+        '<td style="text-align:center;font-weight:500;">'+(cnt||0)+'</td>'+
+        '<td>'+esc(displayMembers)+'</td>'+
         (showActions?'<td><button class="btn btn-s" style="padding:3px 10px;font-size:12px;" onclick="openEdit(\''+a.id+'\')">编辑</button></td>':'')+
         '</tr>';
     });
@@ -232,7 +255,7 @@ function renderTable(){
   // Extra time row
   var extraTime=currentVersion? (currentVersion.extra_time||'22:05') : '22:05';
   html+='<tr class="extra-row">'+
-    '<td colspan="2"><span id="extraTimeDisp">⏱️ 补副业时间：'+esc(extraTime)+'</span>'+
+    '<td colspan="3"><span id="extraTimeDisp">⏱️ 补副业时间：'+esc(extraTime)+'</span>'+
     (showActions?' <span id="extraTimeEditWrap" style="display:none;"><input type="text" id="extraTimeInput" value="'+esc(extraTime)+'" style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:13px;text-align:center;" /><button class="btn btn-p" style="padding:2px 8px;font-size:11px;" onclick="saveExtraTime()">✓</button><button class="btn btn-s" style="padding:2px 8px;font-size:11px;" onclick="cancelExtraTimeEdit()">✕</button></span>':'')+
     '</td>'+
     '<td></td>'+
@@ -264,19 +287,30 @@ async function switchVersion(id, name){
 // ===== Edit/Add =====
 function popCheckboxes(selected){
   var names=(selected||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
-  var hz=allMembers.filter(function(m){return m.position==='会长';}).map(function(m){return m.display_name;}).join('、')||'无';
-  var fz=allMembers.filter(function(m){return m.position==='副会长';}).map(function(m){return m.display_name;}).join('、')||'无';
+  var hzMembers=allMembers.filter(function(m){return m.position==='会长';});
+  var fzMembers=allMembers.filter(function(m){return m.position==='副会长';});
+  var hasOldFz=names.indexOf('副会长')>=0; // backwards compat
   var html='';
-  // 会长/副会长单独选项
-  html+='<label class="strong"><input type="checkbox" value="会长" '+(names.indexOf('会长')>=0?'checked':'')+' /><span>会长（'+esc(hz)+'）</span></label>';
-  html+='<label class="strong"><input type="checkbox" value="副会长" '+(names.indexOf('副会长')>=0?'checked':'')+' /><span>副会长（'+esc(fz)+'）</span></label>';
+  // 会长选项
+  hzMembers.forEach(function(m){
+    var checked=names.indexOf(m.display_name)>=0 || names.indexOf('会长')>=0?'checked':'';
+    html+='<label class="strong"><input type="checkbox" value="'+esc(m.display_name)+'" '+checked+' /><span>会长：'+esc(m.display_name)+'</span></label>';
+  });
+  // 副会长各自单列
+  fzMembers.forEach(function(m){
+    var checked=names.indexOf(m.display_name)>=0 || hasOldFz?'checked':'';
+    html+='<label class="strong"><input type="checkbox" value="'+esc(m.display_name)+'" '+checked+' /><span>副会长：'+esc(m.display_name)+'</span></label>';
+  });
+  if(hzMembers.length===0 && fzMembers.length===0){
+    html+='<label style="color:var(--text3);">暂无会长/副会长数据</label>';
+  }
   html+='<div style="border-top:1px solid var(--border-l);margin:4px 0;"></div>';
   allMembers.forEach(function(m){
+    if(m.position==='会长'||m.position==='副会长') return; // already listed above
     var checked=names.indexOf(m.display_name)>=0?'checked':'';
     html+='<label><input type="checkbox" value="'+esc(m.display_name)+'" '+checked+' /><span>'+esc(m.display_name)+'</span></label>';
   });
   document.getElementById('mMembersCheckboxes').innerHTML=html;
-  console.log('popCheckboxes rendered',allMembers.length,'members');
 }
 
 function deselectAll(){
@@ -330,7 +364,17 @@ async function saveRow(){
     }
     toast('✅ 已保存');
     closeModal();
-    allocations=await API.get('side_business_allocation?version_id=eq.'+currentVersion.id+'&select=*&order=sort_order.asc');
+    allocations=await API.get('side_business_allocation?version_id=eq.'+currentVersion.id+'&select=*');
+    // 固定排序
+    var FIXED_ORDER=['割麦子','洗盘子','捕鱼','摘水果','摆地摊','干工地','挖矿','运输队'];
+    var orderMap={};
+    FIXED_ORDER.forEach(function(name,i){ orderMap[name]=i; });
+    allocations.sort(function(a,b){
+      var oa=orderMap.hasOwnProperty(a.business_name)?orderMap[a.business_name]:999;
+      var ob=orderMap.hasOwnProperty(b.business_name)?orderMap[b.business_name]:999;
+      if(oa!==ob) return oa-ob;
+      return (a.sort_order||0)-(b.sort_order||0);
+    });
     renderTable();
     updateTime();
   } catch(e){ console.error(e); toast('保存失败: '+e.message,'err'); }
@@ -343,7 +387,16 @@ async function deleteRow(){
     await API.del('side_business_allocation?id=eq.'+editId);
     toast('✅ 已删除');
     closeModal();
-    allocations=await API.get('side_business_allocation?version_id=eq.'+currentVersion.id+'&select=*&order=sort_order.asc');
+    allocations=await API.get('side_business_allocation?version_id=eq.'+currentVersion.id+'&select=*');
+    var FIXED_ORDER=['割麦子','洗盘子','捕鱼','摘水果','摆地摊','干工地','挖矿','运输队'];
+    var orderMap={};
+    FIXED_ORDER.forEach(function(name,i){ orderMap[name]=i; });
+    allocations.sort(function(a,b){
+      var oa=orderMap.hasOwnProperty(a.business_name)?orderMap[a.business_name]:999;
+      var ob=orderMap.hasOwnProperty(b.business_name)?orderMap[b.business_name]:999;
+      if(oa!==ob) return oa-ob;
+      return (a.sort_order||0)-(b.sort_order||0);
+    });
     renderTable();
     updateTime();
   } catch(e){ console.error(e); toast('删除失败: '+e.message,'err'); }
