@@ -118,7 +118,13 @@
   <!-- Query -->
   <div class="query-card">
     <h2>任务选择器</h2>
-    <p class="desc">逐级选择分类，定位到具体任务后点击查询</p>
+    <p class="desc">输入关键字搜索任务，或逐级选择分类定位</p>
+
+    <div style="margin-bottom:14px;">
+      <input type="text" id="searchTask" placeholder="🔍 输入任务关键字模糊搜索..." oninput="onSearchTask()"
+        style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;" />
+      <div id="searchResults" style="display:none;margin-top:4px;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--card);"></div>
+    </div>
 
     <div class="selects">
       <div class="select-group">
@@ -187,6 +193,57 @@ function getUser(){
   var s=localStorage.getItem('guild_current_user');
   if(!s){ window.location.href='../login.html'; return null; }
   try{ var u=JSON.parse(s); if(!u.id)throw Error(); return u; }catch(_){ localStorage.removeItem('guild_current_user'); window.location.href='../login.html'; return null; }
+}
+
+// ===== Fuzzy search =====
+function onSearchTask(){
+  var q = (document.getElementById('searchTask').value||'').toLowerCase().trim();
+  var container = document.getElementById('searchResults');
+  if(!q || q.length < 1){
+    container.style.display = 'none';
+    return;
+  }
+  var matches = defs.filter(function(d){
+    var name = (d.display_name||d.task_name||'').toLowerCase();
+    return name.indexOf(q) >= 0;
+  });
+  if(!matches.length){
+    container.style.display = 'none';
+    return;
+  }
+  // Build path for each match
+  var html = '';
+  matches.slice(0,50).forEach(function(t){
+    var parts = [];
+    var cat = cats.find(function(c){ return c.id===t.category_id; });
+    while(cat){
+      parts.unshift(cat.name);
+      cat = cats.find(function(c){ return c.id===cat.parent_id; });
+    }
+    var path = parts.join(' > ');
+    var name = t.display_name||t.task_name;
+    html += '<div style="padding:8px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border-l);" onclick="selectSearchResult(\''+t.id+'\')" onmouseover="this.style.background=\'var(--hover)\'" onmouseout="this.style.background=\'\'">'+
+      '<span style="color:var(--text);">'+esc(name)+'</span>'+
+      ' <span style="color:var(--text3);font-size:11px;">('+(t.default_score||0)+'分)</span>'+
+      '<br><span style="color:var(--text3);font-size:11px;">'+esc(path)+'</span>'+
+    '</div>';
+  });
+  if(matches.length > 50) html += '<div style="padding:6px 14px;font-size:11px;color:var(--text3);">还有 '+(matches.length-50)+' 个结果，请缩小范围</div>';
+  container.innerHTML = html;
+  container.style.display = 'block';
+}
+
+function selectSearchResult(taskId){
+  var t = defs.find(function(d){ return d.id===taskId; });
+  if(!t) return;
+  var name = t.display_name||t.task_name;
+  // Populate s4 with just this task so the value is valid
+  document.getElementById('s4').innerHTML = '<option value="'+taskId+'">'+esc(name)+' ('+(t.default_score||0)+'分)</option>';
+  document.getElementById('s4').value = taskId;
+  document.getElementById('s4').disabled = false;
+  document.getElementById('searchResults').style.display = 'none';
+  document.getElementById('searchTask').value = '';
+  doQuery();
 }
 
 // ===== Load categories & definitions =====
@@ -388,6 +445,11 @@ async function init(){
   document.getElementById('navUser').textContent = curUser.display_name || curUser.uid;
   await loadData();
 }
+document.addEventListener('click', function(e){
+  var sr = document.getElementById('searchResults');
+  var st = document.getElementById('searchTask');
+  if(e.target !== st && !sr.contains(e.target)) sr.style.display = 'none';
+});
 init();
 </script>
 </body>
