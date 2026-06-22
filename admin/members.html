@@ -81,6 +81,8 @@
 
     .stats { display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
     .stat { flex:1; min-width:120px; background:var(--bg2); border-radius:var(--r); padding:14px 18px; border:1px solid var(--border-l); text-align:center; }
+    .stat.clickable { cursor:pointer; transition:border-color 0.2s; }
+    .stat.clickable:hover { border-color:var(--accent); }
     .stat .num { font-size:28px; font-weight:700; color:var(--accent); }
     .stat .lbl { font-size:12px; color:var(--text2); margin-top:2px; }
   </style>
@@ -98,7 +100,7 @@
   <!-- Stats -->
   <div class="stats">
     <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">成员总数</div></div>
-    <div class="stat"><div class="num" id="statAble">0</div><div class="lbl">已录入任务</div></div>
+    <div class="stat clickable" onclick="showAbleList()"><div class="num" id="statAble">0</div><div class="lbl">已录入人数</div></div>
     <div class="stat"><div class="num" id="statTarget">0</div><div class="lbl">已设目标</div></div>
     <div class="stat"><div class="num" id="statAdmin">0</div><div class="lbl">竞标赛管理</div></div>
   </div>
@@ -396,6 +398,32 @@ async function showDetail(memberId){
 
   if(abs.length === 0){
     html += '<p style="color:var(--text3);">该成员尚未录入任何任务</p>';
+  }
+
+  html += '<div style="margin-top:16px;text-align:right;"><button class="btn btn-p" onclick="closeDetail()">关闭</button></div>';
+  document.getElementById('detailContent').innerHTML = html;
+  document.getElementById('detailModal').classList.add('show');
+}
+
+function showAbleList(){
+  var entered = [], notEntered = [];
+  members.forEach(function(m){
+    if(abilityCounts[m.id]) entered.push(m);
+    else notEntered.push(m);
+  });
+  entered.sort(function(a,b){ return (b.level||0)-(a.level||0); });
+  notEntered.sort(function(a,b){ return (b.level||0)-(a.level||0); });
+
+  var html = '<h3>任务录入情况</h3>';
+  html += '<p class="modal-sub">已录入 '+entered.length+' 人 · 未录入 '+notEntered.length+' 人</p>';
+
+  if(entered.length>0){
+    html += '<div class="group"><h4>✅ 已录入（'+entered.length+'人）</h4>';
+    html += '<p>'+entered.map(function(m){ return esc(m.display_name)+' (Lv.'+(m.level||0)+')'; }).join('、')+'</p></div>';
+  }
+  if(notEntered.length>0){
+    html += '<div class="group"><h4>❌ 未录入（'+notEntered.length+'人）</h4>';
+    html += '<p>'+notEntered.map(function(m){ return esc(m.display_name)+' (Lv.'+(m.level||0)+')'; }).join('、')+'</p></div>';
   }
 
   html += '<div style="margin-top:16px;text-align:right;"><button class="btn btn-p" onclick="closeDetail()">关闭</button></div>';
