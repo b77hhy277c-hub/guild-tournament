@@ -135,7 +135,7 @@
       <input type="text" id="mCap" value="1" placeholder="如：5人 / 不限" />
     </div>
     <div class="field">
-      <label>参与成员</label>
+      <label>参与成员 <button class="btn btn-s" style="padding:2px 10px;font-size:11px;margin-left:8px;" onclick="deselectAll()">取消全选</button></label>
       <div id="mMembersCheckboxes" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);background:var(--bg);"></div>
     </div>
     <div class="btn-row">
@@ -277,6 +277,11 @@ function popCheckboxes(selected){
   });
   document.getElementById('mMembersCheckboxes').innerHTML=html;
   console.log('popCheckboxes rendered',allMembers.length,'members');
+}
+
+function deselectAll(){
+  var boxes=document.querySelectorAll('#mMembersCheckboxes input[type=checkbox]');
+  boxes.forEach(function(b){ b.checked=false; });
 }
 
 function getCheckedMembers(){
