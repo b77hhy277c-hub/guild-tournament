@@ -379,8 +379,10 @@ async function showMemberDetail(memberId){
   var qtyMap = {}; abs.forEach(function(a){ qtyMap[a.task_definition_id] = a.quantity||0; });
   var l1cats = cats.filter(function(c){ return !c.parent_id; });
 
+  var totalTasks = Object.keys(qtyMap).length;
   var html = '<h3 style="margin-bottom:4px;">'+esc(m.display_name)+'</h3>';
-  html += '<p style="font-size:13px;color:var(--text2);margin-bottom:12px;">'+esc(m.uid)+' · Lv.'+(m.level||0)+' · VIP'+(m.vip_level||0)+'</p>';
+  html += '<p style="font-size:13px;color:var(--text2);margin-bottom:4px;">'+esc(m.uid)+' · Lv.'+(m.level||0)+' · VIP'+(m.vip_level||0)+'</p>';
+  html += '<p style="font-size:13px;color:var(--accent);font-weight:500;margin-bottom:12px;">已勾选任务：'+totalTasks+' 项</p>';
 
   var hasAny = false;
   l1cats.forEach(function(l1){

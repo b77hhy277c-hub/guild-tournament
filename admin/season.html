@@ -123,8 +123,8 @@
     </div>
     <div class="field">
       <label>数据更新时间</label>
-      <input type="datetime-local" id="fStatsTime" />
-      <span style="font-size:12px;color:var(--text3);">以上三项数据最后更新的时间</span>
+      <span id="fStatsTime" style="font-size:14px;color:var(--text);padding: 9px 0;display:inline-block;"></span>
+      <span style="font-size:12px;color:var(--text3);">（当前总分/任务完成总数/当前排名变动时自动记录）</span>
     </div>
     <div class="field">
       <label>公告</label>
@@ -162,6 +162,7 @@ function getUser(){
 
 function fmtDate(d){ if(!d) return ''; var dt=new Date(d); return dt.toISOString().split('T')[0]; }
 function fmtDateTime(d){ if(!d) return ''; var dt=new Date(d); return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+'T'+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0'); }
+function fmtDateTimeText(d){ if(!d) return '--'; var dt=new Date(d); return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0'); }
 
 // ===== Log operation =====
 async function logOp(type, targetType, targetId, targetName, changes){
@@ -241,7 +242,7 @@ function fillForm(s){
   document.getElementById('fTotalTasks').value = s.total_tasks||0;
   document.getElementById('fRankPos').value = s.rank_position||'';
   document.getElementById('fAnnounce').value = s.announcement||'';
-  document.getElementById('fStatsTime').value = fmtDateTime(s.stats_updated_at);
+  document.getElementById('fStatsTime').textContent = s.stats_updated_at ? fmtDateTimeText(s.stats_updated_at) : '暂无记录';
 }
 
 async function reloadSeason(){
