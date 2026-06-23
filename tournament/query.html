@@ -56,6 +56,10 @@
     .select-group select:focus { border-color: var(--accent); }
     .select-group select:disabled { opacity: 0.35; cursor: not-allowed; }
 
+    .query-tab { padding:8px 24px; border-radius:8px; font-size:14px; font-weight:500; font-family:inherit; cursor:pointer; border:1px solid var(--border); background:var(--bg); color:var(--text2); transition:all 0.2s; }
+    .query-tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .query-tab:not(.active):hover { border-color:var(--accent); color:var(--accent); }
+
     .btn {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 10px 28px; border-radius: 10px; font-size: 15px;
@@ -117,56 +121,58 @@
 
   <!-- Query -->
   <div class="query-card">
-    <h2>任务选择器</h2>
-    <p class="desc">输入关键字搜索任务，或逐级选择分类定位</p>
-
-    <div style="margin-bottom:14px;">
-      <input type="text" id="searchTask" placeholder="🔍 输入任务关键字模糊搜索..." oninput="onSearchTask()"
-        style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;" />
-      <div id="searchResults" style="display:none;margin-top:4px;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--card);"></div>
+    <!-- Tabs -->
+    <div style="display:flex;gap:2px;margin-bottom:16px;">
+      <button class="btn query-tab active" id="tabTask" onclick="switchQueryTab('task')">🔍 任务查询</button>
+      <button class="btn query-tab" id="tabMember" onclick="switchQueryTab('member')">👤 成员查询</button>
     </div>
 
-    <div class="selects">
-      <div class="select-group">
-        <label>一级分类</label>
-        <select id="s1" onchange="onS1()"></select>
+    <!-- Task query panel -->
+    <div id="panelTask">
+      <div style="margin-bottom:14px;">
+        <input type="text" id="searchTask" placeholder="🔍 输入任务关键字模糊搜索..." oninput="onSearchTask()"
+          style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;" />
+        <div id="searchResults" style="display:none;margin-top:4px;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--card);"></div>
       </div>
-      <div class="select-group">
-        <label>二级</label>
-        <select id="s2" onchange="onS2()"></select>
+      <div class="selects">
+        <div class="select-group"><label>一级分类</label><select id="s1" onchange="onS1()"></select></div>
+        <div class="select-group"><label>二级</label><select id="s2" onchange="onS2()"></select></div>
+        <div class="select-group" id="g3"><label>三级</label><select id="s3" onchange="onS3()"></select></div>
+        <div class="select-group"><label>任务</label><select id="s4"></select></div>
       </div>
-      <div class="select-group" id="g3">
-        <label>三级</label>
-        <select id="s3" onchange="onS3()"></select>
-      </div>
-      <div class="select-group">
-        <label>任务</label>
-        <select id="s4"></select>
+      <button class="btn btn-p" onclick="doQuery()">🔍 查询可接成员</button>
+
+      <!-- Results -->
+      <div class="result-card" id="resultCard" style="display:none;margin-top:20px;">
+        <div class="result-header" id="resultHeader"></div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:50px;">序号</th>
+                <th>昵称</th>
+                <th>UID</th>
+                <th>等级</th>
+                <th>状态</th>
+                <th id="qtyTh" style="display:none;">数量</th>
+              </tr>
+            </thead>
+            <tbody id="resultBody"></tbody>
+          </table>
+        </div>
+        <div class="filter-note">💡 显示所有勾选此任务的成员。高亮=均分达标（任务分数 ≥ 均分−2），灰色=均分不达标（后方标注均分）。未设目标的成员默认达标。</div>
       </div>
     </div>
 
-    <button class="btn btn-p" onclick="doQuery()">🔍 查询可接成员</button>
-  </div>
-
-  <!-- Results -->
-  <div class="result-card" id="resultCard" style="display:none;">
-    <div class="result-header" id="resultHeader"></div>
-    <div style="overflow-x:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;">序号</th>
-            <th>昵称</th>
-            <th>UID</th>
-            <th>等级</th>
-            <th>状态</th>
-            <th id="qtyTh" style="display:none;">数量</th>
-                      </tr>
-        </thead>
-        <tbody id="resultBody"></tbody>
-      </table>
+    <!-- Member query panel -->
+    <div id="panelMember" style="display:none;">
+      <div style="margin-bottom:14px;">
+        <input type="text" id="searchMember" placeholder="🔍 输入成员昵称..." oninput="onSearchMember()"
+          style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;" />
+        <div id="memberSearchResults" style="display:none;margin-top:4px;max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--card);"></div>
+      </div>
+      <div id="memberDetail" style="display:none;margin-top:12px;padding:16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border-l);"></div>
     </div>
-    <div class="filter-note">💡 显示所有勾选此任务的成员。高亮=均分达标（任务分数 ≥ 均分−2），灰色=均分不达标（后方标注均分）。未设目标的成员默认达标。</div>
   </div>
 
   <!-- Empty state (pre-query) -->
@@ -184,7 +190,7 @@ var API = {
   get: async function(p){ var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}); if(!r.ok)throw Error(await r.text()); return r.json(); },
 };
 
-var curUser = null, cats = [], defs = [];
+var curUser = null, cats = [], defs = [], allMembers = [];
 
 function toast(m,t){ var e=document.getElementById('toast'); e.textContent=m; e.className='toast '+(t||'ok')+' show'; clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove('show');},2500); }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -195,12 +201,20 @@ function getUser(){
   try{ var u=JSON.parse(s); if(!u.id)throw Error(); return u; }catch(_){ localStorage.removeItem('guild_current_user'); window.location.href='../login.html'; return null; }
 }
 
+function switchQueryTab(tab){
+  document.getElementById('tabTask').classList.toggle('active', tab==='task');
+  document.getElementById('tabMember').classList.toggle('active', tab==='member');
+  document.getElementById('panelTask').style.display = tab==='task'?'':'none';
+  document.getElementById('panelMember').style.display = tab==='member'?'':'none';
+}
+
 // ===== Fuzzy search =====
 function onSearchTask(){
   var q = (document.getElementById('searchTask').value||'').toLowerCase().trim();
   var container = document.getElementById('searchResults');
   if(!q || q.length < 1){
     container.style.display = 'none';
+    container.innerHTML = '';
     return;
   }
 
@@ -315,10 +329,106 @@ function selectSearchResult(taskId){
 // ===== Load categories & definitions =====
 async function loadData(){
   try {
-    cats = await API.get('task_categories?select=*&order=sort_order.asc');
-    defs = await API.get('task_definitions?select=*&order=sort_order.asc');
+    var results = await Promise.all([
+      API.get('task_categories?select=*&order=sort_order.asc'),
+      API.get('task_definitions?select=*&order=sort_order.asc'),
+      API.get('members?select=id,display_name,uid,level,vip_level&order=display_name.asc')
+    ]);
+    cats = results[0]; defs = results[1]; allMembers = results[2];
     populateS1();
   } catch(e){ console.error(e); toast('加载失败: '+e.message,'err'); }
+}
+
+// ===== Member quick search =====
+function onSearchMember(){
+  var q = (document.getElementById('searchMember').value||'').toLowerCase().trim();
+  var container = document.getElementById('memberSearchResults');
+  var detailDiv = document.getElementById('memberDetail');
+  if(!q || q.length < 1){
+    container.style.display = 'none';
+    container.innerHTML = '';
+    detailDiv.style.display = 'none';
+    return;
+  }
+  var matches = allMembers.filter(function(m){
+    return (m.display_name||'').toLowerCase().indexOf(q) >= 0 || (m.uid||'').toLowerCase().indexOf(q) >= 0;
+  });
+  if(!matches.length){ container.style.display = 'none'; return; }
+  var html = '';
+  matches.slice(0,20).forEach(function(m){
+    html += '<div style="padding:8px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border-l);" onclick="showMemberDetail(\''+m.id+'\')" onmouseover="this.style.background=\'var(--hover)\'" onmouseout="this.style.background=\'\'">'+
+      '<strong>'+esc(m.display_name)+'</strong> <span style="color:var(--text3);">'+esc(m.uid)+'</span></div>';
+  });
+  container.innerHTML = html;
+  container.style.display = 'block';
+}
+
+async function showMemberDetail(memberId){
+  document.getElementById('memberSearchResults').style.display = 'none';
+  document.getElementById('searchMember').value = '';
+
+  var m = allMembers.find(function(x){ return x.id===memberId; });
+  if(!m) return;
+
+  // Fetch abilities
+  var abs = [];
+  try {
+    abs = await API.get('member_task_abilities?member_id=eq.'+memberId+'&is_able=eq.true&select=task_definition_id,quantity');
+  } catch(e){ console.error(e); }
+
+  var qtyMap = {}; abs.forEach(function(a){ qtyMap[a.task_definition_id] = a.quantity||0; });
+  var l1cats = cats.filter(function(c){ return !c.parent_id; });
+
+  var html = '<h3 style="margin-bottom:4px;">'+esc(m.display_name)+'</h3>';
+  html += '<p style="font-size:13px;color:var(--text2);margin-bottom:12px;">'+esc(m.uid)+' · Lv.'+(m.level||0)+' · VIP'+(m.vip_level||0)+'</p>';
+
+  var hasAny = false;
+  l1cats.forEach(function(l1){
+    var l2s = cats.filter(function(c){ return c.parent_id===l1.id; });
+    var groupItems = [];
+    l2s.forEach(function(l2){
+      var l3s = cats.filter(function(c){ return c.parent_id===l2.id; });
+      if(l3s.length === 0){
+        var tasks = defs.filter(function(d){ return d.category_id===l2.id; });
+        var picked = [];
+        tasks.forEach(function(t){
+          if(qtyMap[t.id] !== undefined){
+            if(t.is_skin) picked.push((t.display_name||t.task_name)+' x'+qtyMap[t.id]);
+            else picked.push(t.display_name||t.task_name);
+          }
+        });
+        if(picked.length>0) groupItems.push('<strong>'+esc(l2.name)+'</strong>：'+picked.join('、'));
+      } else {
+        l3s.forEach(function(l3){
+          var tasks = defs.filter(function(d){ return d.category_id===l3.id; });
+          var picked = [], skins = [];
+          tasks.forEach(function(t){
+            if(qtyMap[t.id] !== undefined){
+              if(t.is_skin) skins.push((t.display_name||t.task_name)+' x'+qtyMap[t.id]);
+              else picked.push(t.display_name||t.task_name);
+            }
+          });
+          if(picked.length>0 || skins.length>0){
+            var parts = [];
+            if(picked.length>0) parts.push(picked.join('、'));
+            if(skins.length>0) parts.push('🎨 '+skins.join('、'));
+            groupItems.push('<strong>'+esc(l3.name)+'</strong>：'+parts.join(' | '));
+          }
+        });
+      }
+    });
+    if(groupItems.length>0){
+      hasAny = true;
+      html += '<div style="margin-bottom:12px;"><h4 style="font-size:14px;font-weight:600;margin-bottom:4px;">'+esc(l1.name)+'</h4>';
+      groupItems.forEach(function(gi){ html += '<p style="font-size:13px;color:var(--text2);line-height:1.6;word-break:break-all;">'+gi+'</p>'; });
+      html += '</div>';
+    }
+  });
+  if(!hasAny) html += '<p style="color:var(--text3);">该成员尚未录入任何任务</p>';
+
+  var detailDiv = document.getElementById('memberDetail');
+  detailDiv.innerHTML = html;
+  detailDiv.style.display = 'block';
 }
 
 // ===== Populate dropdowns =====
@@ -515,6 +625,9 @@ document.addEventListener('click', function(e){
   var sr = document.getElementById('searchResults');
   var st = document.getElementById('searchTask');
   if(e.target !== st && !sr.contains(e.target)) sr.style.display = 'none';
+  var mr = document.getElementById('memberSearchResults');
+  var ms = document.getElementById('searchMember');
+  if(e.target !== ms && !mr.contains(e.target)) mr.style.display = 'none';
 });
 init();
 </script>
