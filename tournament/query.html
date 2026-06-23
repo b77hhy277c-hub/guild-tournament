@@ -288,10 +288,10 @@ function selectSearchResult(taskId){
   s2.value = l2?l2.id:'';
   s2.disabled = false;
 
-  // Populate S3
+  // Populate S3 (for talent/artist: L3 character; for guardian: L3 individual)
   var g3 = document.getElementById('g3');
   var s3 = document.getElementById('s3');
-  if(isTalentOrArtist && l3){
+  if(l3){
     g3.style.display = '';
     s3.innerHTML = '<option value="'+l3.id+'">'+esc(l3.name)+'</option>';
     s3.value = l3.id;
