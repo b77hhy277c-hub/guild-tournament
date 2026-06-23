@@ -94,6 +94,9 @@
     .sidebar-info {
       flex: 1; padding: 16px 24px; overflow-y: auto;
     }
+    .sidebar-info.side-biz {
+      flex: 0 0 auto; max-height: 35vh; overflow-y: auto;
+    }
 
     .sidebar-info .section-label {
       font-size: 11px; font-weight: 600; color: var(--text-tertiary);
@@ -289,7 +292,7 @@
       </div>
 
       <!-- 今日副业 -->
-      <div class="sidebar-info" id="sideBizSection">
+      <div class="sidebar-info side-biz" id="sideBizSection">
         <div class="section-label">📋 今日副业</div>
         <div id="sideBizList" style="font-size:13px;color:var(--text2);padding:4px 0;">加载中...</div>
       </div>
