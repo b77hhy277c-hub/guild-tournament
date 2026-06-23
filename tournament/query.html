@@ -370,63 +370,74 @@ async function showMemberDetail(memberId){
   var m = allMembers.find(function(x){ return x.id===memberId; });
   if(!m) return;
 
-  // Fetch abilities
-  var abs = [];
+  // Fetch abilities and config in parallel
+  var abs = [], cfg = null;
   try {
-    abs = await API.get('member_task_abilities?member_id=eq.'+memberId+'&is_able=eq.true&select=task_definition_id,quantity');
+    var seasonData = await API.get('seasons?is_current=eq.true&select=id&limit=1');
+    var seasonId = seasonData && seasonData.length>0 ? seasonData[0].id : null;
+    var parallel = [API.get('member_task_abilities?member_id=eq.'+memberId+'&is_able=eq.true&select=task_definition_id,quantity')];
+    if(seasonId) parallel.push(API.get('member_season_config?member_id=eq.'+memberId+'&season_id=eq.'+seasonId+'&select=avg_score,target_score&limit=1'));
+    var results = await Promise.all(parallel);
+    abs = results[0] || [];
+    if(results[1] && results[1].length>0) cfg = results[1][0];
   } catch(e){ console.error(e); }
 
   var qtyMap = {}; abs.forEach(function(a){ qtyMap[a.task_definition_id] = a.quantity||0; });
-  var l1cats = cats.filter(function(c){ return !c.parent_id; });
+  var avgScore = (cfg && cfg.avg_score) ? cfg.avg_score : null;
+  var threshold = avgScore ? avgScore - 2 : null;
 
   var totalTasks = Object.keys(qtyMap).length;
   var html = '<h3 style="margin-bottom:4px;">'+esc(m.display_name)+'</h3>';
   html += '<p style="font-size:13px;color:var(--text2);margin-bottom:4px;">'+esc(m.uid)+' · Lv.'+(m.level||0)+' · VIP'+(m.vip_level||0)+'</p>';
-  html += '<p style="font-size:13px;color:var(--accent);font-weight:500;margin-bottom:12px;">已勾选任务：'+totalTasks+' 项</p>';
+  html += '<p style="font-size:13px;color:var(--accent);font-weight:500;margin-bottom:12px;">已勾选任务：'+totalTasks+' 项';
+  if(avgScore) html += ' · 任务均分：'+avgScore+' 分 · 达标线：≥ '+(threshold||0)+' 分';
+  html += '</p>';
 
-  var hasAny = false;
-  l1cats.forEach(function(l1){
-    var l2s = cats.filter(function(c){ return c.parent_id===l1.id; });
-    var groupItems = [];
-    l2s.forEach(function(l2){
-      var l3s = cats.filter(function(c){ return c.parent_id===l2.id; });
-      if(l3s.length === 0){
-        var tasks = defs.filter(function(d){ return d.category_id===l2.id; });
-        var picked = [];
-        tasks.forEach(function(t){
-          if(qtyMap[t.id] !== undefined){
-            if(t.is_skin) picked.push((t.display_name||t.task_name)+' x'+qtyMap[t.id]);
-            else picked.push(t.display_name||t.task_name);
-          }
-        });
-        if(picked.length>0) groupItems.push('<strong>'+esc(l2.name)+'</strong>：'+picked.join('、'));
-      } else {
-        l3s.forEach(function(l3){
-          var tasks = defs.filter(function(d){ return d.category_id===l3.id; });
-          var picked = [], skins = [];
-          tasks.forEach(function(t){
-            if(qtyMap[t.id] !== undefined){
-              if(t.is_skin) skins.push((t.display_name||t.task_name)+' x'+qtyMap[t.id]);
-              else picked.push(t.display_name||t.task_name);
-            }
-          });
-          if(picked.length>0 || skins.length>0){
-            var parts = [];
-            if(picked.length>0) parts.push(picked.join('、'));
-            if(skins.length>0) parts.push('🎨 '+skins.join('、'));
-            groupItems.push('<strong>'+esc(l3.name)+'</strong>：'+parts.join(' | '));
-          }
-        });
-      }
-    });
-    if(groupItems.length>0){
-      hasAny = true;
-      html += '<div style="margin-bottom:12px;"><h4 style="font-size:14px;font-weight:600;margin-bottom:4px;">'+esc(l1.name)+'</h4>';
-      groupItems.forEach(function(gi){ html += '<p style="font-size:13px;color:var(--text2);line-height:1.6;word-break:break-all;">'+gi+'</p>'; });
-      html += '</div>';
-    }
+  // Collect all tasks with their info
+  var allPicked = [];
+  Object.keys(qtyMap).forEach(function(defId){
+    var t = defs.find(function(d){ return d.id===defId; });
+    if(!t) return;
+    var score = t.default_score||0;
+    var isSkin = t.is_skin === true;
+    var name = (t.display_name||t.task_name) + (isSkin ? ' x'+qtyMap[defId] : '');
+    // Build path
+    var parts = [];
+    var cat = cats.find(function(c){ return c.id===t.category_id; });
+    while(cat){ parts.unshift(cat.name); cat = cats.find(function(c){ return c.id===cat.parent_id; }); }
+    var path = parts.join(' > ');
+    allPicked.push({ name: name, score: score, path: path, defId: defId });
   });
-  if(!hasAny) html += '<p style="color:var(--text3);">该成员尚未录入任何任务</p>';
+
+  if(!allPicked.length){
+    html += '<p style="color:var(--text3);">该成员尚未录入任何任务</p>';
+  } else {
+    var meet = [], notMeet = [];
+    allPicked.forEach(function(item){
+      // No config → all meet; otherwise score >= threshold
+      if(!threshold || item.score >= threshold) meet.push(item);
+      else notMeet.push(item);
+    });
+    // Sort by score desc within each group
+    meet.sort(function(a,b){ return b.score-a.score; });
+    notMeet.sort(function(a,b){ return b.score-a.score; });
+
+    function renderGroup(items, title, color){
+      if(!items.length) return '';
+      var h = '<div style="margin-bottom:12px;">';
+      h += '<h4 style="font-size:14px;font-weight:600;margin-bottom:4px;color:'+color+';">'+title+'（'+items.length+'项）</h4>';
+      h += '<p style="font-size:13px;color:var(--text2);line-height:1.8;word-break:break-all;">';
+      items.forEach(function(item, i){
+        if(i>0) h += '<br>';
+        h += item.path+' > <strong>'+esc(item.name)+'</strong> <span style="color:var(--accent);">('+item.score+'分)</span>';
+      });
+      h += '</p></div>';
+      return h;
+    }
+
+    html += renderGroup(meet, '✅ 达标任务', '#30d158');
+    html += renderGroup(notMeet, '⚠️ 未达标任务', 'var(--danger)');
+  }
 
   var detailDiv = document.getElementById('memberDetail');
   detailDiv.innerHTML = html;
