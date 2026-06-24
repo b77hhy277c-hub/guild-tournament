@@ -657,11 +657,18 @@ function updateCnt(){
 async function saveAbilities(){
   var mid=effId(); if(!mid){ toast('未找到成员','err'); return; }
   var rows=[]; Object.keys(abilities).forEach(function(did){ var a=abilities[did]; rows.push({ member_id:mid, task_definition_id:did, is_able:a.is_able, quantity:a.quantity||0, updated_at:new Date().toISOString() }); });
+  // Save current page state
+  var savedL1 = activeL1, savedAttr = activeAttr, savedL2 = activeL2, savedL3Title = document.getElementById('l3Title').textContent;
   try {
     await API.del('member_task_abilities?member_id=eq.'+mid);
     for(var i=0;i<rows.length;i+=100){ await API.post('member_task_abilities', rows.slice(i,i+100)); }
     toast('✅ 任务已保存'); await loadAll();
-    if(activeL2){ var nm=document.getElementById('l3Title').textContent; renderL3(activeL2,nm); }
+    // Restore page state
+    if(savedL1){ selectL1(savedL1); }
+    if(savedAttr){ selectAttr(savedAttr); }
+    if(savedL2 && savedL3Title){
+      selectL2(savedL2, savedL3Title);
+    }
   } catch(e){ console.error(e); toast('保存失败: '+e.message,'err'); }
 }
 

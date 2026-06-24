@@ -124,7 +124,8 @@
     <div class="field">
       <label>数据更新时间</label>
       <span id="fStatsTime" style="font-size:14px;color:var(--text);padding: 9px 0;display:inline-block;"></span>
-      <span style="font-size:12px;color:var(--text3);">（当前总分/任务完成总数/当前排名变动时自动记录）</span>
+      <span id="fStatsBy" style="font-size:12px;color:var(--text2);margin-left:8px;"></span>
+      <div style="font-size:12px;color:var(--text3);">（当前总分/任务完成总数/当前排名变动时自动记录）</div>
     </div>
     <div class="field">
       <label>公告</label>
@@ -182,7 +183,7 @@ async function logOp(type, targetType, targetId, targetName, changes){
 // ===== Build change diff =====
 function buildDiff(original, updated){
   var diff = { before: {}, after: {} };
-  var keys = ['season_name','target_rank','strategy','start_date','end_date','total_score','total_tasks','rank_position','announcement','stats_updated_at'];
+  var keys = ['season_name','target_rank','strategy','start_date','end_date','total_score','total_tasks','rank_position','announcement','stats_updated_at','stats_updated_by'];
   keys.forEach(function(k){
     var ov = original[k] !== undefined ? original[k] : null;
     var nv = updated[k] !== undefined ? updated[k] : null;
@@ -230,6 +231,7 @@ function fillForm(s){
     rank_position: s.rank_position||'',
     announcement: s.announcement||'',
     stats_updated_at: s.stats_updated_at,
+    stats_updated_by: s.stats_updated_by||'',
   };
 
   document.getElementById('formTitle').innerHTML = '赛季配置 '+(s.is_current?'<span class="tag-current">当前赛季</span>':'');
@@ -243,6 +245,7 @@ function fillForm(s){
   document.getElementById('fRankPos').value = s.rank_position||'';
   document.getElementById('fAnnounce').value = s.announcement||'';
   document.getElementById('fStatsTime').textContent = s.stats_updated_at ? fmtDateTimeText(s.stats_updated_at) : '暂无记录';
+  document.getElementById('fStatsBy').textContent = s.stats_updated_by ? '（'+esc(s.stats_updated_by)+' 更新）' : '';
 }
 
 async function reloadSeason(){
@@ -275,9 +278,10 @@ async function saveSeason(){
     announcement: document.getElementById('fAnnounce').value.trim(),
   };
 
-  // Auto-update stats timestamp if score/tasks/rank changed
+  // Auto-update stats timestamp + operator if score/tasks/rank changed
   if(scoreChanged || tasksChanged || rankChanged){
     updates.stats_updated_at = new Date().toISOString();
+    updates.stats_updated_by = curUser.display_name || curUser.uid;
   }
 
   if(!updates.season_name){ toast('请输入赛季名称','err'); return; }
