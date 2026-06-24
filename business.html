@@ -236,11 +236,17 @@ function renderTable(){
   } else {
     allocations.forEach(function(a){
       var cnt = (a.members||'').split(',').filter(function(s){return s.trim();}).length;
+      var fzIdx = 0;
+      var fzNames = allMembers.filter(function(m){ return m.position==='副会长'; }).map(function(m){ return m.display_name; });
+      var hzName = (allMembers.find(function(m){ return m.position==='会长'; })||{}).display_name || '无';
       var displayMembers = (a.members||'').split(',').map(function(s){
         var name=s.trim(); if(!name) return '';
-        var p=posMap[name];
-        if(p==='会长') return '会长('+name+')';
-        if(p==='副会长') return '副会长('+name+')';
+        if(name==='会长') return '会长('+hzName+')';
+        if(name==='副会长'){
+          var fzName = fzNames[fzIdx] || '副会长';
+          fzIdx++;
+          return '副会长('+fzName+')';
+        }
         return name;
       }).filter(Boolean).join(',');
       html+='<tr>'+
@@ -289,24 +295,30 @@ function popCheckboxes(selected){
   var names=(selected||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
   var hzMembers=allMembers.filter(function(m){return m.position==='会长';});
   var fzMembers=allMembers.filter(function(m){return m.position==='副会长';});
-  var hasOldFz=names.indexOf('副会长')>=0; // backwards compat
+  // Count how many 副会长 in stored data (for backwards compat with old data that stored actual names)
+  var storedFzCount = names.filter(function(n){ return n==='副会长'; }).length;
+  // Also check old format: if any actual VP name is in stored data, count those too
+  var oldFzNames = fzMembers.filter(function(m){ return names.indexOf(m.display_name)>=0; });
+  if(oldFzNames.length > storedFzCount) storedFzCount = oldFzNames.length;
+
   var html='';
-  // 会长选项
-  hzMembers.forEach(function(m){
-    var checked=names.indexOf(m.display_name)>=0 || names.indexOf('会长')>=0?'checked':'';
-    html+='<label class="strong"><input type="checkbox" value="'+esc(m.display_name)+'" '+checked+' /><span>会长：'+esc(m.display_name)+'</span></label>';
+  // 会长选项 (stored as "会长")
+  var hzChecked = names.indexOf('会长')>=0 || hzMembers.some(function(m){ return names.indexOf(m.display_name)>=0; });
+  var hzName = hzMembers.length>0 ? hzMembers[0].display_name : '无';
+  html+='<label class="strong"><input type="checkbox" value="会长" '+(hzChecked?'checked':'')+' /><span>会长（当前：'+esc(hzName)+'）</span></label>';
+
+  // 副会长各自单列 (stored as "副会长")
+  fzMembers.forEach(function(m, i){
+    var checked = i < storedFzCount;
+    html+='<label class="strong"><input type="checkbox" value="副会_'+i+'" '+(checked?'checked':'')+' /><span>副会长（当前：'+esc(m.display_name)+'）</span></label>';
   });
-  // 副会长各自单列
-  fzMembers.forEach(function(m){
-    var checked=names.indexOf(m.display_name)>=0 || hasOldFz?'checked':'';
-    html+='<label class="strong"><input type="checkbox" value="'+esc(m.display_name)+'" '+checked+' /><span>副会长：'+esc(m.display_name)+'</span></label>';
-  });
+
   if(hzMembers.length===0 && fzMembers.length===0){
     html+='<label style="color:var(--text3);">暂无会长/副会长数据</label>';
   }
   html+='<div style="border-top:1px solid var(--border-l);margin:4px 0;"></div>';
   allMembers.forEach(function(m){
-    if(m.position==='会长'||m.position==='副会长') return; // already listed above
+    if(m.position==='会长'||m.position==='副会长') return;
     var checked=names.indexOf(m.display_name)>=0?'checked':'';
     html+='<label><input type="checkbox" value="'+esc(m.display_name)+'" '+checked+' /><span>'+esc(m.display_name)+'</span></label>';
   });
@@ -321,7 +333,13 @@ function deselectAll(){
 function getCheckedMembers(){
   var boxes=document.querySelectorAll('#mMembersCheckboxes input[type=checkbox]');
   var checked=[];
-  boxes.forEach(function(b){ if(b.checked) checked.push(b.value); });
+  boxes.forEach(function(b){
+    if(b.checked){
+      // Convert "副会_X" to "副会长"
+      if(b.value.indexOf('副会_')===0) checked.push('副会长');
+      else checked.push(b.value);
+    }
+  });
   return checked.join(',');
 }
 
