@@ -295,15 +295,12 @@ function popCheckboxes(selected){
   var names=(selected||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
   var hzMembers=allMembers.filter(function(m){return m.position==='会长';});
   var fzMembers=allMembers.filter(function(m){return m.position==='副会长';});
-  // Count how many 副会长 in stored data (for backwards compat with old data that stored actual names)
+  // Count how many 副会长 in stored data
   var storedFzCount = names.filter(function(n){ return n==='副会长'; }).length;
-  // Also check old format: if any actual VP name is in stored data, count those too
-  var oldFzNames = fzMembers.filter(function(m){ return names.indexOf(m.display_name)>=0; });
-  if(oldFzNames.length > storedFzCount) storedFzCount = oldFzNames.length;
 
   var html='';
   // 会长选项 (stored as "会长")
-  var hzChecked = names.indexOf('会长')>=0 || hzMembers.some(function(m){ return names.indexOf(m.display_name)>=0; });
+  var hzChecked = names.indexOf('会长')>=0;
   var hzName = hzMembers.length>0 ? hzMembers[0].display_name : '无';
   html+='<label class="strong"><input type="checkbox" value="会长" '+(hzChecked?'checked':'')+' /><span>会长（当前：'+esc(hzName)+'）</span></label>';
 
