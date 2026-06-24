@@ -183,7 +183,7 @@ async function loadData(){
     abilityCounts = {};
     var offset = 0, pageSize = 1000, hasMore = true;
     while(hasMore){
-      var allAbilities = await API.get('member_task_abilities?select=member_id&limit='+pageSize+'&offset='+offset);
+      var allAbilities = await API.get('member_task_abilities?is_able=eq.true&select=member_id&limit='+pageSize+'&offset='+offset);
       allAbilities.forEach(function(a){
         abilityCounts[a.member_id] = (abilityCounts[a.member_id]||0) + 1;
       });
