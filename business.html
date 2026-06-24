@@ -318,7 +318,6 @@ function popCheckboxes(selected){
   }
   html+='<div style="border-top:1px solid var(--border-l);margin:4px 0;"></div>';
   allMembers.forEach(function(m){
-    if(m.position==='会长'||m.position==='副会长') return;
     var checked=names.indexOf(m.display_name)>=0?'checked':'';
     html+='<label><input type="checkbox" value="'+esc(m.display_name)+'" '+checked+' /><span>'+esc(m.display_name)+'</span></label>';
   });
