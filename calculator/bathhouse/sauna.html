@@ -262,7 +262,7 @@ var costSpan=document.querySelector('.cost-display[data-key="'+esc(key)+'"]');
 var level=parseInt(levelEl&&levelEl.value)||0;
 var cost=parseInt(costSpan.textContent)||getCost(side,level);
 var income=parseInt(incomeEl.value)||0;
-if(cost<=0||income<=0)return;
+if(level<=0||cost<=0||income<=0)return;
 items.push({label:tech.id+' '+side,side:side,cost:cost,income:income,level:level,ratio:income/cost});
 });
 });
