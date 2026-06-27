@@ -311,29 +311,49 @@ techs.push({id:tech.id,above:above,below:below});
 var remaining=budget,totalSpent=0;
 
 while(remaining>0){
-// Find best single action
 var bestAction=null,bestRatio=0;
 
 techs.forEach(function(tech){
-// Action 1: upgrade above (always available)
 var aCost=tech.above.cost;
 var aRatio=tech.above.income/aCost;
-if(aCost<=remaining&&aRatio>bestRatio){bestRatio=aRatio;bestAction={tech:tech,target:'above',cost:aCost};}
+// Action 1: upgrade above (always, unless below needs uncap)
+var belowCapped=!tech.below.locked&&tech.below.level>=100&&tech.above.level<200;
+var aEffective=aRatio;
+// If below is capped, upgrading above has additional benefit of uncapping
+if(belowCapped){
+// Calc benefit: uncap lets below go past 100. Effective ratio = (above_income + below_income_beyond_100) / above_cost
+// Simplified: just compare above upgrade cost vs below post-100 benefit
+var uncapRemaining=200-tech.above.level;
+var uncapCost=calcPathCost('上',tech.above.level,200);
+var effectiveARatio=tech.below.income/uncapCost;
+if(effectiveARatio>aEffective)aEffective=effectiveARatio;
+}
+if(aCost<=remaining&&aEffective>bestRatio){bestRatio=aEffective;bestAction={tech:tech,target:'above',cost:aCost};}
 
-// Action 2: upgrade below (if unlocked)
-if(!tech.below.locked){
+// Action 2: upgrade below (if unlocked and not capped)
+if(!tech.below.locked&&!belowCapped){
 var bCost=tech.below.cost;
 var bRatio=tech.below.income/bCost;
 if(bCost<=remaining&&bRatio>bestRatio){bestRatio=bRatio;bestAction={tech:tech,target:'below',cost:bCost};}
 }
 
-// Action 3: unlock below by pushing above to 100
+// Action 3: unlock below (push above to 100 + first below level)
 if(tech.below.locked&&tech.above.income>0&&tech.below.income>0){
 var unlockCost=calcPathCost('上',tech.above.level,100);
 var totalCost=unlockCost+getCost('下',1);
 if(totalCost<=remaining){
 var effRatio=tech.below.income/totalCost;
 if(effRatio>bestRatio){bestRatio=effRatio;bestAction={tech:tech,target:'unlock',cost:totalCost,unlockCost:unlockCost};}
+}
+}
+
+// Action 4: uncap below (push above from current to 200)
+if(belowCapped&&tech.below.income>0){
+var uncapCost=calcPathCost('上',tech.above.level,200);
+var totalUC=uncapCost+getCost('下',100);
+if(totalUC<=remaining){
+var effRatio=tech.below.income/totalUC;
+if(effRatio>bestRatio){bestRatio=effRatio;bestAction={tech:tech,target:'uncap',cost:totalUC,uncapCost:uncapCost};}
 }
 }
 });
@@ -345,28 +365,31 @@ if(bestAction.target==='above'){
 remaining-=bestAction.cost;totalSpent+=bestAction.cost;
 t.above.spent+=bestAction.cost;t.above.upgraded++;
 t.above.level++;t.above.cost=getCost('上',t.above.level);
-// Check if above just hit 100 → unlock below
 if(t.above.level>=100&&t.below.locked){t.below.locked=false;t.below.cost=getCost('下',1);t.below.level=1;}
-// Check if above just hit 200 → uncap below
-if(t.above.level>=200&&t.below.level>=100){}
-} else if(bestAction.target==='below'){
+}else if(bestAction.target==='below'){
 remaining-=bestAction.cost;totalSpent+=bestAction.cost;
 t.below.spent+=bestAction.cost;t.below.upgraded++;
 t.below.level++;t.below.cost=getCost('下',t.below.level);
-// Cap below at 100 if above hasn't reached 200
-if(t.below.level>=100&&t.above.level<200){t.below.level=100;t.below.cost=getCost('下',100);}
-} else if(bestAction.target==='unlock'){
-// Push above to 100 in one go
+if(t.below.level>100&&t.above.level<200){t.below.level=100;t.below.cost=getCost('下',100);}
+}else if(bestAction.target==='unlock'){
 var ulCost=bestAction.unlockCost;
 remaining-=ulCost;totalSpent+=ulCost;
 t.above.spent+=ulCost;
 var levelsNeeded=100-t.above.level;
 t.above.upgraded+=levelsNeeded;t.above.level=100;t.above.cost=getCost('上',100);
 t.below.locked=false;t.below.level=1;t.below.cost=getCost('下',1);
-// Remaining budget goes to below's first level
 var remCost=bestAction.cost-ulCost;
 remaining-=remCost;totalSpent+=remCost;
 t.below.spent+=remCost;t.below.upgraded++;t.below.level=1;t.below.cost=getCost('下',2);
+}else if(bestAction.target==='uncap'){
+var ucCost=bestAction.uncapCost;
+remaining-=ucCost;totalSpent+=ucCost;
+t.above.spent+=ucCost;
+var levelsNeeded=200-t.above.level;
+t.above.upgraded+=levelsNeeded;t.above.level=200;t.above.cost=getCost('上',200);
+var remCost=bestAction.cost-ucCost;
+remaining-=remCost;totalSpent+=remCost;
+t.below.spent+=remCost;t.below.upgraded++;t.below.level=100;t.below.cost=getCost('下',101);
 }
 }
 
