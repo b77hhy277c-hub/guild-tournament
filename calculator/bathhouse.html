@@ -6,15 +6,16 @@
   <title>澡堂</title>
   <style>
     :root {
-      --bg: #ffffff; --bg2: #f5f5f7; --card: #ffffff;
+      --bg: #ffffff; --bg2: #f5f5f7; --card: #ffffff; --hover: rgba(0,0,0,0.04);
       --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2;
       --accent: #007AFF; --accent-h: #0062d1;
       --border: #d2d2d7; --border-l: #e5e5ea;
-      --shadow: 0 4px 20px rgba(0,0,0,0.08); --r: 12px;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08); --r: 14px;
     }
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #000000; --bg2: #1c1c1e; --card: #1c1c1e;
+        --hover: rgba(255,255,255,0.08);
         --text: #f5f5f7; --text2: #8e8e93; --text3: #636366;
         --accent: #0A84FF; --accent-h: #409cff;
         --border: #38383a; --border-l: #2c2c2e;
@@ -29,11 +30,30 @@
     .navbar .title { font-size:16px; font-weight:600; }
     .navbar .user { font-size:13px; color:var(--text2); }
 
-    .main { max-width: 800px; margin: 0 auto; padding: 48px 24px; text-align: center; }
-    .icon { font-size: 72px; margin-bottom: 24px; }
-    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
-    .desc { font-size: 15px; color: var(--text2); margin-bottom: 32px; }
-    .badge { display:inline-block; padding:4px 12px; border-radius:6px; font-size:12px; font-weight:500; background:var(--accent); color:#fff; }
+    .main { max-width: 760px; margin: 0 auto; padding: 32px 24px 48px; }
+
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+    .sub { font-size: 15px; color: var(--text2); margin-bottom: 28px; }
+
+    .card-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    @media (max-width: 560px) { .card-grid { grid-template-columns:1fr; } }
+
+    .calc-card {
+      display:flex; flex-direction:column; align-items:center; text-align:center;
+      background:var(--card); border:1px solid var(--border-l);
+      border-radius:var(--r); padding:32px 20px 24px;
+      box-shadow:var(--shadow); cursor:pointer;
+      text-decoration:none; color:inherit;
+      transition:transform 0.25s, box-shadow 0.25s;
+    }
+    .calc-card:hover { transform:translateY(-3px); box-shadow:0 12px 40px rgba(0,0,0,0.12); }
+    .calc-card .icon { font-size:44px; margin-bottom:14px; }
+    .calc-card .name { font-size:18px; font-weight:600; margin-bottom:4px; }
+    .calc-card .desc { font-size:13px; color:var(--text2); }
+
+    .thanks { text-align:center; margin-top:36px; padding:20px; font-size:14px; color:var(--text2); line-height:1.8; }
+    .thanks .names { color:var(--accent); font-weight:600; }
+    .hint { font-size: 12px; color: var(--text3); text-align:center; margin-top: 12px; }
   </style>
 </head>
 <body>
@@ -45,10 +65,51 @@
 </nav>
 
 <div class="main">
-  <div class="icon">🛁</div>
-  <h1>澡堂</h1>
-  <p class="desc">计算澡堂最优点法</p>
-  <div class="badge">🔧 开发中</div>
+  <h1>🛁 澡堂</h1>
+  <p class="sub">六个部门，各自独立计算</p>
+
+  <div class="card-grid">
+    <a href="bathhouse/male.html" class="calc-card">
+      <div class="icon">🚹</div>
+      <div class="name">男澡堂部</div>
+      <div class="desc">男澡堂技师点法计算</div>
+    </a>
+
+    <a href="bathhouse/female.html" class="calc-card">
+      <div class="icon">🚺</div>
+      <div class="name">女澡堂部</div>
+      <div class="desc">女澡堂技师点法计算</div>
+    </a>
+
+    <a href="bathhouse/sauna.html" class="calc-card">
+      <div class="icon">🧖</div>
+      <div class="name">桑拿部</div>
+      <div class="desc">桑拿技师点法计算</div>
+    </a>
+
+    <a href="bathhouse/massage.html" class="calc-card">
+      <div class="icon">💆</div>
+      <div class="name">按摩部</div>
+      <div class="desc">按摩技师点法计算</div>
+    </a>
+
+    <a href="bathhouse/tcm.html" class="calc-card">
+      <div class="icon">🪭</div>
+      <div class="name">中医部</div>
+      <div class="desc">中医技师点法计算</div>
+    </a>
+
+    <a href="bathhouse/vip.html" class="calc-card">
+      <div class="icon">👑</div>
+      <div class="name">贵宾部</div>
+      <div class="desc">贵宾技师点法计算</div>
+    </a>
+  </div>
+
+  <div class="thanks">
+    特别鸣谢 <span class="names">听雪、梦然、蛙蛙、魏魏、志</span> 对本栏目的大力支持！
+  </div>
+  <p class="hint">仅超级管理员可见</p>
 </div>
 
 <script>
