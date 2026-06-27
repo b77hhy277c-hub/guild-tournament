@@ -278,41 +278,102 @@ if(n>10000)break;
 return{levels:n,cost:cumCost,newCost:cost,newLevel:lv};
 }
 
+function calcPathCost(side,fromLevel,toLevel){var total=0;for(var lv=fromLevel;lv<toLevel;lv++)total+=getCost(side,lv+1);return total;}
+
 function calculate(){
 var budget=parseInt(document.getElementById('budget').value)||0;
 if(budget<=0){toast('请输入可投入票据','err');return;}
 var items=gatherItems();
 if(items.length===0){toast('请至少填写一项数据','err');return;}
 
-var sim=items.map(function(it){return{label:it.label,side:it.side,cost:it.cost,income:it.income,level:it.level,ratio:it.ratio,origRatio:it.ratio,upgraded:0,spent:0};});
-sim.sort(function(a,b){return b.ratio-a.ratio;});
+// Build tech-level sim: group 上/下 per tech
+var techs=[];
+DEPT.techs.forEach(function(tech){
+var akey=tech.id+'|上',bkey=tech.id+'|下';
+var aItem=items.find(function(x){return x.label===tech.id+' 上';});
+var bItem=items.find(function(x){return x.label===tech.id+' 下';});
+var above={level:aItem?aItem.level:0,income:aItem?aItem.income:0,cost:aItem?aItem.cost:getCost('上',aItem?aItem.level:0),upgraded:0,spent:0};
+var belowLocked=above.level<100;
+var below={level:bItem?bItem.level:0,income:bItem?bItem.income:0,cost:bItem?bItem.cost:getCost('下',bItem?bItem.level:1),locked:belowLocked,upgraded:0,spent:0};
+if(!belowLocked&&bItem)below=bItem;
+techs.push({id:tech.id,above:above,below:below});
+});
+
 var remaining=budget,totalSpent=0;
 
-for(var iter=0;iter<500&&remaining>0;iter++){
-sim.sort(function(a,b){return b.ratio-a.ratio;});
-var bestR=sim[0].ratio,worstR=sim[sim.length-1].ratio;
-if(bestR-worstR<0.000001)break;
-var target=null;
-for(var i=1;i<sim.length;i++){if(sim[i].ratio<bestR-0.000001){target=sim[i].ratio;break;}}
-if(target===null)break;
+while(remaining>0){
+// Find best single action
+var bestAction=null,bestRatio=0;
 
-var needBudget=0,batch=[];
-for(var i=0;i<sim.length;i++){
-if(sim[i].ratio<bestR-0.0001)break;
-var it=sim[i];if(it.income/it.cost<=target)continue;
-var result=levelsToTarget(it.cost,it.level,it.side,it.income,target);
-if(result.levels>0){needBudget+=result.cost;batch.push({item:it,levels:result.levels,cost:result.cost,newCost:result.newCost,newLevel:result.newLevel});}
+techs.forEach(function(tech){
+// Action 1: upgrade above (always available)
+var aCost=tech.above.cost;
+var aRatio=tech.above.income/aCost;
+if(aCost<=remaining&&aRatio>bestRatio){bestRatio=aRatio;bestAction={tech:tech,target:'above',cost:aCost};}
+
+// Action 2: upgrade below (if unlocked)
+if(!tech.below.locked){
+var bCost=tech.below.cost;
+var bRatio=tech.below.income/bCost;
+if(bCost<=remaining&&bRatio>bestRatio){bestRatio=bRatio;bestAction={tech:tech,target:'below',cost:bCost};}
 }
-if(needBudget<=0)break;
-if(remaining>=needBudget){
-batch.forEach(function(b){b.item.cost=b.newCost;b.item.level=b.newLevel;b.item.ratio=b.item.income/b.item.cost;b.item.spent+=b.cost;b.item.upgraded+=b.levels;remaining-=b.cost;totalSpent+=b.cost;});
-}else{
-while(remaining>0){sim.sort(function(a,b){return b.ratio-a.ratio;});var best=sim[0];if(best.cost>remaining)break;remaining-=best.cost;totalSpent+=best.cost;best.spent+=best.cost;best.upgraded+=1;
-best.cost=getCost(best.side,best.level+1);best.level++;best.ratio=best.income/best.cost;}break;
+
+// Action 3: unlock below by pushing above to 100
+if(tech.below.locked&&tech.above.income>0&&tech.below.income>0){
+var unlockCost=calcPathCost('上',tech.above.level,100);
+var totalCost=unlockCost+getCost('下',1);
+if(totalCost<=remaining){
+var effRatio=tech.below.income/totalCost;
+if(effRatio>bestRatio){bestRatio=effRatio;bestAction={tech:tech,target:'unlock',cost:totalCost,unlockCost:unlockCost};}
 }
 }
-while(remaining>0){sim.sort(function(a,b){return b.ratio-a.ratio;});var best=sim[0];if(best.cost>remaining)break;remaining-=best.cost;totalSpent+=best.cost;best.spent+=best.cost;best.upgraded+=1;
-best.cost=getCost(best.side,best.level+1);best.level++;best.ratio=best.income/best.cost;}
+});
+
+if(!bestAction||bestAction.cost>remaining)break;
+
+var t=bestAction.tech;
+if(bestAction.target==='above'){
+remaining-=bestAction.cost;totalSpent+=bestAction.cost;
+t.above.spent+=bestAction.cost;t.above.upgraded++;
+t.above.level++;t.above.cost=getCost('上',t.above.level);
+// Check if above just hit 100 → unlock below
+if(t.above.level>=100&&t.below.locked){t.below.locked=false;t.below.cost=getCost('下',1);t.below.level=1;}
+// Check if above just hit 200 → uncap below
+if(t.above.level>=200&&t.below.level>=100){}
+} else if(bestAction.target==='below'){
+remaining-=bestAction.cost;totalSpent+=bestAction.cost;
+t.below.spent+=bestAction.cost;t.below.upgraded++;
+t.below.level++;t.below.cost=getCost('下',t.below.level);
+// Cap below at 100 if above hasn't reached 200
+if(t.below.level>=100&&t.above.level<200){t.below.level=100;t.below.cost=getCost('下',100);}
+} else if(bestAction.target==='unlock'){
+// Push above to 100 in one go
+var ulCost=bestAction.unlockCost;
+remaining-=ulCost;totalSpent+=ulCost;
+t.above.spent+=ulCost;
+var levelsNeeded=100-t.above.level;
+t.above.upgraded+=levelsNeeded;t.above.level=100;t.above.cost=getCost('上',100);
+t.below.locked=false;t.below.level=1;t.below.cost=getCost('下',1);
+// Remaining budget goes to below's first level
+var remCost=bestAction.cost-ulCost;
+remaining-=remCost;totalSpent+=remCost;
+t.below.spent+=remCost;t.below.upgraded++;t.below.level=1;t.below.cost=getCost('下',2);
+}
+}
+
+// Rebuild sim for results
+var sim=[];
+techs.forEach(function(tech){
+var origAboveCost=getCost('上',tech.above.level-tech.above.upgraded);
+var origAboveRatio=tech.above.income/origAboveCost;
+sim.push({label:tech.id+' 上',cost:tech.above.cost,income:tech.above.income,level:tech.above.level,ratio:tech.above.income/tech.above.cost,origRatio:origAboveRatio,upgraded:tech.above.upgraded,spent:tech.above.spent});
+if(!tech.below.locked||tech.below.upgraded>0){
+var origBelowLevel=tech.below.level-tech.below.upgraded;
+var origBelowCost=getCost('下',origBelowLevel||1);
+var origBelowRatio=tech.below.income/origBelowCost;
+sim.push({label:tech.id+' 下',cost:tech.below.cost,income:tech.below.income,level:tech.below.level,ratio:tech.below.income/tech.below.cost,origRatio:origBelowRatio,upgraded:tech.below.upgraded,spent:tech.below.spent});
+}
+});
 
 lastSimResult=sim;
 try{var simSave=sim.map(function(s){return{label:s.label,cost:s.cost,level:s.level,upgraded:s.upgraded,spent:Math.round(s.spent)};});localStorage.setItem('calc_'+DEPT.calcType+'_sim',JSON.stringify(simSave));}catch(e){}
