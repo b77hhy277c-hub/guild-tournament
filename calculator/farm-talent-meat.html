@@ -193,7 +193,7 @@ html+='<tr class="'+cls+'">'+
 '<td class="talent-count">'+tc+'</td>'+
 '<td><input type="number" class="num level save-input" data-key="'+esc(key)+'" data-field="level" value="'+(d.level||0)+'" min="0" onchange="saveData()" style="width:58px;"/></td>'+
 '<td><input type="number" class="num cost save-input" data-key="'+esc(key)+'" data-field="cost" value="'+(d.cost||0)+'" min="0" onchange="saveData()"/></td>'+
-'<td><input type="number" class="num income save-input" data-key="'+esc(key)+'" data-field="income" data-sec="'+esc(sec.name)+'" data-first="'+(si===0?'1':'0')+'" value="'+(d.income||0)+'" min="0" onchange="onIncomeChange(this)" onfocus="onIncomeChange(this)"/></td>'+
+'<td><input type="number" class="num income save-input" data-key="'+esc(key)+'" data-field="income" data-sec="'+esc(sec.name)+'" data-first="'+(si===0?'1':'0')+'" value="'+(d.income||0)+'" min="0" '+(si===0?'':'readonly style="opacity:0.5;cursor:not-allowed;" ')+'onchange="onIncomeChange(this)" onfocus="onIncomeChange(this)"/></td>'+
 '</tr>';
 } else {
 html+='<tr class="'+cls+'">'+
