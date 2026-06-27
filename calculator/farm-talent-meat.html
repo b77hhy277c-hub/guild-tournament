@@ -335,7 +335,7 @@ while(remaining>0){sim.sort(function(a,b){return b.ratio-a.ratio;});var best=sim
 }
 }
 
-if(remaining>0){sim.sort(function(a,b){return b.ratio-a.ratio;});if(Math.abs(sim[0].ratio-sim[sim.length-1].ratio)<0.000001){while(remaining>0){var ok=false;for(var i=0;i<sim.length&&remaining>0;i++){if(sim[i].cost<=remaining){remaining-=sim[i].cost;totalSpent+=sim[i].cost;sim[i].spent+=sim[i].cost;sim[i].upgraded+=1;sim[i].cost=Math.round(sim[i].cost*getGrowth(sim[i].level));sim[i].level++;sim[i].ratio=sim[i].income/sim[i].cost;ok=true;}}if(!ok)break;}}}
+while(remaining>0){sim.sort(function(a,b){return b.ratio-a.ratio;});var best=sim[0];if(best.cost>remaining)break;remaining-=best.cost;totalSpent+=best.cost;best.spent+=best.cost;best.upgraded+=1;best.cost=nextCost(best.cost,best.level);best.level++;best.ratio=best.income/best.cost;}
 
 lastSimResult=sim;
 try{var simSave=sim.map(function(s){return{section:s.section,sub:s.sub,cost:Math.round(s.cost),level:s.level,income:s.income,upgraded:s.upgraded,spent:Math.round(s.spent)};});localStorage.setItem('calc_'+CALC_TYPE+'_sim',JSON.stringify(simSave));}catch(e){}
@@ -358,7 +358,7 @@ html+='<tr class="'+cls+'">'+
 '<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
 document.getElementById('resultBody').innerHTML=html;
-document.getElementById('resultBar').innerHTML='<span>💰 预算 <span class="hl">'+budget.toLocaleString()+'</span> 万</span><span>|</span><span>📊 分配 <span class="hl">'+Math.round(spent).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span>';
+document.getElementById('resultBar').innerHTML='<span>💰 预算 <span class="hl">'+budget.toLocaleString()+'</span></span><span>|</span><span>📊 分配 <span class="hl">'+Math.round(spent).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span><span style="font-size:11px;color:var(--text3);">（共'+sim.length+'项，最高性价比'+sim.reduce(function(m,x){return Math.max(m,x.origRatio);},0).toFixed(4)+'→最低'+sim.reduce(function(m,x){return Math.min(m,x.origRatio);},0).toFixed(4)+'）</span>';
 document.getElementById('resultCard').classList.add('show');
 }
 
