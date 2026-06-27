@@ -278,7 +278,7 @@ if(n>10000)break;
 return{levels:n,cost:cumCost,newCost:cost,newLevel:lv};
 }
 
-function belowCap(aboveLevel){if(aboveLevel<100)return 0;if(aboveLevel<200)return 100;return 200;}
+function belowCap(aboveLevel){if(aboveLevel<100)return 0;return Math.floor(aboveLevel/100)*100;}
 function calcPathCost(side,fromLevel,toLevel){var total=0;for(var lv=fromLevel;lv<toLevel;lv++)total+=getCost(side,lv+1);return total;}
 
 var g_techs=null, g_budget=0, g_remaining=0, g_spent=0;
@@ -337,7 +337,7 @@ items.push({tech:tech,target:'above',cost:tech.above.cost,income:tech.above.inco
 // Below if unlocked and not at cap
 var cap=belowCap(tech.above.level);
 if(!tech.below.locked&&tech.below.income>0&&tech.below.cost>0){
-if(tech.below.level<cap||cap===200){
+if(tech.below.level<cap){
 items.push({tech:tech,target:'below',cost:tech.below.cost,income:tech.below.income,ratio:tech.below.income/tech.below.cost});
 }
 }
@@ -353,7 +353,7 @@ if(best.cost>remaining)break;
 if(best.target==='below'&&stopOnCap){
 var t=best.tech;
 var cap=belowCap(t.above.level);
-if(t.below.level+1>cap&&cap<200){
+if(t.below.level+1>cap){
 // This upgrade would exceed cap. STOP here.
 stoppedBy=t;
 break;
@@ -429,13 +429,13 @@ if(stoppedTech){
 var t=techs.find(function(x){return x.id===stoppedTech.id;});
 if(t){
 var cap=belowCap(t.above.level);
-var targetAbove=(cap===0)?100:200;
+var targetAbove=cap+100;
 var unlockCost=calcPathCost('上',t.above.level,targetAbove);
 if(unlockCost<=remaining){
 remaining-=unlockCost;
 t.above.level=targetAbove;t.above.cost=getCost('上',targetAbove);
 t.spent+=unlockCost;
-if(targetAbove===100){t.below.locked=false;t.below.level=1;t.below.cost=getCost('下',1);}
+if(cap===0){t.below.locked=false;t.below.level=1;t.below.cost=getCost('下',1);}
 }
 }
 }
