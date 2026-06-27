@@ -177,7 +177,7 @@ html+='<tr class="'+cls+'">'+
 '<td style="color:var(--text2);">'+(side==='上'?'上面项目':'下面项目')+'</td>'+
 '<td><input type="number" class="num level save-input" data-key="'+esc(key)+'" data-side="'+side+'" value="'+level+'" min="0" onchange="onLevelChange(this)" style="width:58px;"/></td>'+
 '<td style="text-align:center;font-weight:500;color:var(--text2);"><span class="cost-display" data-key="'+esc(key)+'">'+cost+'</span></td>'+
-'<td><input type="number" class="num income save-input" data-key="'+esc(key)+'" data-field="income" data-side="'+side+'" data-first="'+(ti===0&&side==='上'?'1':'0')+'" value="'+(d.income||0)+'" min="0" "+(ti===0||side==='下'?'':'readonly style="opacity:0.5;cursor:not-allowed;" ')+"onchange="+(side==='上'?'onIncomeChange(this)':'saveData()')+" onfocus="+(side==='上'?'onIncomeChange(this)':'')+""/></td>'+
+'<td><input type="number" class="num income save-input" data-key="'+esc(key)+'" data-field="income" data-side="'+side+'" data-first="'+(ti===0&&side==='上'?'1':'0')+'" value="'+(d.income||0)+'" min="0" '+(ti===0||side==='下'?'':'readonly style="opacity:0.5;cursor:not-allowed;" ')+'onchange="'+(side==='上'?'onIncomeChange(this)':'saveData()')+'" onfocus="'+(side==='上'?'onIncomeChange(this)':'')+'"/></td>'+
 '</tr>';
 });
 });
@@ -259,7 +259,7 @@ var key=tech.id+'|'+side;
 var levelEl=document.querySelector('.level[data-key="'+esc(key)+'"]');
 var incomeEl=document.querySelector('.income[data-key="'+esc(key)+'"]');
 var costSpan=document.querySelector('.cost-display[data-key="'+esc(key)+'"]');
-var level=parseInt(levelEl.value)||0,side=key.split('|')[1];
+var level=parseInt(levelEl&&levelEl.value)||0;
 var cost=parseInt(costSpan.textContent)||getCost(side,level);
 var income=parseInt(incomeEl.value)||0;
 if(cost<=0||income<=0)return;
