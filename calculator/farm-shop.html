@@ -69,6 +69,17 @@
     .toast.show { opacity:1; }
     .toast.ok { background:#30d158; color:#fff; }
     .toast.err { background:#ff3b30; color:#fff; }
+
+    @media(max-width:768px){
+      .main{padding:12px 8px;}
+      .top-bar{flex-direction:column;align-items:stretch;gap:8px;}
+      .top-bar input{width:100%;}
+      .top-bar .btn{width:100%;padding:12px;}
+      th,td{padding:6px 4px;font-size:11px;}
+      input.num{font-size:12px;padding:4px;}
+      .card .usage-note{padding:12px 14px;font-size:12px;}
+      .result-bar{flex-direction:column;align-items:flex-start;gap:4px;font-size:13px;}
+    }
   </style>
 </head>
 <body>
@@ -81,7 +92,7 @@
 </nav>
 
 <div class="main">
-  <div class="card" style="margin-bottom:16px;padding:16px 20px;font-size:13px;color:var(--text2);line-height:1.8;">
+  <div class="card usage-note" style="margin-bottom:16px;padding:16px 20px;font-size:13px;color:var(--text2);line-height:1.8;">
     <div style="font-weight:600;color:var(--text);margin-bottom:4px;">📖 使用说明</div>
     <div>1、初次使用，请依次升级每个项目，记录升一级收入提升，并记录当前等级和升级消耗。未解锁项目保留0即可。</div>
     <div>2、填写本次可投入升级的粮票数量后，点击「计算最优点法」。</div>
