@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>粮票联动分配</title>
+<style>
+:root{--bg:#fff;--bg2:#f5f5f7;--card:#fff;--hover:rgba(0,0,0,0.04);--text:#1d1d1f;--text2:#6e6e73;--text3:#aeaeb2;--accent:#007AFF;--accent-h:#0062d1;--border:#d2d2d7;--border-l:#e5e5ea;--shadow:0 4px 20px rgba(0,0,0,0.08);--r:12px;--green:#30d158;}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--bg2:#1c1c1e;--card:#1c1c1e;--hover:rgba(255,255,255,0.08);--text:#f5f5f7;--text2:#8e8e93;--text3:#636366;--accent:#0A84FF;--accent-h:#409cff;--border:#38383a;--border-l:#2c2c2e;--shadow:0 1px 3px rgba(255,255,255,0.05);}}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;font-size:14px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;}
+.navbar{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 20px;border-bottom:1px solid var(--border-l);position:sticky;top:0;background:var(--bg);z-index:10;backdrop-filter:blur(20px);}
+.navbar a{color:var(--accent);text-decoration:none;font-size:14px;}
+.navbar .title{font-size:16px;font-weight:600;}
+.navbar .user{font-size:13px;color:var(--text2);}
+.main{max-width:800px;margin:0 auto;padding:24px;}
+.top-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px;padding:16px 20px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border-l);}
+.top-bar label{font-weight:500;}
+.top-bar input{width:140px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;}
+.top-bar input:focus{border-color:var(--accent);}
+.btn{padding:10px 28px;border-radius:8px;font-size:15px;font-weight:500;font-family:inherit;cursor:pointer;border:none;background:var(--accent);color:#fff;transition:background 0.2s;}
+.btn:hover{background:var(--accent-h);}
+.card{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px;}
+.card h3{font-size:17px;font-weight:600;padding:16px 20px 0;}
+.card .sub{font-size:13px;color:var(--text2);padding:4px 20px 12px;}
+.info-row{display:flex;gap:16px;padding:0 20px 16px;flex-wrap:wrap;}
+.info-item{flex:1;min-width:160px;padding:12px 16px;background:var(--bg2);border-radius:8px;text-align:center;}
+.info-item .val{font-size:24px;font-weight:700;color:var(--accent);}
+.info-item .lbl{font-size:12px;color:var(--text2);margin-top:2px;}
+.result-row{display:flex;gap:12px;padding:16px 20px;border-top:1px solid var(--border-l);align-items:center;flex-wrap:wrap;}
+.result-card{flex:1;min-width:200px;padding:16px;background:var(--bg2);border-radius:8px;text-align:center;}
+.result-card .big{font-size:28px;font-weight:700;}
+.result-card .big.shop{color:var(--accent);}
+.result-card .big.talent{color:var(--green);}
+.result-card .lbl{font-size:13px;color:var(--text2);margin-top:4px;}
+.bar-wrap{width:100%;height:24px;background:var(--border-l);border-radius:12px;overflow:hidden;margin:8px 0;display:flex;}
+.bar-shop{height:100%;background:var(--accent);transition:width 0.5s;}
+.bar-talent{height:100%;background:var(--green);transition:width 0.5s;}
+.note{font-size:12px;color:var(--text3);padding:0 20px 16px;}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;font-size:14px;font-weight:500;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.3s;box-shadow:var(--shadow);}
+.toast.show{opacity:1;}
+.toast.ok{background:#30d158;color:#fff;}
+.toast.err{background:#ff3b30;color:#fff;}
+@media(max-width:768px){.main{padding:12px 8px;}.top-bar{flex-direction:column;align-items:stretch;gap:8px;}.top-bar input{width:100%;}.top-bar .btn{width:100%;}.info-row{flex-direction:column;}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<nav class="navbar">
+<a href="../calculator.html">← 返回蘑菇的计算器</a>
+<span class="title">🔗 粮票联动分配</span>
+<span class="user" id="navUser">--</span>
+</nav>
+
+<div class="main">
+<div class="top-bar">
+<label>可投入粮票（万）：</label>
+<input type="number" id="budget" value="0" min="0"/>
+<button class="btn" onclick="calculate()">📊 计算分配比例</button>
+</div>
+
+<div class="card" style="margin-bottom:16px;padding:16px 20px;font-size:13px;color:var(--text2);line-height:1.8;">
+<div style="font-weight:600;color:var(--text);margin-bottom:4px;">📖 使用说明</div>
+<div>联动计算器读取你在「店铺研究」和「人才锻炼（粮票）」中已保存的数据，根据当前性价比自动给出粮票分配建议。</div>
+<div>不会给出具体升级方案，仅返回两个模块各自的建议分配比例。具体升级请到各自页面操作。</div>
+<div>需先在两个子页面中填写并保存数据后，此页面才能正常计算。</div>
+</div>
+
+<div class="card" id="statusCard">
+<h3>📊 当前状态</h3>
+<div class="sub" id="statusSub">加载中...</div>
+<div class="info-row">
+<div class="info-item"><div class="val" id="shopItems">--</div><div class="lbl">店铺研究项目数</div></div>
+<div class="info-item"><div class="val" id="shopBest">--</div><div class="lbl">店铺最佳性价比</div></div>
+<div class="info-item"><div class="val" id="talentItems">--</div><div class="lbl">人才锻炼项目数</div></div>
+<div class="info-item"><div class="val" id="talentBest">--</div><div class="lbl">人才最佳性价比</div></div>
+</div>
+</div>
+
+<div class="card result-section" id="resultCard" style="display:none;">
+<h3>📈 分配建议</h3>
+<div class="sub" id="resultSub"></div>
+<div class="result-row">
+<div class="result-card"><div class="big shop" id="shopPct">--</div><div class="lbl">🏪 店铺研究</div></div>
+<div class="result-card"><div class="big talent" id="talentPct">--</div><div class="lbl">🌾 人才锻炼（粮票）</div></div>
+</div>
+<div class="bar-wrap">
+<div class="bar-shop" id="barShop" style="width:50%;"></div>
+<div class="bar-talent" id="barTalent" style="width:50%;"></div>
+</div>
+<div class="note" id="resultNote"></div>
+</div>
+</div>
+
+<script>
+var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API={
+h:function(){return{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};},
+get:function(p){return fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.json();});}
+};
+
+var curUser=null;
+function getUser(){var s=localStorage.getItem('guild_current_user');if(!s){window.location.href='../login.html';return null;}try{var u=JSON.parse(s);if(!u.id)throw Error();return u;}catch(_){localStorage.removeItem('guild_current_user');window.location.href='../login.html';return null;}}
+function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},2500);}
+function getGrowth(lv){if(lv>=200)return 1.009;if(lv>=100)return 1.01;return 1.012;}
+function nextCost(cost,lv){return Math.max(cost+1,Math.round(cost*getGrowth(lv)));}
+
+var shopData=null, talentData=null;
+
+function parseItems(data){
+// data is {key: {level, cost, income}, ...}
+var items=[];
+if(!data)return items;
+Object.keys(data).forEach(function(k){
+if(k.charAt(0)==='_')return;
+var d=data[k];
+var cost=parseInt(d.cost)||0, income=parseInt(d.income)||0, level=parseInt(d.level)||0;
+if(cost<=0||income<=0)return;
+items.push({key:k,cost:cost,income:income,level:level,ratio:income/cost});
+});
+return items;
+}
+
+async function loadData(){
+try{
+document.getElementById('statusSub').textContent='加载中...';
+var rows=await API.get('calculator_data?member_id=eq.'+curUser.id+'&or=(calculator_type.eq.farm_shop,calculator_type.eq.farm_talent_food)&select=calculator_type,data');
+shopData=null;talentData=null;
+rows.forEach(function(r){
+if(r.calculator_type==='farm_shop')shopData=r.data;
+if(r.calculator_type==='farm_talent_food')talentData=r.data;
+});
+
+var shopItems=parseItems(shopData);
+var talentItems=parseItems(talentData);
+
+var shopBest=shopItems.length>0?shopItems.reduce(function(m,x){return Math.max(m,x.ratio);},0):0;
+var talentBest=talentItems.length>0?talentItems.reduce(function(m,x){return Math.max(m,x.ratio);},0):0;
+
+document.getElementById('shopItems').textContent=shopItems.length;
+document.getElementById('shopBest').textContent=shopBest>0?shopBest.toFixed(4):'--';
+document.getElementById('talentItems').textContent=talentItems.length;
+document.getElementById('talentBest').textContent=talentBest>0?talentBest.toFixed(4):'--';
+
+var msg=[];
+if(shopItems.length===0)msg.push('店铺研究无数据');
+if(talentItems.length===0)msg.push('人才锻炼无数据');
+document.getElementById('statusSub').textContent=msg.length>0?'⚠️ '+msg.join('；')+'，请先填写保存':'✅ 数据已就绪，可输入粮票计算';
+
+return{shop:shopItems,talent:talentItems};
+}catch(e){console.error(e);document.getElementById('statusSub').textContent='加载失败: '+e.message;return{shop:[],talent:[]};}
+}
+
+function calculate(){
+var budget=parseInt(document.getElementById('budget').value)||0;
+if(budget<=0){toast('请输入可投入粮票','err');return;}
+
+loadData().then(function(result){
+var shopItems=result.shop, talentItems=result.talent;
+if(shopItems.length===0&&talentItems.length===0){toast('两边均无数据，请先填写保存','err');return;}
+
+// Clone for simulation
+var all=[];
+shopItems.forEach(function(it){all.push({pool:'shop',cost:it.cost,income:it.income,level:it.level,ratio:it.ratio});});
+talentItems.forEach(function(it){all.push({pool:'talent',cost:it.cost,income:it.income,level:it.level,ratio:it.ratio});});
+
+var shopBudget=0, talentBudget=0, remaining=budget;
+
+// Allocate one ticket at a time to the best-ratio item
+while(remaining>0){
+all.sort(function(a,b){return b.ratio-a.ratio;});
+var best=all[0];
+if(best.cost>remaining)break;
+remaining-=best.cost;
+if(best.pool==='shop')shopBudget+=best.cost;
+else talentBudget+=best.cost;
+best.spent=(best.spent||0)+best.cost;
+best.cost=nextCost(best.cost,best.level);
+best.level++;
+best.ratio=best.income/best.cost;
+}
+
+var totalAllocated=shopBudget+talentBudget;
+var shopPct=totalAllocated>0?Math.round(shopBudget/totalAllocated*100):50;
+var talentPct=totalAllocated>0?Math.round(talentBudget/totalAllocated*100):50;
+
+document.getElementById('shopPct').textContent=shopPct+'%';
+document.getElementById('talentPct').textContent=talentPct+'%';
+document.getElementById('barShop').style.width=shopPct+'%';
+document.getElementById('barTalent').style.width=talentPct+'%';
+document.getElementById('resultSub').textContent='总投入 '+budget.toLocaleString()+' 万，已分配 '+Math.round(totalAllocated).toLocaleString()+' 万，剩余 '+Math.round(remaining).toLocaleString()+' 万';
+document.getElementById('resultNote').textContent='💡 建议按此比例分配粮票到两个模块。具体升级方案请在各自页面中计算。';
+document.getElementById('resultCard').style.display='block';
+});
+}
+
+async function init(){
+curUser=getUser();if(!curUser)return;
+if(!curUser.is_admin){alert('无权限访问');window.location.href='../index.html';return;}
+document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
+loadData();
+}
+init();
+</script>
+</body>
+</html>
