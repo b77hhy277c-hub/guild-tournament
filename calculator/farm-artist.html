@@ -256,8 +256,10 @@ function countOwned(artistList){
   return c;
 }
 
-async function buildInputTable(){
-  var saved=await loadSavedData();
+function buildInputTable(){
+  loadSavedData().then(function(saved){ renderInputTable(saved); });
+}
+function renderInputTable(saved){
   var html='';
   PROJECTS.forEach(function(p,si){
     var cls=(si%2===0)?'section-odd':'section-even';
@@ -283,11 +285,10 @@ async function buildInputTable(){
   }
 }
 
-async function loadSavedData(){
-  try {
-    var rows=await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_artist&select=data&limit=1');
-    return (rows&&rows.length>0)?rows[0].data:{};
-  } catch(e){console.warn('loadSavedData error:',e);return{};}
+function loadSavedData(){
+  return API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_artist&select=data&limit=1')
+    .then(function(rows){ return (rows&&rows.length>0)?rows[0].data:{}; })
+    .catch(function(e){console.warn('loadSavedData error:',e);return{};});
 }
 
 var _saveTimer=null;
@@ -306,26 +307,22 @@ function saveData(){
     if(rb.innerHTML&&document.getElementById('resultCard').classList.contains('show')){
       data._resultHTML=rb.innerHTML;data._resultBar=rr.innerHTML;
     }
-    saveToServer(data);
+    API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_artist&select=id&limit=1')
+      .then(function(ex){
+        if(ex&&ex.length){
+          return API.patch('calculator_data?id=eq.'+ex[0].id,{data:data,updated_at:new Date().toISOString()});
+        } else {
+          return API.post('calculator_data',{member_id:curUser.id,calculator_type:'farm_artist',data:data});
+        }
+      }).catch(function(e){console.warn('saveData error:',e);});
   },500);
 }
-async function saveToServer(data){
-  try {
-    var ex=await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_artist&select=id&limit=1');
-    if(ex&&ex.length){
-      await API.patch('calculator_data?id=eq.'+ex[0].id,{data:data,updated_at:new Date().toISOString()});
-    } else {
-      await API.post('calculator_data',{member_id:curUser.id,calculator_type:'farm_artist',data:data});
-    }
-  } catch(e){console.warn('saveData error:',e);}
-}
 
-async function resetAll(){
+function resetAll(){
   if(!confirm('确定清空所有数据和结果？'))return;
-  try {
-    var ex=await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_artist&select=id&limit=1');
-    if(ex&&ex.length)await API.del('calculator_data?id=eq.'+ex[0].id);
-  } catch(e){console.warn('reset error:',e);}
+  API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_artist&select=id&limit=1')
+    .then(function(ex){if(ex&&ex.length)return API.del('calculator_data?id=eq.'+ex[0].id);})
+    .catch(function(e){console.warn('reset error:',e);});
   localStorage.removeItem('calc_artist_sim');
   document.getElementById('budget').value='0';
   document.querySelectorAll('.save-input').forEach(function(el){el.value='0';});
@@ -437,8 +434,7 @@ async function init(){
   curUser=getUser();if(!curUser)return;
   if(!curUser.is_admin){alert('无权限访问');window.location.href='../index.html';return;}
   document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
-  await loadOwnedArtists();
-  await buildInputTable();
+  loadOwnedArtists().then(function(){ buildInputTable(); });
 }
 init();
 </script>
