@@ -40,8 +40,8 @@
     .btn:hover{background:var(--accent-h);}
 
     .card{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px;}
-    table{width:100%;border-collapse:collapse;table-layout:fixed;}
-    th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border-l);font-size:13px;overflow:hidden;text-overflow:ellipsis;}
+    table{width:100%;border-collapse:collapse;}
+    th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border-l);font-size:13px;}
     th{font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);white-space:nowrap;}
     td{vertical-align:middle;}
     tr:hover td{background:var(--hover);}
@@ -50,7 +50,7 @@
     tr.section-odd td input.num{background:transparent;}
     tr.section-even td input.num{background:transparent;}
 
-    input.num{width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;text-align:right;}
+    input.num{padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;}
     input.num:focus{border-color:var(--accent);}
     .artist-count{text-align:center;font-weight:600;color:var(--accent);}
 
@@ -103,8 +103,8 @@
           <th style="width:32px;">#</th>
           <th>锻炼项目</th>
           <th style="width:56px;">艺人</th>
-          <th style="width:64px;">等级</th>
-          <th style="width:88px;">消耗（万）</th>
+          <th style="width:84px;text-align:center;">等级</th>
+          <th style="width:100px;text-align:center;">消耗（万）</th>
         </tr>
       </thead>
       <tbody id="inputBody"></tbody>
@@ -269,8 +269,8 @@ function renderInputTable(saved){
       '<td style="text-align:center;">'+(si+1)+'</td>'+
       '<td style="font-weight:600;">'+esc(p.name)+' <span style="color:var(--accent);cursor:pointer;font-size:12px;" onclick="showArtistDetail(\''+esc(p.name)+'\')" title="查看涉及艺人">ⓘ</span></td>'+
       '<td class="artist-count">'+ac+'</td>'+
-      '<td><input type="number" class="num level save-input" data-name="'+esc(p.name)+'" data-field="level" value="'+(d.level||0)+'" min="0" style="width:65px;" onchange="saveData()" /></td>'+
-      '<td><input type="number" class="num cost save-input" data-name="'+esc(p.name)+'" data-field="cost" value="'+(d.cost||0)+'" min="0" onchange="saveData()" /></td>'+
+      '<td style="text-align:center;"><input type="number" class="num level save-input" data-name="'+esc(p.name)+'" data-field="level" value="'+(d.level||0)+'" min="0" style="width:72px;text-align:center;" onchange="saveData()" /></td>'+
+      '<td style="text-align:center;"><input type="number" class="num cost save-input" style="width:88px;text-align:center;" data-name="'+esc(p.name)+'" data-field="cost" value="'+(d.cost||0)+'" min="0" onchange="saveData()" /></td>'+
     '</tr>';
   });
   document.getElementById('inputBody').innerHTML=html;
