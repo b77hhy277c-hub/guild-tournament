@@ -173,7 +173,7 @@ var level=parseInt(d.level)||0;
 var cost=(parseInt(d.cost)>0)?parseInt(d.cost):getCost(side,level);
 html+='<tr class="'+cls+'">'+
 '<td style="text-align:center;">'+(ti+1)+'</td>'+
-(sbi===0?'<td style="font-weight:600;vertical-align:top;" rowspan="2">'+esc(tech.id)+' <span style="color:var(--accent);cursor:pointer;font-size:12px;" onclick="showTalentDetail(\''+esc(tech.id)+'\')" title="查看人才">ⓘ</span></td><td style="font-size:11px;color:var(--text3);vertical-align:top;" rowspan="2">'+esc(tech.talents.join('、'))+'</td><td class="talent-count" style="vertical-align:top;" rowspan="2">'+countOwned(tech.talents)+'</td>':'')+
+(sbi===0?'<td style="font-weight:600;vertical-align:top;" rowspan="2">'+esc(tech.id)+' <span style="color:var(--accent);cursor:pointer;font-size:12px;" onclick="showTalentDetail(\''+esc(tech.id)+'\')" title="查看人才">ⓘ</span></td><td class="talent-count" style="vertical-align:top;" rowspan="2">'+countOwned(tech.talents)+'</td>':'')+
 '<td style="color:var(--text2);">'+(side==='上'?'上面项目':'下面项目')+'</td>'+
 '<td><input type="number" class="num level save-input" data-key="'+esc(key)+'" data-side="'+side+'" value="'+level+'" min="0" onchange="onLevelChange(this)" style="width:58px;"/></td>'+
 '<td><input type="number" class="num cost save-input" data-key="'+esc(key)+'" data-field="cost" value="'+cost+'" min="0" onchange="saveData()"/></td>'+
