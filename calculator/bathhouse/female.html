@@ -363,21 +363,31 @@ break;
 remaining-=best.cost;totalSpent+=best.cost;
 var t=best.tech;
 if(best.target==='above'){
+t.above.upgraded=(t.above.upgraded||0)+1;t.above.spent=(t.above.spent||0)+best.cost;
 t.above.level++;t.above.cost=getCost('上',t.above.level);
 t.upgraded++;t.spent+=best.cost;
-// Check unlock
 if(t.above.level>=100&&t.below.locked){t.below.locked=false;t.below.level=1;t.below.cost=getCost('下',1);}
 }else{
+t.below.upgraded=(t.below.upgraded||0)+1;t.below.spent=(t.below.spent||0)+best.cost;
 t.below.level++;t.below.cost=getCost('下',t.below.level);
 t.upgraded++;t.spent+=best.cost;
 }
 }
 
-// Build sim output
+// Build sim output with origRatio tracking
 var sim=[];
 techs.forEach(function(tech){
-if(tech.above.income>0)sim.push({label:tech.id+' 上',cost:tech.above.cost,income:tech.above.income,level:tech.above.level,ratio:tech.above.income/tech.above.cost,upgraded:0,spent:0});
-if(!tech.below.locked&&tech.below.income>0)sim.push({label:tech.id+' 下',cost:tech.below.cost,income:tech.below.income,level:tech.below.level,ratio:tech.below.income/tech.below.cost,upgraded:0,spent:0});
+if(tech.above.income>0){
+var aUp=tech.above.upgraded||0,aSp=tech.above.spent||0;
+var origCost=getCost('上',tech.above.level-aUp);
+sim.push({label:tech.id+' 上',cost:tech.above.cost,income:tech.above.income,level:tech.above.level,ratio:tech.above.income/tech.above.cost,origRatio:tech.above.income/origCost,upgraded:aUp,spent:aSp});
+}
+if(!tech.below.locked&&tech.below.income>0){
+var bUp=tech.below.upgraded||0,bSp=tech.below.spent||0;
+var origLevel=tech.below.level-bUp;
+var origCost=origLevel>0?getCost('下',origLevel):getCost('下',1);
+sim.push({label:tech.id+' 下',cost:tech.below.cost,income:tech.below.income,level:tech.below.level,ratio:tech.below.income/tech.below.cost,origRatio:tech.below.income/origCost,upgraded:bUp,spent:bSp});
+}
 });
 return{sim:sim,techs:techs,spent:totalSpent,remaining:remaining,stoppedBy:stoppedBy};
 }
@@ -389,10 +399,10 @@ sim.forEach(function(s,si){
 var cls=(si%2===0)?'section-odd':'section-even';
 html+='<tr class="'+cls+'">'+
 '<td style="text-align:center;">'+(si+1)+'</td><td>'+esc(s.label)+'</td>'+
-'<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td>'+
-'<td style="text-align:center;font-weight:600;color:var(--accent);">-</td>'+
-'<td style="text-align:right;font-weight:600;">-</td>'+
-'<td style="text-align:right;">-</td></tr>';
+'<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
+'<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
+'<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
+'<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
 document.getElementById('resultBody').innerHTML=html;
 
@@ -448,10 +458,10 @@ sim.forEach(function(s,si){
 var cls=(si%2===0)?'section-odd':'section-even';
 html+='<tr class="'+cls+'">'+
 '<td style="text-align:center;">'+(si+1)+'</td><td>'+esc(s.label)+'</td>'+
-'<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td>'+
-'<td style="text-align:center;font-weight:600;color:var(--accent);">-</td>'+
-'<td style="text-align:right;font-weight:600;">-</td>'+
-'<td style="text-align:right;">-</td></tr>';
+'<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
+'<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
+'<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
+'<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
 document.getElementById('resultBody').innerHTML=html;
 document.getElementById('resultBar').innerHTML='<span>已按选项'+(opt===1?'1（分散）':'2（专注）')+'分配</span><span>|</span><span>📊 消耗 <span class="hl">'+Math.round(g_budget-result.remaining).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(result.remaining).toLocaleString()+'</span></span>';
