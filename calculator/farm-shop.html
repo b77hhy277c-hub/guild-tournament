@@ -243,7 +243,7 @@ async function loadSavedData(){
 var _saveTimer = null;
 function saveData(){
   clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(async function(){
+  _saveTimer = setTimeout(function(){
     var data = {};
     document.querySelectorAll('.save-input').forEach(function(el){
       var key = el.dataset.key;
@@ -258,15 +258,18 @@ function saveData(){
       data._resultHTML = resultBody.innerHTML;
       data._resultBar = resultBar.innerHTML;
     }
-    try {
-      var ex = await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_shop&select=id&limit=1');
-      if(ex && ex.length){
-        await API.patch('calculator_data?id=eq.'+ex[0].id, {data: data, updated_at: new Date().toISOString()});
-      } else {
-        await API.post('calculator_data', {member_id: curUser.id, calculator_type: 'farm_shop', data: data});
-      }
-    } catch(e){ console.warn('saveData error:', e); }
+    saveToServer(data);
   }, 500);
+}
+async function saveToServer(data){
+  try {
+    var ex = await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_shop&select=id&limit=1');
+    if(ex && ex.length){
+      await API.patch('calculator_data?id=eq.'+ex[0].id, {data: data, updated_at: new Date().toISOString()});
+    } else {
+      await API.post('calculator_data', {member_id: curUser.id, calculator_type: 'farm_shop', data: data});
+    }
+  } catch(e){ console.warn('saveData error:', e); }
 }
 
 async function resetAll(){
@@ -474,7 +477,7 @@ function init(){
   if(!curUser) return;
   if(!curUser.is_admin){ alert('无权限访问'); window.location.href='../index.html'; return; }
   document.getElementById('navUser').textContent = curUser.display_name || curUser.uid;
-  await buildInputTable();
+  try { await buildInputTable(); } catch(e){ console.error(e); document.getElementById('inputBody').innerHTML='<tr><td colspan="6" style="color:red;padding:20px;">加载失败: '+esc(e.message)+'</td></tr>'; }
 }
 init();
 </script>

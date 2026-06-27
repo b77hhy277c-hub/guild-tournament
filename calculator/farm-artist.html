@@ -293,7 +293,7 @@ async function loadSavedData(){
 var _saveTimer=null;
 function saveData(){
   clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(async function(){
+  _saveTimer=setTimeout(function(){
     var data={};
     document.querySelectorAll('.save-input').forEach(function(el){
       var name=el.dataset.name;
@@ -306,15 +306,18 @@ function saveData(){
     if(rb.innerHTML&&document.getElementById('resultCard').classList.contains('show')){
       data._resultHTML=rb.innerHTML;data._resultBar=rr.innerHTML;
     }
-    try {
-      var ex=await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_artist&select=id&limit=1');
-      if(ex&&ex.length){
-        await API.patch('calculator_data?id=eq.'+ex[0].id,{data:data,updated_at:new Date().toISOString()});
-      } else {
-        await API.post('calculator_data',{member_id:curUser.id,calculator_type:'farm_artist',data:data});
-      }
-    } catch(e){console.warn('saveData error:',e);}
+    saveToServer(data);
   },500);
+}
+async function saveToServer(data){
+  try {
+    var ex=await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_artist&select=id&limit=1');
+    if(ex&&ex.length){
+      await API.patch('calculator_data?id=eq.'+ex[0].id,{data:data,updated_at:new Date().toISOString()});
+    } else {
+      await API.post('calculator_data',{member_id:curUser.id,calculator_type:'farm_artist',data:data});
+    }
+  } catch(e){console.warn('saveData error:',e);}
 }
 
 async function resetAll(){
