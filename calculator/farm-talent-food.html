@@ -309,6 +309,9 @@ return{levels:n,cost:cumCost,newCost:cost,newLevel:lv};
 function calculate(){
 var budget=parseInt(document.getElementById('budget').value)||0;
 if(budget<=0){toast('请输入可投入粮票','err');return;}
+// Sync auto-fill incomes
+var firstIncomeEl=document.querySelector('.income[data-first="1"]');
+if(firstIncomeEl&&parseInt(firstIncomeEl.value)>0)onIncomeChange(firstIncomeEl);
 var items=gatherItems();
 if(items.length===0){toast('请至少填写一项数据','err');return;}
 
