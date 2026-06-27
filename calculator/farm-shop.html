@@ -139,6 +139,16 @@
 </div>
 
 <script>
+var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API={
+  h:function(){return{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json'};},
+  get:async function(p){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()});if(!r.ok)throw Error(await r.text());return r.json();},
+  post:async function(p,b){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'Prefer':'return=representation'},this.h()),body:JSON.stringify(b)});if(!r.ok)throw Error(await r.text());return r.json();},
+  patch:async function(p,b){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'PATCH',headers:this.h(),body:JSON.stringify(b)});var t=await r.text();if(!r.ok)throw Error(t);return t?JSON.parse(t):null;},
+  del:async function(p){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'DELETE',headers:this.h()});if(!r.ok)throw Error(await r.text());},
+};
+
 var curUser = null;
 function getUser(){
   var s=localStorage.getItem('guild_current_user');
@@ -189,14 +199,14 @@ function levelsToTarget(currentCost, currentLevel, income, targetRatio){
   return { levels: n, cost: cumCost, newCost: cost, newLevel: lv };
 }
 
-function buildInputTable(){
-  var saved = loadSavedData();
+async function buildInputTable(){
+  var saved = await loadSavedData();
   var html = '';
   SECTIONS.forEach(function(sec, si){
     SUB_ITEMS.forEach(function(sub){
       var cls = (si % 2 === 0) ? 'section-odd' : 'section-even';
       var key = sec + '|' + sub;
-      var d = saved[key] || {};
+      var d = (saved && saved[key]) || {};
       html += '<tr class="'+cls+'">'+
         '<td style="text-align:center;">'+(si+1)+'</td>'+
         '<td class="section-name">'+esc(sec)+'</td>'+
@@ -208,15 +218,14 @@ function buildInputTable(){
     });
   });
   document.getElementById('inputBody').innerHTML = html;
-  // Restore budget
-  if(saved._budget) document.getElementById('budget').value = saved._budget;
+  if(saved && saved._budget) document.getElementById('budget').value = saved._budget;
   // Restore sim data
   try {
     var simSaved = JSON.parse(localStorage.getItem('calc_farm_shop_sim')||'null');
     if(simSaved) lastSimResult = simSaved;
   } catch(e){}
   // Restore results
-  if(saved._resultHTML){
+  if(saved && saved._resultHTML){
     document.getElementById('resultBody').innerHTML = saved._resultHTML;
     document.getElementById('resultBar').innerHTML = saved._resultBar || '';
     document.getElementById('resultCard').classList.add('show');
@@ -224,35 +233,48 @@ function buildInputTable(){
   }
 }
 
-function loadSavedData(){
-  try { return JSON.parse(localStorage.getItem('calc_farm_shop')||'{}'); } catch(e){ return {}; }
+async function loadSavedData(){
+  try {
+    var rows = await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_shop&select=data&limit=1');
+    return (rows && rows.length>0) ? rows[0].data : {};
+  } catch(e){ console.warn('loadSavedData error:', e); return {}; }
 }
 
+var _saveTimer = null;
 function saveData(){
-  var data = {};
-  // Save all inputs
-  document.querySelectorAll('.save-input').forEach(function(el){
-    var key = el.dataset.key;
-    var field = el.dataset.field;
-    if(!data[key]) data[key] = {};
-    data[key][field] = parseInt(el.value)||0;
-  });
-  // Save budget
-  var budget = document.getElementById('budget').value;
-  data._budget = budget;
-  // Save current results
-  var resultBody = document.getElementById('resultBody');
-  var resultBar = document.getElementById('resultBar');
-  if(resultBody.innerHTML && document.getElementById('resultCard').classList.contains('show')){
-    data._resultHTML = resultBody.innerHTML;
-    data._resultBar = resultBar.innerHTML;
-  }
-  localStorage.setItem('calc_farm_shop', JSON.stringify(data));
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async function(){
+    var data = {};
+    document.querySelectorAll('.save-input').forEach(function(el){
+      var key = el.dataset.key;
+      var field = el.dataset.field;
+      if(!data[key]) data[key] = {};
+      data[key][field] = parseInt(el.value)||0;
+    });
+    data._budget = document.getElementById('budget').value;
+    var resultBody = document.getElementById('resultBody');
+    var resultBar = document.getElementById('resultBar');
+    if(resultBody.innerHTML && document.getElementById('resultCard').classList.contains('show')){
+      data._resultHTML = resultBody.innerHTML;
+      data._resultBar = resultBar.innerHTML;
+    }
+    try {
+      var ex = await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_shop&select=id&limit=1');
+      if(ex && ex.length){
+        await API.patch('calculator_data?id=eq.'+ex[0].id, {data: data, updated_at: new Date().toISOString()});
+      } else {
+        await API.post('calculator_data', {member_id: curUser.id, calculator_type: 'farm_shop', data: data});
+      }
+    } catch(e){ console.warn('saveData error:', e); }
+  }, 500);
 }
 
-function resetAll(){
+async function resetAll(){
   if(!confirm('确定清空所有数据和结果？')) return;
-  localStorage.removeItem('calc_farm_shop');
+  try {
+    var ex = await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_shop&select=id&limit=1');
+    if(ex && ex.length) await API.del('calculator_data?id=eq.'+ex[0].id);
+  } catch(e){ console.warn('reset error:', e); }
   localStorage.removeItem('calc_farm_shop_sim');
   document.getElementById('budget').value = '0';
   document.querySelectorAll('.save-input').forEach(function(el){ el.value = '0'; });
@@ -452,7 +474,7 @@ function init(){
   if(!curUser) return;
   if(!curUser.is_admin){ alert('无权限访问'); window.location.href='../index.html'; return; }
   document.getElementById('navUser').textContent = curUser.display_name || curUser.uid;
-  buildInputTable();
+  await buildInputTable();
 }
 init();
 </script>

@@ -142,8 +142,11 @@
 var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
 var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
 var API={
-  h:function(){return{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};},
-  get:async function(p){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()});if(!r.ok)throw Error(await r.text());return r.json();}
+  h:function(){return{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json'};},
+  get:async function(p){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()});if(!r.ok)throw Error(await r.text());return r.json();},
+  post:async function(p,b){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'Prefer':'return=representation'},this.h()),body:JSON.stringify(b)});if(!r.ok)throw Error(await r.text());return r.json();},
+  patch:async function(p,b){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'PATCH',headers:this.h(),body:JSON.stringify(b)});var t=await r.text();if(!r.ok)throw Error(t);return t?JSON.parse(t):null;},
+  del:async function(p){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'DELETE',headers:this.h()});if(!r.ok)throw Error(await r.text());},
 };
 
 var curUser=null;
@@ -253,12 +256,12 @@ function countOwned(artistList){
   return c;
 }
 
-function buildInputTable(){
-  var saved=loadSavedData();
+async function buildInputTable(){
+  var saved=await loadSavedData();
   var html='';
   PROJECTS.forEach(function(p,si){
     var cls=(si%2===0)?'section-odd':'section-even';
-    var d=saved[p.name]||{};
+    var d=(saved&&saved[p.name])||{};
     var ac=countOwned(p.artists);
     html+='<tr class="'+cls+'">'+
       '<td style="text-align:center;">'+(si+1)+'</td>'+
@@ -269,10 +272,10 @@ function buildInputTable(){
     '</tr>';
   });
   document.getElementById('inputBody').innerHTML=html;
-  if(saved._budget)document.getElementById('budget').value=saved._budget;
+  if(saved&&saved._budget)document.getElementById('budget').value=saved._budget;
   // Restore sim + results
   try{var simSaved=JSON.parse(localStorage.getItem('calc_artist_sim')||'null');if(simSaved)lastSimResult=simSaved;}catch(e){}
-  if(saved._resultHTML){
+  if(saved&&saved._resultHTML){
     document.getElementById('resultBody').innerHTML=saved._resultHTML;
     document.getElementById('resultBar').innerHTML=saved._resultBar||'';
     document.getElementById('resultCard').classList.add('show');
@@ -280,29 +283,46 @@ function buildInputTable(){
   }
 }
 
-function loadSavedData(){
-  try{return JSON.parse(localStorage.getItem('calc_farm_artist')||'{}');}catch(e){return{};}
+async function loadSavedData(){
+  try {
+    var rows=await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_artist&select=data&limit=1');
+    return (rows&&rows.length>0)?rows[0].data:{};
+  } catch(e){console.warn('loadSavedData error:',e);return{};}
 }
 
+var _saveTimer=null;
 function saveData(){
-  var data={};
-  document.querySelectorAll('.save-input').forEach(function(el){
-    var name=el.dataset.name;
-    var field=el.dataset.field;
-    if(!data[name])data[name]={};
-    data[name][field]=parseInt(el.value)||0;
-  });
-  data._budget=document.getElementById('budget').value;
-  var rb=document.getElementById('resultBody'),rr=document.getElementById('resultBar');
-  if(rb.innerHTML&&document.getElementById('resultCard').classList.contains('show')){
-    data._resultHTML=rb.innerHTML;data._resultBar=rr.innerHTML;
-  }
-  localStorage.setItem('calc_farm_artist',JSON.stringify(data));
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(async function(){
+    var data={};
+    document.querySelectorAll('.save-input').forEach(function(el){
+      var name=el.dataset.name;
+      var field=el.dataset.field;
+      if(!data[name])data[name]={};
+      data[name][field]=parseInt(el.value)||0;
+    });
+    data._budget=document.getElementById('budget').value;
+    var rb=document.getElementById('resultBody'),rr=document.getElementById('resultBar');
+    if(rb.innerHTML&&document.getElementById('resultCard').classList.contains('show')){
+      data._resultHTML=rb.innerHTML;data._resultBar=rr.innerHTML;
+    }
+    try {
+      var ex=await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_artist&select=id&limit=1');
+      if(ex&&ex.length){
+        await API.patch('calculator_data?id=eq.'+ex[0].id,{data:data,updated_at:new Date().toISOString()});
+      } else {
+        await API.post('calculator_data',{member_id:curUser.id,calculator_type:'farm_artist',data:data});
+      }
+    } catch(e){console.warn('saveData error:',e);}
+  },500);
 }
 
-function resetAll(){
+async function resetAll(){
   if(!confirm('确定清空所有数据和结果？'))return;
-  localStorage.removeItem('calc_farm_artist');
+  try {
+    var ex=await API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.farm_artist&select=id&limit=1');
+    if(ex&&ex.length)await API.del('calculator_data?id=eq.'+ex[0].id);
+  } catch(e){console.warn('reset error:',e);}
   localStorage.removeItem('calc_artist_sim');
   document.getElementById('budget').value='0';
   document.querySelectorAll('.save-input').forEach(function(el){el.value='0';});
@@ -415,7 +435,7 @@ async function init(){
   if(!curUser.is_admin){alert('无权限访问');window.location.href='../index.html';return;}
   document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
   await loadOwnedArtists();
-  buildInputTable();
+  await buildInputTable();
 }
 init();
 </script>
