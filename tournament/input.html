@@ -216,7 +216,10 @@
     <div class="l2-area" id="l2Area"><div style="color:var(--text3);text-align:center;padding:40px;">请选择上方分类</div></div>
     <div class="l3-area" id="l3Area" style="display:none;"><h4 id="l3Title"></h4><div id="l3Tasks"></div></div>
     <div class="bot">
-      <span class="cnt" id="chkCnt">已选 0 项</span>
+      <div>
+        <span class="cnt" id="chkCnt">已选 0 项</span>
+        <span class="cnt" id="taCnt" style="font-size:12px;color:var(--text2);display:block;margin-top:2px;">涵盖 0 位人才、0 位艺人</span>
+      </div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-s" onclick="resetAll()">↩ 撤销本次修改</button>
         <button class="btn btn-s" style="color:var(--danger);" onclick="clearAll()">🗑 清空所有选项</button>
@@ -651,6 +654,23 @@ function onToggle(cb){
 function updateCnt(){
   var c=0; Object.keys(abilities).forEach(function(k){ if(abilities[k].is_able)c++; });
   document.getElementById('chkCnt').textContent='已选 '+c+' 项';
+
+  // Count unique talent & artist L3 categories
+  var talentL3s={}, artistL3s={};
+  Object.keys(abilities).forEach(function(did){
+    if(!abilities[did].is_able) return;
+    var d = defs.find(function(x){return x.id===did;});
+    if(!d) return;
+    var l3 = cats.find(function(x){return x.id===d.category_id;});
+    if(!l3) return;
+    var l2 = cats.find(function(x){return x.id===l3.parent_id;});
+    if(!l2) return;
+    var l1 = cats.find(function(x){return x.id===l2.parent_id;});
+    if(!l1) return;
+    if(l1.name==='人才') talentL3s[l3.id]=true;
+    if(l1.name==='艺人') artistL3s[l3.id]=true;
+  });
+  document.getElementById('taCnt').textContent='涵盖 '+Object.keys(talentL3s).length+' 位人才、'+Object.keys(artistL3s).length+' 位艺人';
 }
 
 // ===== SAVE =====

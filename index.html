@@ -338,6 +338,12 @@
           <div class="card-desc">来看看今天副业怎么上</div>
         </a>
 
+        <a href="calculator.html" class="card" id="cardCalculator" style="display:none;">
+          <div class="card-icon">🧮</div>
+          <div class="card-title">资源计算器</div>
+          <div class="card-desc">各类资源最优点法</div>
+        </a>
+
         <a href="visits.html" class="card" id="cardVisits" style="display:none;">
           <div class="card-icon">📊</div>
           <div class="card-title">访问记录</div>
@@ -449,6 +455,10 @@
       updateSidebar(currentUser);
       loadPositions();
       loadSideBiz();
+      // 资源计算器（仅超级管理员可见）
+      if(currentUser.is_admin){
+        document.getElementById('cardCalculator').style.display='block';
+      }
       // 访问记录入口（仅超级管理员/副会长）
       if(currentUser.is_admin || currentUser.position==='副会长') {
         document.getElementById('cardVisits').style.display='block';

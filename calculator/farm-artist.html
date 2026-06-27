@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>农田-艺人锻炼</title>
+  <style>
+    :root {
+      --bg:#fff;--bg2:#f5f5f7;--card:#fff;--hover:rgba(0,0,0,0.04);
+      --text:#1d1d1f;--text2:#6e6e73;--text3:#aeaeb2;
+      --accent:#007AFF;--accent-h:#0062d1;
+      --border:#d2d2d7;--border-l:#e5e5ea;
+      --shadow:0 4px 20px rgba(0,0,0,0.08);--r:12px;
+    }
+    @media (prefers-color-scheme:dark){
+      :root {
+        --bg:#000;--bg2:#1c1c1e;--card:#1c1c1e;
+        --hover:rgba(255,255,255,0.08);
+        --text:#f5f5f7;--text2:#8e8e93;--text3:#636366;
+        --accent:#0A84FF;--accent-h:#409cff;
+        --border:#38383a;--border-l:#2c2c2e;
+        --shadow:0 1px 3px rgba(255,255,255,0.05);
+      }
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;font-size:14px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;}
+
+    .navbar{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 20px;border-bottom:1px solid var(--border-l);position:sticky;top:0;background:var(--bg);z-index:10;backdrop-filter:blur(20px);}
+    .navbar a{color:var(--accent);text-decoration:none;font-size:14px;}
+    .navbar .title{font-size:16px;font-weight:600;}
+    .navbar .user{font-size:13px;color:var(--text2);}
+
+    .main{max-width:1000px;margin:0 auto;padding:24px;}
+
+    .top-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:16px 20px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border-l);}
+    .top-bar label{font-weight:500;}
+    .top-bar input{width:130px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;}
+    .top-bar input:focus{border-color:var(--accent);}
+    .btn{padding:8px 22px;border-radius:8px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;border:none;background:var(--accent);color:#fff;transition:background 0.2s;}
+    .btn:hover{background:var(--accent-h);}
+
+    .card{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px;}
+    table{width:100%;border-collapse:collapse;table-layout:fixed;}
+    th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border-l);font-size:13px;overflow:hidden;text-overflow:ellipsis;}
+    th{font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);white-space:nowrap;}
+    td{vertical-align:middle;}
+    tr:hover td{background:var(--hover);}
+    tr.section-odd td{background:rgba(127,127,127,0.06);}
+    tr.section-even td{background:transparent;}
+    tr.section-odd td input.num{background:transparent;}
+    tr.section-even td input.num{background:transparent;}
+
+    input.num{width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;text-align:right;}
+    input.num:focus{border-color:var(--accent);}
+    .artist-count{text-align:center;font-weight:600;color:var(--accent);}
+
+    .result-section{display:none;}
+    .result-section.show{display:block;}
+    .result-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;font-size:14px;font-weight:500;}
+    .result-bar .hl{color:var(--accent);font-weight:700;}
+
+    .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;font-size:14px;font-weight:500;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.3s;box-shadow:var(--shadow);}
+    .toast.show{opacity:1;}
+    .toast.ok{background:#30d158;color:#fff;}
+    .toast.err{background:#ff3b30;color:#fff;}
+    .toast.info{background:var(--accent);color:#fff;}
+
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+    .modal-overlay.show{display:flex;}
+    .modal{background:var(--card);border-radius:14px;padding:28px;width:420px;max-width:94vw;max-height:70vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);border:1px solid var(--border-l);}
+    .modal h3{font-size:18px;font-weight:600;margin-bottom:8px;}
+    .modal .artists{font-size:14px;line-height:2;}
+    .modal .artists .owned{color:#30d158;font-weight:600;}
+    .modal .artists .unowned{color:var(--text3);}
+  </style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="artistModal">
+  <div class="modal" id="artistModalContent"></div>
+</div>
+
+<nav class="navbar">
+  <a href="../calculator.html">← 返回计算器</a>
+  <span class="title">🎨 农田-艺人锻炼</span>
+  <span class="user" id="navUser">--</span>
+</nav>
+
+<div class="main">
+  <div class="top-bar">
+    <label>可投入果票（万）：</label>
+    <input type="number" id="budget" value="0" min="0" onchange="saveData()" />
+    <button class="btn" onclick="calculate()">📊 计算最优点法</button>
+    <button class="btn" style="background:var(--bg);color:var(--text);border:1px solid var(--border);" onclick="resetAll()">🔄 一键重填</button>
+    <span id="loadStatus" style="font-size:12px;color:var(--text3);">加载成员数据...</span>
+  </div>
+
+  <div class="card">
+    <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:32px;">#</th>
+          <th>锻炼项目</th>
+          <th style="width:56px;">艺人</th>
+          <th style="width:64px;">等级</th>
+          <th style="width:88px;">消耗（万）</th>
+        </tr>
+      </thead>
+      <tbody id="inputBody"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="card result-section" id="resultCard">
+    <div class="result-bar" id="resultBar"></div>
+    <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px;">#</th>
+          <th style="width:72px;">项目</th>
+          <th style="width:48px;">艺人</th>
+          <th style="width:68px;">性价比</th>
+          <th style="width:56px;">升N级</th>
+          <th style="width:72px;">消耗</th>
+          <th style="width:68px;">新价比</th>
+          <th style="width:60px;">魅力</th>
+        </tr>
+      </thead>
+      <tbody id="resultBody"></tbody>
+    </table>
+    </div>
+    <div id="applyBtnWrap" style="padding:14px 20px;border-top:1px solid var(--border-l);display:none;">
+      <button class="btn" onclick="applyResults()">💾 升级完毕，保存当前等级</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API={
+  h:function(){return{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};},
+  get:async function(p){var r=await fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()});if(!r.ok)throw Error(await r.text());return r.json();}
+};
+
+var curUser=null;
+var ownedArtists={}; // artist name → true if user has checked any task under that artist
+
+function getUser(){
+  var s=localStorage.getItem('guild_current_user');
+  if(!s){window.location.href='../login.html';return null;}
+  try{var u=JSON.parse(s);if(!u.id)throw Error();return u;}catch(_){localStorage.removeItem('guild_current_user');window.location.href='../login.html';return null;}
+}
+function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},2500);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// Growth helpers
+function getGrowth(level){
+  if(level>=200)return 1.009;
+  if(level>=100)return 1.01;
+  return 1.012;
+}
+
+// 18 projects with assigned artists
+var PROJECTS=[
+  {name:'蔬果窖藏',artists:['海燕','淑珍','百灵鸟','丫蛋','港星','一代天后','白居易','小碧']},
+  {name:'沙拉制作',artists:['阿诗玛','英姿','桂芸','校园歌手','高启兰','白晶晶','铁扇公主','枫遥']},
+  {name:'食补技巧',artists:['新娘子','机车女郎','小芳','选美皇后','艳红','静静','阿莲','小燕子']},
+  {name:'远航秘方',artists:['童心','吕销售','邻家女孩','陈书婷','葬爱','晚蔚','玫瑰小姐','孔慈','青丘神女']},
+  {name:'时令水果',artists:['古丽','秋菊','艺术生','奕君','春三十娘','铃儿','幽若','兰心']},
+  {name:'甜品调色',artists:['素芬','舞狮少女','玉兰','青青','港星','彩霞','上官婉儿','含香']},
+  {name:'节日好礼',artists:['淑珍','马教练','歌婷','阿雅','高启兰','静静','顾倾倾','夏雨荷']},
+  {name:'品种改良',artists:['英姿','白素贞','厂花','若楠','选美皇后','葬爱','白居易','楚楚']},
+  {name:'水果出口',artists:['海燕','聂小倩','思敏','杜鹃','艳红','奕君','上官婉儿','第二梦','青丘神女']},
+  {name:'催熟工艺',artists:['阿诗玛','云雪晴','苏秘书','彩霞','红衣教主','晚蔚','白晶晶','含香']},
+  {name:'饮品制作',artists:['新娘子','歌婷','百灵鸟','陈书婷','紫霞仙子','百变天后','春三十娘','夏雨荷']},
+  {name:'蔬果一体',artists:['童心','秋菊','白素贞','厂花','桂芸','一代天后','阿莲','第二梦']},
+  {name:'窖藏精研',artists:['古丽','素芬','聂小倩','机车女郎','思敏','玫瑰小姐','妲己','楚楚']},
+  {name:'沙拉精研',artists:['舞狮少女','云雪晴','吕销售','阿雅','红衣教主','女儿国国王','铃儿','小燕子']},
+  {name:'食补精研',artists:['若楠','紫霞仙子','顾倾倾','百变天后','铁扇公主','芈月','枫遥','兰心']},
+  {name:'秘方精研',artists:['白素贞','玉兰','杜鹃','红衣教主','女儿国国王','幽若']},
+  {name:'节气精研',artists:['聂小倩','马教练','苏秘书','紫霞仙子','妲己','孔慈']},
+  {name:'甜品精研',artists:['芈月','小碧','昭儿']}
+];
+
+var lastSimResult=null;
+
+function showArtistDetail(projectName){
+  var p=PROJECTS.find(function(x){return x.name===projectName;});
+  if(!p)return;
+  var html='<h3>'+esc(p.name)+'</h3>';
+  html+='<p style="font-size:13px;color:var(--text2);margin-bottom:12px;">涉及艺人：'+p.artists.length+' 位 | 已解锁：'+countOwned(p.artists)+' 位</p>';
+  html+='<div class="artists">';
+  p.artists.forEach(function(a){
+    var cls=ownedArtists[a]?'owned':'unowned';
+    var icon=ownedArtists[a]?'✅':'⬜';
+    html+='<div class="'+cls+'">'+icon+' '+esc(a)+'</div>';
+  });
+  html+='</div>';
+  html+='<div style="margin-top:16px;text-align:right;"><button class="btn" onclick="closeArtistModal()">关闭</button></div>';
+  document.getElementById('artistModalContent').innerHTML=html;
+  document.getElementById('artistModal').classList.add('show');
+}
+function closeArtistModal(){document.getElementById('artistModal').classList.remove('show');}
+document.addEventListener('click',function(e){if(e.target===document.getElementById('artistModal'))closeArtistModal();});
+
+// Load user's owned artists
+async function loadOwnedArtists(){
+  try {
+    document.getElementById('loadStatus').textContent='加载中...';
+    // Find 艺人 L3 categories
+    var cats=await API.get('task_categories?select=id,name,parent_id&order=sort_order.asc');
+    var talentL1=cats.find(function(c){return !c.parent_id && c.name==='艺人';});
+    if(!talentL1){console.warn('艺人 L1 not found');return;}
+    // Find L2s under 艺人 (属性)
+    var l2s=cats.filter(function(c){return c.parent_id===talentL1.id;});
+    var l3Names=[];
+    l2s.forEach(function(l2){
+      cats.filter(function(c){return c.parent_id===l2.id;}).forEach(function(l3){
+        l3Names.push(l3.name);
+      });
+    });
+    // Get user's checked abilities
+    var abs=await API.get('member_task_abilities?member_id=eq.'+curUser.id+'&is_able=eq.true&select=task_definition_id');
+    var checkedDefIds={};
+    abs.forEach(function(a){checkedDefIds[a.task_definition_id]=true;});
+    // Get task defs for these abilities
+    var allDefs=await API.get('task_definitions?select=id,category_id&limit=5000');
+    var catHasTask={};
+    allDefs.forEach(function(d){
+      if(checkedDefIds[d.id]) catHasTask[d.category_id]=true;
+    });
+    // Which L3 categories have at least one checked task?
+    ownedArtists={};
+    l3Names.forEach(function(name){
+      // Find all L3s with this name and check if any has a checked task
+      cats.filter(function(c){return c.name===name;}).forEach(function(l3){
+        if(catHasTask[l3.id]) ownedArtists[name]=true;
+      });
+    });
+    // Also check if the name was already matched via any L3
+    document.getElementById('loadStatus').textContent='已加载 '+Object.keys(ownedArtists).length+' 位艺人';
+  }catch(e){console.error(e);document.getElementById('loadStatus').textContent='加载失败: '+e.message;}
+}
+
+// Count owned artists for a project
+function countOwned(artistList){
+  var c=0;
+  artistList.forEach(function(a){if(ownedArtists[a])c++;});
+  return c;
+}
+
+function buildInputTable(){
+  var saved=loadSavedData();
+  var html='';
+  PROJECTS.forEach(function(p,si){
+    var cls=(si%2===0)?'section-odd':'section-even';
+    var d=saved[p.name]||{};
+    var ac=countOwned(p.artists);
+    html+='<tr class="'+cls+'">'+
+      '<td style="text-align:center;">'+(si+1)+'</td>'+
+      '<td style="font-weight:600;">'+esc(p.name)+' <span style="color:var(--accent);cursor:pointer;font-size:12px;" onclick="showArtistDetail(\''+esc(p.name)+'\')" title="查看涉及艺人">ⓘ</span></td>'+
+      '<td class="artist-count">'+ac+'</td>'+
+      '<td><input type="number" class="num level save-input" data-name="'+esc(p.name)+'" data-field="level" value="'+(d.level||0)+'" min="0" style="width:65px;" onchange="saveData()" /></td>'+
+      '<td><input type="number" class="num cost save-input" data-name="'+esc(p.name)+'" data-field="cost" value="'+(d.cost||0)+'" min="0" onchange="saveData()" /></td>'+
+    '</tr>';
+  });
+  document.getElementById('inputBody').innerHTML=html;
+  if(saved._budget)document.getElementById('budget').value=saved._budget;
+  // Restore sim + results
+  try{var simSaved=JSON.parse(localStorage.getItem('calc_artist_sim')||'null');if(simSaved)lastSimResult=simSaved;}catch(e){}
+  if(saved._resultHTML){
+    document.getElementById('resultBody').innerHTML=saved._resultHTML;
+    document.getElementById('resultBar').innerHTML=saved._resultBar||'';
+    document.getElementById('resultCard').classList.add('show');
+    document.getElementById('applyBtnWrap').style.display='block';
+  }
+}
+
+function loadSavedData(){
+  try{return JSON.parse(localStorage.getItem('calc_farm_artist')||'{}');}catch(e){return{};}
+}
+
+function saveData(){
+  var data={};
+  document.querySelectorAll('.save-input').forEach(function(el){
+    var name=el.dataset.name;
+    var field=el.dataset.field;
+    if(!data[name])data[name]={};
+    data[name][field]=parseInt(el.value)||0;
+  });
+  data._budget=document.getElementById('budget').value;
+  var rb=document.getElementById('resultBody'),rr=document.getElementById('resultBar');
+  if(rb.innerHTML&&document.getElementById('resultCard').classList.contains('show')){
+    data._resultHTML=rb.innerHTML;data._resultBar=rr.innerHTML;
+  }
+  localStorage.setItem('calc_farm_artist',JSON.stringify(data));
+}
+
+function resetAll(){
+  if(!confirm('确定清空所有数据和结果？'))return;
+  localStorage.removeItem('calc_farm_artist');
+  localStorage.removeItem('calc_artist_sim');
+  document.getElementById('budget').value='0';
+  document.querySelectorAll('.save-input').forEach(function(el){el.value='0';});
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('resultBody').innerHTML='';
+  document.getElementById('resultBar').innerHTML='';
+  document.getElementById('applyBtnWrap').style.display='none';
+  lastSimResult=null;
+  toast('已清空');
+}
+
+function gatherItems(){
+  var items=[];
+  PROJECTS.forEach(function(p){
+    var costEl=document.querySelector('.cost[data-name="'+esc(p.name)+'"]');
+    var levelEl=document.querySelector('.level[data-name="'+esc(p.name)+'"]');
+    var cost=parseInt(costEl.value)||0;
+    var level=parseInt(levelEl.value)||0;
+    var count=countOwned(p.artists);
+    if(cost<=0||count<=0)return;
+    items.push({name:p.name,level:level,cost:cost,artists:count,ratio:cost/count});
+  });
+  return items;
+}
+
+function calculate(){
+  var budget=parseInt(document.getElementById('budget').value)||0;
+  if(budget<=0){toast('请输入可投入果票','err');return;}
+  var items=gatherItems();
+  if(items.length===0){toast('请至少填写一项数据（需同时有升级消耗和艺人数量>0）','err');return;}
+
+  var sim=items.map(function(it){return{name:it.name,level:it.level,cost:it.cost,artists:it.artists,ratio:it.ratio,origRatio:it.ratio,upgraded:0,spent:0};});
+  // Sort by ratio ASC (best = lowest cost per artist)
+  sim.sort(function(a,b){return a.ratio-b.ratio;});
+  var remaining=budget,totalSpent=0;
+
+  // One level at a time: upgrade the best ratio project
+  while(remaining>0){
+    sim.sort(function(a,b){return a.ratio-b.ratio;});
+    var best=sim[0];
+    if(best.cost>remaining)break;
+    remaining-=best.cost;
+    totalSpent+=best.cost;
+    best.spent+=best.cost;
+    best.upgraded+=1;
+    best.cost=Math.round(best.cost*getGrowth(best.level));
+    best.level++;
+    best.ratio=best.cost/best.artists;
+  }
+
+  lastSimResult=sim;
+  try{
+    var simSave=sim.map(function(s){return{name:s.name,cost:Math.round(s.cost),level:s.level,artists:s.artists,upgraded:s.upgraded,spent:Math.round(s.spent)};});
+    localStorage.setItem('calc_artist_sim',JSON.stringify(simSave));
+  }catch(e){}
+  var totalCharm=0;sim.forEach(function(s){totalCharm+=s.upgraded*s.artists*2;});
+  renderResults(sim,budget,totalSpent,remaining,totalCharm);
+  document.getElementById('applyBtnWrap').style.display='block';
+  saveData();
+}
+
+function renderResults(sim,budget,spent,remaining,totalCharm){
+  sim.sort(function(a,b){return PROJECTS.findIndex(function(p){return p.name===a.name;})-PROJECTS.findIndex(function(p){return p.name===b.name;});});
+  var html='';
+  sim.forEach(function(s,si){
+    var cls=(si%2===0)?'section-odd':'section-even';
+    var charmInc=s.upgraded*s.artists*2;
+    html+='<tr class="'+cls+'">'+
+      '<td style="text-align:center;">'+(si+1)+'</td>'+
+      '<td style="font-weight:600;">'+esc(s.name)+'</td>'+
+      '<td class="artist-count">'+s.artists+'</td>'+
+      '<td style="text-align:right;">'+s.origRatio.toFixed(2)+'</td>'+
+      '<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
+      '<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
+      '<td style="text-align:right;">'+s.ratio.toFixed(2)+'</td>'+
+      '<td style="text-align:center;color:#30d158;font-weight:600;">'+(charmInc>0?'+'+charmInc:'-')+'</td>'+
+    '</tr>';
+  });
+  document.getElementById('resultBody').innerHTML=html;
+  document.getElementById('resultBar').innerHTML=
+    '<span>💰 预算 <span class="hl">'+budget.toLocaleString()+'</span> 万</span>'+
+    '<span>|</span><span>📊 分配 <span class="hl">'+Math.round(spent).toLocaleString()+'</span></span>'+
+    '<span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span>'+
+    '<span>|</span><span>✨ 魅力+<span class="hl">'+totalCharm.toLocaleString()+'</span></span>';
+  document.getElementById('resultCard').classList.add('show');
+}
+
+function applyResults(){
+  if(!lastSimResult||lastSimResult.length===0){toast('无方案可保存，请先点击计算','err');return;}
+  if(!confirm('请确认已按当前方案升级，保存后将自动更新表格中的等级和升级消耗。'))return;
+  lastSimResult.forEach(function(s){
+    var levelEl=document.querySelector('.level[data-name="'+esc(s.name)+'"]');
+    var costEl=document.querySelector('.cost[data-name="'+esc(s.name)+'"]');
+    if(levelEl)levelEl.value=(parseInt(levelEl.value)||0)+s.upgraded;
+    if(costEl)costEl.value=Math.round(s.cost);
+  });
+  document.getElementById('budget').value='0';
+  lastSimResult=null;
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('resultBody').innerHTML='';
+  document.getElementById('resultBar').innerHTML='';
+  document.getElementById('applyBtnWrap').style.display='none';
+  localStorage.removeItem('calc_artist_sim');
+  saveData();
+  toast('✅ 已保存，果票已清零');
+}
+
+async function init(){
+  curUser=getUser();if(!curUser)return;
+  if(!curUser.is_admin){alert('无权限访问');window.location.href='../index.html';return;}
+  document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
+  await loadOwnedArtists();
+  buildInputTable();
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>澡堂</title>
+  <style>
+    :root {
+      --bg: #ffffff; --bg2: #f5f5f7; --card: #ffffff;
+      --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2;
+      --accent: #007AFF; --accent-h: #0062d1;
+      --border: #d2d2d7; --border-l: #e5e5ea;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08); --r: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000; --bg2: #1c1c1e; --card: #1c1c1e;
+        --text: #f5f5f7; --text2: #8e8e93; --text3: #636366;
+        --accent: #0A84FF; --accent-h: #409cff;
+        --border: #38383a; --border-l: #2c2c2e;
+        --shadow: 0 1px 3px rgba(255,255,255,0.05);
+      }
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif; font-size: 15px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    .navbar { display:flex; align-items:center; justify-content:space-between; height:48px; padding:0 20px; border-bottom:1px solid var(--border-l); position:sticky; top:0; background:var(--bg); z-index:10; backdrop-filter:blur(20px); }
+    .navbar a { color:var(--accent); text-decoration:none; font-size:14px; }
+    .navbar .title { font-size:16px; font-weight:600; }
+    .navbar .user { font-size:13px; color:var(--text2); }
+
+    .main { max-width: 800px; margin: 0 auto; padding: 48px 24px; text-align: center; }
+    .icon { font-size: 72px; margin-bottom: 24px; }
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .desc { font-size: 15px; color: var(--text2); margin-bottom: 32px; }
+    .badge { display:inline-block; padding:4px 12px; border-radius:6px; font-size:12px; font-weight:500; background:var(--accent); color:#fff; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../calculator.html">← 返回计算器</a>
+  <span class="title">🛁 澡堂</span>
+  <span class="user" id="navUser">--</span>
+</nav>
+
+<div class="main">
+  <div class="icon">🛁</div>
+  <h1>澡堂</h1>
+  <p class="desc">计算澡堂最优点法</p>
+  <div class="badge">🔧 开发中</div>
+</div>
+
+<script>
+var curUser = null;
+function getUser(){
+  var s=localStorage.getItem('guild_current_user');
+  if(!s){ window.location.href='../login.html'; return null; }
+  try{ var u=JSON.parse(s); if(!u.id)throw Error(); return u; }catch(_){ localStorage.removeItem('guild_current_user'); window.location.href='../login.html'; return null; }
+}
+function init(){
+  curUser = getUser();
+  if(!curUser) return;
+  if(!curUser.is_admin){ alert('无权限访问'); window.location.href='../index.html'; return; }
+  document.getElementById('navUser').textContent = curUser.display_name || curUser.uid;
+}
+init();
+</script>
+</body>
+</html>

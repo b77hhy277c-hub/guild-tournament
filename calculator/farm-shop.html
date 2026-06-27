@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>农田-店铺研究</title>
+  <style>
+    :root {
+      --bg: #ffffff; --bg2: #f5f5f7; --card: #ffffff; --hover: rgba(0,0,0,0.04);
+      --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2;
+      --accent: #007AFF; --accent-h: #0062d1;
+      --border: #d2d2d7; --border-l: #e5e5ea;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08); --r: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000; --bg2: #1c1c1e; --card: #1c1c1e;
+        --hover: rgba(255,255,255,0.08);
+        --text: #f5f5f7; --text2: #8e8e93; --text3: #636366;
+        --accent: #0A84FF; --accent-h: #409cff;
+        --border: #38383a; --border-l: #2c2c2e;
+        --shadow: 0 1px 3px rgba(255,255,255,0.05);
+      }
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif; font-size: 14px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    .navbar { display:flex; align-items:center; justify-content:space-between; height:48px; padding:0 20px; border-bottom:1px solid var(--border-l); position:sticky; top:0; background:var(--bg); z-index:10; backdrop-filter:blur(20px); }
+    .navbar a { color:var(--accent); text-decoration:none; font-size:14px; }
+    .navbar .title { font-size:16px; font-weight:600; }
+    .navbar .user { font-size:13px; color:var(--text2); }
+
+    .main { max-width: 960px; margin: 0 auto; padding: 24px; }
+
+    .top-bar { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:20px; padding:16px 20px; background:var(--bg2); border-radius:var(--r); border:1px solid var(--border-l); }
+    .top-bar label { font-weight:500; }
+    .top-bar input { width:130px; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:15px; font-family:inherit; background:var(--bg); color:var(--text); outline:none; }
+    .top-bar input:focus { border-color:var(--accent); }
+    .btn { padding:8px 22px; border-radius:8px; font-size:14px; font-weight:500; font-family:inherit; cursor:pointer; border:none; background:var(--accent); color:#fff; transition:background 0.2s; }
+    .btn:hover { background:var(--accent-h); }
+
+    .card { background:var(--card); border:1px solid var(--border-l); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; margin-bottom:20px; }
+
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:8px 10px; text-align:left; border-bottom:1px solid var(--border-l); font-size:13px; }
+    th { font-size:11px; font-weight:600; color:var(--text2); background:var(--bg2); white-space:nowrap; }
+    td { vertical-align:middle; }
+    tr:hover td { background:var(--hover); }
+    tr.section-odd td { background:rgba(127,127,127,0.06); }
+    tr.section-even td { background:transparent; }
+    tr.section-odd td input.num { background:transparent; }
+    tr.section-even td input.num { background:transparent; }
+
+    .section-name { font-weight:600; color:var(--accent); }
+    .item-name { padding-left:8px; color:var(--text2); }
+    input.num { width:80px; padding:5px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--bg); color:var(--text); outline:none; text-align:right; }
+    input.num:focus { border-color:var(--accent); }
+
+    .ratio { text-align:right; font-weight:500; }
+    .upgrade { text-align:center; font-weight:600; color:var(--accent); }
+    .cost-total { text-align:right; font-weight:600; }
+
+    .result-section { display:none; }
+    .result-section.show { display:block; }
+    .result-bar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:14px 20px; font-size:14px; font-weight:500; }
+    .result-bar .hl { color:var(--accent); font-weight:700; }
+
+    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); padding:10px 20px; border-radius:8px; font-size:14px; font-weight:500; z-index:200; opacity:0; pointer-events:none; transition:opacity 0.3s; box-shadow:var(--shadow); }
+    .toast.show { opacity:1; }
+    .toast.ok { background:#30d158; color:#fff; }
+    .toast.err { background:#ff3b30; color:#fff; }
+  </style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<nav class="navbar">
+  <a href="../calculator.html">← 返回计算器</a>
+  <span class="title">🏪 农田-店铺研究</span>
+  <span class="user" id="navUser">--</span>
+</nav>
+
+<div class="main">
+  <div class="card" style="margin-bottom:16px;padding:16px 20px;font-size:13px;color:var(--text2);line-height:1.8;">
+    <div style="font-weight:600;color:var(--text);margin-bottom:4px;">📖 使用说明</div>
+    <div>1、初次使用，请依次升级每个项目，记录升一级收入提升，并记录当前等级和升级消耗。未解锁项目保留0即可。</div>
+    <div>2、填写本次可投入升级的粮票数量后，点击「计算最优点法」。</div>
+    <div>3、按照计算结果升级后，点击「保存当前等级」，表格区域的等级和升级消耗自动更新、粮票归零。至此完成一轮升级。</div>
+    <div>4、表格区域数据保留，初次计算性价比差距过大的，短期内可以不再更新数据，直接填入粮票数量继续升级即可。</div>
+  </div>
+
+  <div class="top-bar">
+    <label>可投入粮票（万）：</label>
+    <input type="number" id="budget" value="0" min="0" onchange="saveData()" />
+    <button class="btn" onclick="calculate()">📊 计算最优点法</button>
+    <button class="btn" style="background:var(--bg);color:var(--text);border:1px solid var(--border);" onclick="resetAll()">🔄 一键重填</button>
+  </div>
+
+  <div class="card">
+    <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px;">#</th>
+          <th>栏目</th>
+          <th>项目</th>
+          <th style="width:70px;">当前等级</th>
+          <th style="width:100px;">升级消耗（万）</th>
+          <th style="width:100px;">升一级收入提升</th>
+        </tr>
+      </thead>
+      <tbody id="inputBody"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="card result-section" id="resultCard">
+    <div class="result-bar" id="resultBar"></div>
+    <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px;">#</th>
+          <th>栏目</th>
+          <th>项目</th>
+          <th style="width:80px;">当前性价比</th>
+          <th style="width:70px;">建议升N级</th>
+          <th style="width:90px;">消耗粮票</th>
+          <th style="width:80px;">新性价比</th>
+        </tr>
+      </thead>
+      <tbody id="resultBody"></tbody>
+    </table>
+    </div>
+    <div id="applyBtnWrap" style="padding:14px 20px;border-top:1px solid var(--border-l);display:none;">
+      <button class="btn" onclick="applyResults()">💾 升级完毕，保存当前等级</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var curUser = null;
+function getUser(){
+  var s=localStorage.getItem('guild_current_user');
+  if(!s){ window.location.href='../login.html'; return null; }
+  try{ var u=JSON.parse(s); if(!u.id)throw Error(); return u; }catch(_){ localStorage.removeItem('guild_current_user'); window.location.href='../login.html'; return null; }
+}
+function toast(m,t){ var e=document.getElementById('toast'); e.textContent=m; e.className='toast '+(t||'ok')+' show'; clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove('show');},2500); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+var SECTIONS = [
+  '水磨修建','集市建设','健身广场','扫盲站点','外景设计','基站选址','沼气设施',
+  '移动推车','舞台搭建','篝火晚会','西式美食','网络生活','物流速递','主角修养'
+];
+var SUB_ITEMS = ['初步研究','精准突破'];
+var GROWTH_LOW = 1.012;   // Lv 1-100
+var GROWTH_MID = 1.01;    // Lv 101-200
+var GROWTH_HIGH = 1.009;  // Lv 200+
+var lastSimResult = null;
+
+function getGrowth(level){
+  if(level >= 200) return GROWTH_HIGH;
+  if(level >= 100) return GROWTH_MID;
+  return GROWTH_LOW;
+}
+
+// Cost to upgrade N levels from currentLevel, starting at currentCost
+function calcUpgrade(currentCost, currentLevel, n){
+  var cost = currentCost, lv = currentLevel, total = 0;
+  for(var i = 0; i < n; i++){
+    total += cost;
+    cost = Math.round(cost * getGrowth(lv));
+    lv++;
+  }
+  return { total: total, newCost: cost, newLevel: lv };
+}
+
+// How many levels needed to drop ratio to targetRatio (income / newCost <= targetRatio)
+// Returns { levels, totalCost, newCost, newLevel }
+function levelsToTarget(currentCost, currentLevel, income, targetRatio){
+  var cost = currentCost, lv = currentLevel, n = 0, cumCost = 0;
+  while(income / cost > targetRatio){
+    cumCost += cost;
+    cost = Math.round(cost * getGrowth(lv));
+    lv++;
+    n++;
+    if(n > 10000) break; // safety
+  }
+  return { levels: n, cost: cumCost, newCost: cost, newLevel: lv };
+}
+
+function buildInputTable(){
+  var saved = loadSavedData();
+  var html = '';
+  SECTIONS.forEach(function(sec, si){
+    SUB_ITEMS.forEach(function(sub){
+      var cls = (si % 2 === 0) ? 'section-odd' : 'section-even';
+      var key = sec + '|' + sub;
+      var d = saved[key] || {};
+      html += '<tr class="'+cls+'">'+
+        '<td style="text-align:center;">'+(si+1)+'</td>'+
+        '<td class="section-name">'+esc(sec)+'</td>'+
+        '<td class="item-name">'+esc(sub)+'</td>'+
+        '<td><input type="number" class="num level save-input" data-sec="'+esc(sec)+'" data-sub="'+esc(sub)+'" data-key="'+esc(key)+'" data-field="level" value="'+(d.level||0)+'" min="0" style="width:65px;" onchange="saveData()" /></td>'+
+        '<td><input type="number" class="num cost save-input" data-sec="'+esc(sec)+'" data-sub="'+esc(sub)+'" data-key="'+esc(key)+'" data-field="cost" value="'+(d.cost||0)+'" min="0" onchange="saveData()" /></td>'+
+        '<td><input type="number" class="num income save-input" data-sec="'+esc(sec)+'" data-sub="'+esc(sub)+'" data-key="'+esc(key)+'" data-field="income" value="'+(d.income||0)+'" min="0" onchange="saveData()" /></td>'+
+      '</tr>';
+    });
+  });
+  document.getElementById('inputBody').innerHTML = html;
+  // Restore budget
+  if(saved._budget) document.getElementById('budget').value = saved._budget;
+  // Restore sim data
+  try {
+    var simSaved = JSON.parse(localStorage.getItem('calc_farm_shop_sim')||'null');
+    if(simSaved) lastSimResult = simSaved;
+  } catch(e){}
+  // Restore results
+  if(saved._resultHTML){
+    document.getElementById('resultBody').innerHTML = saved._resultHTML;
+    document.getElementById('resultBar').innerHTML = saved._resultBar || '';
+    document.getElementById('resultCard').classList.add('show');
+    document.getElementById('applyBtnWrap').style.display = 'block';
+  }
+}
+
+function loadSavedData(){
+  try { return JSON.parse(localStorage.getItem('calc_farm_shop')||'{}'); } catch(e){ return {}; }
+}
+
+function saveData(){
+  var data = {};
+  // Save all inputs
+  document.querySelectorAll('.save-input').forEach(function(el){
+    var key = el.dataset.key;
+    var field = el.dataset.field;
+    if(!data[key]) data[key] = {};
+    data[key][field] = parseInt(el.value)||0;
+  });
+  // Save budget
+  var budget = document.getElementById('budget').value;
+  data._budget = budget;
+  // Save current results
+  var resultBody = document.getElementById('resultBody');
+  var resultBar = document.getElementById('resultBar');
+  if(resultBody.innerHTML && document.getElementById('resultCard').classList.contains('show')){
+    data._resultHTML = resultBody.innerHTML;
+    data._resultBar = resultBar.innerHTML;
+  }
+  localStorage.setItem('calc_farm_shop', JSON.stringify(data));
+}
+
+function resetAll(){
+  if(!confirm('确定清空所有数据和结果？')) return;
+  localStorage.removeItem('calc_farm_shop');
+  localStorage.removeItem('calc_farm_shop_sim');
+  document.getElementById('budget').value = '0';
+  document.querySelectorAll('.save-input').forEach(function(el){ el.value = '0'; });
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('resultBody').innerHTML = '';
+  document.getElementById('resultBar').innerHTML = '';
+  document.getElementById('applyBtnWrap').style.display = 'none';
+  lastSimResult = null;
+  toast('已清空');
+}
+
+function gatherItems(){
+  var items = [];
+  var costEls = document.querySelectorAll('.cost');
+  costEls.forEach(function(costEl){
+    var sec = costEl.dataset.sec;
+    var sub = costEl.dataset.sub;
+    var levelEl = document.querySelector('.level[data-sec="'+esc(sec)+'"][data-sub="'+esc(sub)+'"]');
+    var incomeEl = document.querySelector('.income[data-sec="'+esc(sec)+'"][data-sub="'+esc(sub)+'"]');
+    var cost = parseInt(costEl.value)||0;
+    var income = parseInt(incomeEl.value)||0;
+    if(cost <= 0 || income <= 0) return;
+    items.push({
+      section: sec, sub: sub,
+      level: parseInt(levelEl.value)||0,
+      cost: cost, income: income,
+      ratio: income / cost
+    });
+  });
+  return items;
+}
+
+function calculate(){
+  var budget = parseInt(document.getElementById('budget').value)||0;
+  if(budget <= 0){ toast('请输入可投入粮票','err'); return; }
+  var items = gatherItems();
+  if(items.length === 0){ toast('请至少填写一项数据','err'); return; }
+
+  // Clone for simulation (include level for growth calculation)
+  var sim = items.map(function(it){ return { section: it.section, sub: it.sub, level: it.level, cost: it.cost, income: it.income, ratio: it.ratio, origRatio: it.ratio, upgraded: 0, spent: 0 }; });
+
+  // Sort by ratio DESCENDING (best value first — upgrading reduces ratio)
+  sim.sort(function(a,b){ return b.ratio - a.ratio; });
+  var remaining = budget;
+  var totalSpent = 0;
+  var MAX_ITER = 500;
+
+  for(var iter = 0; iter < MAX_ITER && remaining > 0; iter++){
+    // Re-sort: best (highest ratio) first
+    sim.sort(function(a,b){ return b.ratio - a.ratio; });
+
+    var bestR = sim[0].ratio;
+    var worstR = sim[sim.length-1].ratio;
+    if(bestR - worstR < 0.000001) break; // all equal
+
+    // Find the next-lower ratio tier to catch DOWN to
+    var target = null;
+    for(var i = 1; i < sim.length; i++){
+      if(sim[i].ratio < bestR - 0.000001){ target = sim[i].ratio; break; }
+    }
+    if(target === null) break; // shouldn't happen if not all equal
+
+    // For all items at bestR, calc levels to drop ratio to target
+    var needBudget = 0;
+    var batch = [];
+    for(var i = 0; i < sim.length; i++){
+      if(sim[i].ratio < bestR - 0.0001) break;
+      var it = sim[i];
+      if(it.income / it.cost <= target) continue;
+      var result = levelsToTarget(it.cost, it.level, it.income, target);
+      if(result.levels > 0){
+        needBudget += result.cost;
+        batch.push({ item: it, levels: result.levels, cost: result.cost, newCost: result.newCost, newLevel: result.newLevel });
+      }
+    }
+
+    if(needBudget <= 0) break;
+
+    if(remaining >= needBudget){
+      // Apply full batch
+      batch.forEach(function(b){
+        b.item.cost = b.newCost;
+        b.item.level = b.newLevel;
+        b.item.ratio = b.item.income / b.item.cost;
+        b.item.spent += b.cost;
+        b.item.upgraded += b.levels;
+        remaining -= b.cost;
+        totalSpent += b.cost;
+      });
+    } else {
+      // Not enough for full batch — spend one level at a time on best ratio items
+      while(remaining > 0){
+        sim.sort(function(a,b){ return b.ratio - a.ratio; });
+        var best = sim[0];
+        if(best.cost > remaining) break;
+        remaining -= best.cost;
+        totalSpent += best.cost;
+        best.spent += best.cost;
+        best.upgraded += 1;
+        best.cost = Math.round(best.cost * getGrowth(best.level));
+        best.level++;
+        best.ratio = best.income / best.cost;
+      }
+      break;
+    }
+  }
+
+  // Remainder: all equal, distribute one level each round-robin
+  if(remaining > 0){
+    sim.sort(function(a,b){ return b.ratio - a.ratio; });
+    if(Math.abs(sim[0].ratio - sim[sim.length-1].ratio) < 0.000001){
+      while(remaining > 0){
+        var ok = false;
+        for(var i = 0; i < sim.length && remaining > 0; i++){
+          if(sim[i].cost <= remaining){
+            remaining -= sim[i].cost;
+            totalSpent += sim[i].cost;
+            sim[i].spent += sim[i].cost;
+            sim[i].upgraded += 1;
+            sim[i].cost = Math.round(sim[i].cost * getGrowth(sim[i].level));
+            sim[i].level++;
+            sim[i].ratio = sim[i].income / sim[i].cost;
+            ok = true;
+          }
+        }
+        if(!ok) break;
+      }
+    }
+  }
+
+  lastSimResult = sim;
+  // Persist sim data for page reload
+  try {
+    var simSave = sim.map(function(s){ return { section: s.section, sub: s.sub, cost: Math.round(s.cost), income: s.income, upgraded: s.upgraded, spent: Math.round(s.spent) }; });
+    localStorage.setItem('calc_farm_shop_sim', JSON.stringify(simSave));
+  } catch(e){}
+  renderResults(sim, budget, totalSpent, remaining);
+  document.getElementById('applyBtnWrap').style.display = 'block';
+  saveData();
+
+}
+
+function applyResults(){
+  if(!lastSimResult || lastSimResult.length===0){ toast('无方案可保存，请先点击计算','err'); return; }
+  if(!confirm('请确认已按当前方案升级，保存后将自动更新表格中的等级和升级消耗。')) return;
+  lastSimResult.forEach(function(s){
+    var levelEl = document.querySelector('.level[data-sec="'+esc(s.section)+'"][data-sub="'+esc(s.sub)+'"]');
+    var costEl = document.querySelector('.cost[data-sec="'+esc(s.section)+'"][data-sub="'+esc(s.sub)+'"]');
+    if(levelEl) levelEl.value = (parseInt(levelEl.value)||0) + s.upgraded;
+    if(costEl) costEl.value = Math.round(s.cost);
+  });
+  // Clear budget to complete this round
+  document.getElementById('budget').value = '0';
+  // Reset results
+  lastSimResult = null;
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('resultBody').innerHTML = '';
+  document.getElementById('resultBar').innerHTML = '';
+  document.getElementById('applyBtnWrap').style.display = 'none';
+  localStorage.removeItem('calc_farm_shop_sim');
+  saveData();
+  toast('✅ 已保存当前等级，粮票已清零');
+}
+
+function renderResults(sim, budget, spent, remaining){
+  // Restore original section order
+  sim.sort(function(a,b){
+    var ia = SECTIONS.indexOf(a.section), ib = SECTIONS.indexOf(b.section);
+    if(ia !== ib) return ia - ib;
+    return SUB_ITEMS.indexOf(a.sub) - SUB_ITEMS.indexOf(b.sub);
+  });
+
+  var html = '';
+  sim.forEach(function(s, si){
+    var secIdx = SECTIONS.indexOf(s.section);
+    var cls = (secIdx % 2 === 0) ? 'section-odd' : 'section-even';
+    html += '<tr class="'+cls+'">'+
+      '<td style="text-align:center;">'+(secIdx+1)+'</td>'+
+      '<td>'+esc(s.section)+'</td>'+
+      '<td style="color:var(--text2);">'+esc(s.sub)+'</td>'+
+      '<td class="ratio">'+s.origRatio.toFixed(4)+'</td>'+
+      '<td class="upgrade">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
+      '<td class="cost-total">'+Math.round(s.spent).toLocaleString()+'</td>'+
+      '<td class="ratio">'+s.ratio.toFixed(4)+'</td>'+
+    '</tr>';
+  });
+  document.getElementById('resultBody').innerHTML = html;
+  document.getElementById('resultBar').innerHTML =
+    '<span>💰 预算 <span class="hl">'+budget.toLocaleString()+'</span></span>'+
+    '<span>|</span><span>📊 分配 <span class="hl">'+Math.round(spent).toLocaleString()+'</span></span>'+
+    '<span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span>';
+  document.getElementById('resultCard').classList.add('show');
+}
+
+function init(){
+  curUser = getUser();
+  if(!curUser) return;
+  if(!curUser.is_admin){ alert('无权限访问'); window.location.href='../index.html'; return; }
+  document.getElementById('navUser').textContent = curUser.display_name || curUser.uid;
+  buildInputTable();
+}
+init();
+</script>
+</body>
+</html>
