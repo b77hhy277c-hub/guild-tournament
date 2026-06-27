@@ -286,16 +286,25 @@ if(budget<=0){toast('请输入可投入票据','err');return;}
 var items=gatherItems();
 if(items.length===0){toast('请至少填写一项数据','err');return;}
 
-// Build tech-level sim: group 上/下 per tech
+// Build tech-level sim: read data from DOM directly (not just gathered items)
 var techs=[];
 DEPT.techs.forEach(function(tech){
 var akey=tech.id+'|上',bkey=tech.id+'|下';
-var aItem=items.find(function(x){return x.label===tech.id+' 上';});
-var bItem=items.find(function(x){return x.label===tech.id+' 下';});
-var above={level:aItem?aItem.level:0,income:aItem?aItem.income:0,cost:aItem?aItem.cost:getCost('上',aItem?aItem.level:0),upgraded:0,spent:0};
-var belowLocked=above.level<100;
-var below={level:bItem?bItem.level:0,income:bItem?bItem.income:0,cost:bItem?bItem.cost:getCost('下',bItem?bItem.level:1),locked:belowLocked,upgraded:0,spent:0};
-if(!belowLocked&&bItem)below=bItem;
+// Read above data from DOM
+var aLevelEl=document.querySelector('.level[data-key="'+esc(akey)+'"]');
+var aIncomeEl=document.querySelector('.income[data-key="'+esc(akey)+'"]');
+var aLevel=parseInt(aLevelEl&&aLevelEl.value)||0;
+var aIncome=parseInt(aIncomeEl&&aIncomeEl.value)||0;
+var aCost=getCost('上',aLevel);
+var above={level:aLevel,income:aIncome,cost:aCost,upgraded:0,spent:0};
+// Read below data from DOM
+var bLevelEl=document.querySelector('.level[data-key="'+esc(bkey)+'"]');
+var bIncomeEl=document.querySelector('.income[data-key="'+esc(bkey)+'"]');
+var bLevel=parseInt(bLevelEl&&bLevelEl.value)||0;
+var bIncome=parseInt(bIncomeEl&&bIncomeEl.value)||0;
+var belowLocked=aLevel<100;
+var below={level:bLevel,income:bIncome,cost:getCost('下',bLevel||1),locked:belowLocked,upgraded:0,spent:0};
+if(!belowLocked&&bLevel>0)below.cost=getCost('下',bLevel);
 techs.push({id:tech.id,above:above,below:below});
 });
 
