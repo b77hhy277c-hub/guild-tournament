@@ -116,6 +116,7 @@ function getUser(){var s=localStorage.getItem('guild_current_user');if(!s){windo
 function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},2500);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function getGrowth(lv){if(lv>=200)return 1.009;if(lv>=100)return 1.01;return 1.012;}
+function nextCost(cost,lv){return Math.max(cost+1, Math.round(cost*getGrowth(lv)));}
 
 var SECTIONS=[
 {name:'肉类存储',talents:['何律师','丽萍','步惊云','李双','张大力']},
@@ -302,7 +303,7 @@ return items;
 
 function levelsToTarget(currentCost,currentLevel,income,targetRatio){
 var cost=currentCost,lv=currentLevel,n=0,cumCost=0;
-while(income/cost>targetRatio){cumCost+=cost;cost=Math.round(cost*getGrowth(lv));lv++;n++;if(n>10000)break;}
+while(income/cost>targetRatio){cumCost+=cost;cost=nextCost(cost,lv);lv++;n++;if(n>10000)break;}
 return{levels:n,cost:cumCost,newCost:cost,newLevel:lv};
 }
 
@@ -359,11 +360,11 @@ var cls=(si%2===0)?'section-odd':'section-even';
 html+='<tr class="'+cls+'">'+
 '<td style="text-align:center;">'+(si+1)+'</td>'+
 '<td>'+esc(s.section)+' <span style="color:var(--text2);">'+esc(s.sub)+'</span></td>'+
-'<td class="talent-count">-</td>'+
-'<td style="text-align:right;">'+s.origRatio.toFixed(4)+'</td>'+
+'<td class="talent-count">'+countOwned((SECTIONS.find(function(p){return p.name===s.section;})||{}).talents||[])+'</td>'+
+'<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
 '<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
 '<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
-'<td style="text-align:right;">'+s.ratio.toFixed(4)+'</td></tr>';
+'<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
 document.getElementById('resultBody').innerHTML=html;
 document.getElementById('resultBar').innerHTML='<span>💰 预算 <span class="hl">'+budget.toLocaleString()+'</span> 万</span><span>|</span><span>📊 分配 <span class="hl">'+Math.round(spent).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span>';
