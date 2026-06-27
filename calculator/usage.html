@@ -55,9 +55,11 @@
             <th>成员</th>
             <th>店铺研究</th>
             <th>艺人锻炼</th>
+            <th>人才(肉票)</th>
+            <th>人才(粮票)</th>
           </tr>
         </thead>
-        <tbody id="tbody"><tr><td colspan="3" style="text-align:center;color:var(--text3);padding:20px;">加载中...</td></tr></tbody>
+        <tbody id="tbody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px;">加载中...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -96,19 +98,18 @@ async function loadData(){
       if(!map[r.member_id][r.calculator_type])map[r.member_id][r.calculator_type]=r.updated_at;
     });
 
+    var types=['farm_shop','farm_artist','farm_talent_meat','farm_talent_food'];
     var html='';
     members.forEach(function(m){
       var d=map[m.id]||{};
-      var shopTime=d.farm_shop?fmtTime(d.farm_shop):'<span class="never">从未使用</span>';
-      var artistTime=d.farm_artist?fmtTime(d.farm_artist):'<span class="never">从未使用</span>';
-      html+='<tr>'+
-        '<td><strong>'+esc(m.display_name)+'</strong></td>'+
-        '<td class="time">'+shopTime+'</td>'+
-        '<td class="time">'+artistTime+'</td>'+
-      '</tr>';
+      html+='<tr><td><strong>'+esc(m.display_name)+'</strong></td>';
+      types.forEach(function(t){
+        html+='<td class="time">'+(d[t]?fmtTime(d[t]):'<span class="never">从未使用</span>')+'</td>';
+      });
+      html+='</tr>';
     });
     document.getElementById('tbody').innerHTML=html;
-  }catch(e){console.error(e);document.getElementById('tbody').innerHTML='<tr><td colspan="3" style="text-align:center;color:red;padding:20px;">加载失败: '+esc(e.message)+'</td></tr>';}
+  }catch(e){console.error(e);document.getElementById('tbody').innerHTML='<tr><td colspan="5" style="text-align:center;color:red;padding:20px;">加载失败: '+esc(e.message)+'</td></tr>';}
 }
 
 async function init(){

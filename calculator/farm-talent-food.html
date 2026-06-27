@@ -1,68 +1,396 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>农田-人才锻炼（粮票）</title>
-  <style>
-    :root {
-      --bg: #ffffff; --bg2: #f5f5f7; --card: #ffffff;
-      --text: #1d1d1f; --text2: #6e6e73; --text3: #aeaeb2;
-      --accent: #007AFF; --accent-h: #0062d1;
-      --border: #d2d2d7; --border-l: #e5e5ea;
-      --shadow: 0 4px 20px rgba(0,0,0,0.08); --r: 12px;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #000000; --bg2: #1c1c1e; --card: #1c1c1e;
-        --text: #f5f5f7; --text2: #8e8e93; --text3: #636366;
-        --accent: #0A84FF; --accent-h: #409cff;
-        --border: #38383a; --border-l: #2c2c2e;
-        --shadow: 0 1px 3px rgba(255,255,255,0.05);
-      }
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif; font-size: 15px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; min-height: 100vh; }
-
-    .navbar { display:flex; align-items:center; justify-content:space-between; height:48px; padding:0 20px; border-bottom:1px solid var(--border-l); position:sticky; top:0; background:var(--bg); z-index:10; backdrop-filter:blur(20px); }
-    .navbar a { color:var(--accent); text-decoration:none; font-size:14px; }
-    .navbar .title { font-size:16px; font-weight:600; }
-    .navbar .user { font-size:13px; color:var(--text2); }
-
-    .main { max-width: 800px; margin: 0 auto; padding: 48px 24px; text-align: center; }
-    .icon { font-size: 72px; margin-bottom: 24px; }
-    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
-    .desc { font-size: 15px; color: var(--text2); margin-bottom: 32px; }
-    .badge { display:inline-block; padding:4px 12px; border-radius:6px; font-size:12px; font-weight:500; background:var(--accent); color:#fff; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>人才锻炼（粮票）</title>
+<style>
+:root{--bg:#fff;--bg2:#f5f5f7;--card:#fff;--hover:rgba(0,0,0,0.04);--text:#1d1d1f;--text2:#6e6e73;--text3:#aeaeb2;--accent:#007AFF;--accent-h:#0062d1;--border:#d2d2d7;--border-l:#e5e5ea;--shadow:0 4px 20px rgba(0,0,0,0.08);--r:12px;}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--bg2:#1c1c1e;--card:#1c1c1e;--hover:rgba(255,255,255,0.08);--text:#f5f5f7;--text2:#8e8e93;--text3:#636366;--accent:#0A84FF;--accent-h:#409cff;--border:#38383a;--border-l:#2c2c2e;--shadow:0 1px 3px rgba(255,255,255,0.05);}}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;font-size:14px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;}
+.navbar{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 20px;border-bottom:1px solid var(--border-l);position:sticky;top:0;background:var(--bg);z-index:10;backdrop-filter:blur(20px);}
+.navbar a{color:var(--accent);text-decoration:none;font-size:14px;}
+.navbar .title{font-size:16px;font-weight:600;}
+.navbar .user{font-size:13px;color:var(--text2);}
+.main{max-width:1100px;margin:0 auto;padding:24px;}
+.top-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:16px 20px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border-l);}
+.top-bar label{font-weight:500;}
+.top-bar input{width:130px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;}
+.top-bar input:focus{border-color:var(--accent);}
+.btn{padding:8px 22px;border-radius:8px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;border:none;background:var(--accent);color:#fff;transition:background 0.2s;}
+.btn:hover{background:var(--accent-h);}
+.card{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;table-layout:fixed;}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--border-l);font-size:13px;overflow:hidden;text-overflow:ellipsis;}
+th{font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);white-space:nowrap;}
+td{vertical-align:middle;}
+tr:hover td{background:var(--hover);}
+tr.section-odd td{background:rgba(127,127,127,0.06);}
+tr.section-even td{background:transparent;}
+tr.section-odd td input.num{background:transparent;}
+tr.section-even td input.num{background:transparent;}
+input.num{width:72px;padding:5px 6px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;text-align:right;}
+input.num:focus{border-color:var(--accent);}
+.talent-count{text-align:center;font-weight:600;color:var(--accent);}
+.result-section{display:none;}
+.result-section.show{display:block;}
+.result-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;font-size:14px;font-weight:500;}
+.result-bar .hl{color:var(--accent);font-weight:700;}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;font-size:14px;font-weight:500;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.3s;box-shadow:var(--shadow);}
+.toast.show{opacity:1;}
+.toast.ok{background:#30d158;color:#fff;}
+.toast.err{background:#ff3b30;color:#fff;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--card);border-radius:14px;padding:28px;width:420px;max-width:94vw;max-height:70vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);border:1px solid var(--border-l);}
+.modal h3{font-size:18px;font-weight:600;margin-bottom:8px;}
+.modal .talents{font-size:14px;line-height:2;}
+.modal .talents .owned{color:#30d158;font-weight:600;}
+.modal .talents .unowned{color:var(--text3);}
+</style>
 </head>
 <body>
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="talentModal"><div class="modal" id="talentModalContent"></div></div>
 
 <nav class="navbar">
-  <a href="../calculator.html">← 返回蘑菇的计算器</a>
-  <span class="title">🌾 农田-人才锻炼（粮票）</span>
-  <span class="user" id="navUser">--</span>
+<a href="../calculator.html">← 返回蘑菇的计算器</a>
+<span class="title">🌾 人才锻炼（粮票）</span>
+<span class="user" id="navUser">--</span>
 </nav>
 
 <div class="main">
-  <div class="icon">🌾</div>
-  <h1>农田-人才锻炼（粮票）</h1>
-  <p class="desc">计算粮票型人才锻炼最优点法</p>
-  <div class="badge">🔧 开发中</div>
+<div class="card" style="margin-bottom:16px;padding:16px 20px;font-size:13px;color:var(--text2);line-height:1.8;">
+<div style="font-weight:600;color:var(--text);margin-bottom:4px;">📖 使用说明</div>
+<div>1、初次使用，请依次升级每个项目，记录升一级收入提升。初步研究仅需填写第一栏的收入，其余栏自动按解锁人才比例计算。</div>
+<div>2、填写本次可投入升级的粮票数量后，点击「计算最优点法」。</div>
+<div>3、按照计算结果升级后，可保存结果，表格区域的等级和升级消耗自动更新、粮票归零。</div>
+<div>4、表格数据保留，短期内无需重复更新数据，直接填入粮票即可。</div>
+</div>
+
+<div class="top-bar">
+<label>可投入粮票（万）：</label>
+<input type="number" id="budget" value="0" min="0" onchange="saveData()"/>
+<button class="btn" onclick="calculate()">📊 计算最优点法</button>
+<button class="btn" style="background:var(--bg);color:var(--text);border:1px solid var(--border);" onclick="resetAll()">🔄 一键重填</button>
+<span id="loadStatus" style="font-size:12px;color:var(--text3);">加载中...</span>
+</div>
+
+<div class="card"><div style="overflow-x:auto;">
+<table><thead><tr>
+<th style="width:28px;">#</th><th style="width:72px;">栏目</th><th>项目</th><th style="width:48px;">人才</th>
+<th style="width:64px;">等级</th><th style="width:80px;">消耗（万）</th><th style="width:80px;">收入提升</th>
+</tr></thead><tbody id="inputBody"></tbody></table>
+</div></div>
+
+<div class="card result-section" id="resultCard">
+<div class="result-bar" id="resultBar"></div>
+<div style="overflow-x:auto;">
+<table><thead><tr>
+<th style="width:28px;">#</th><th>项目</th><th style="width:48px;">人才</th>
+<th style="width:68px;">性价比</th><th style="width:56px;">升N级</th>
+<th style="width:72px;">消耗</th><th style="width:68px;">新价比</th>
+</tr></thead><tbody id="resultBody"></tbody></table>
+</div>
+<div id="applyBtnWrap" style="padding:14px 20px;border-top:1px solid var(--border-l);display:none;">
+<button class="btn" onclick="applyResults()">💾 升级完毕，保存当前等级</button>
+</div>
+</div>
 </div>
 
 <script>
-var curUser = null;
-function getUser(){
-  var s=localStorage.getItem('guild_current_user');
-  if(!s){ window.location.href='../login.html'; return null; }
-  try{ var u=JSON.parse(s); if(!u.id)throw Error(); return u; }catch(_){ localStorage.removeItem('guild_current_user'); window.location.href='../login.html'; return null; }
+var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API={
+h:function(ct){var hd={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};if(ct)hd['Content-Type']='application/json';return hd;},
+get:function(p){return fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.json();});},
+post:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'Prefer':'return=representation'},this.h(1)),body:JSON.stringify(b)}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.json();});},
+patch:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'PATCH',headers:this.h(1),body:JSON.stringify(b)}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.text().then(function(t){return t?JSON.parse(t):null;});});},
+del:function(p){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'DELETE',headers:this.h(1)}).then(function(r){if(!r.ok)throw Error(r.statusText);});}
+};
+
+var curUser=null, ownedTalents={}, lastSimResult=null;
+
+function getUser(){var s=localStorage.getItem('guild_current_user');if(!s){window.location.href='../login.html';return null;}try{var u=JSON.parse(s);if(!u.id)throw Error();return u;}catch(_){localStorage.removeItem('guild_current_user');window.location.href='../login.html';return null;}}
+function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},2500);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function getGrowth(lv){if(lv>=200)return 1.009;if(lv>=100)return 1.01;return 1.012;}
+
+var SECTIONS=[
+{name:'肉类存储',talents:['何律师','丽萍','步惊云','李双','张大力']},
+{name:'风干技艺',talents:['强哥','林兽医','陈医生','周大头','迈克周','白铁匠','青丘神女']},
+{name:'腌制技艺',talents:['林冲','曾守信','丽萍','步惊云','刘二狗','紫霞仙子']},
+{name:'烟熏技艺',talents:['鲁智深','聂风','渔三哥','肖卫平','张冰棍','白素贞']},
+{name:'酱制技艺',talents:['武松','书文','高启强','非主流','孙糖画','主持人','青丘神女']},
+{name:'冷藏技艺',talents:['林冲','刘二狗','街机高手','张冰棍','多情浪子','孙悟空']},
+{name:'烤制技艺',talents:['宋江','唐志强','周大头','孙糖画','韩信','黄飞鸿','武则天']},
+{name:'醉烧技艺',talents:['武松','何律师','乾隆','非主流','小陈哥','张大力']},
+{name:'叫花技艺',talents:['安塞腰鼓','迈克周','白铁匠','主持人','小燕子','武则天']},
+{name:'酸汤技艺',talents:['刚毅','菜雕师','电工陈','摇滚歌星','永琪','孙悟空']},
+{name:'辣烧技艺',talents:['书文','渔三哥','肖卫平','紫霞仙子','紫薇','阿星']},
+{name:'发酵技艺',talents:['林冲','乾隆','周大头','倪冬梅','白素贞','小燕子']},
+{name:'捶打技艺',talents:['宋江','何律师','街机高手','小陈哥','赛车手','韩信','福尔康']},
+{name:'风干精研',talents:['武松','郑经理','彪子','火炬手','大小说家','紫薇']},
+{name:'腌制精研',talents:['林兽医','刚毅','菜雕师','小陈哥','紫霞','张良','青丘神女']},
+{name:'烟熏精研',talents:['曾守信','迈克周','白素贞','主持人','一代大侠','阿舟']},
+{name:'酱制精研',talents:['强哥','曾守信','高启强','聂风','倪冬梅','国民男神']},
+{name:'冷藏精研',talents:['书文','渔三哥','李双','金蝉子','黄飞鸿','阿星']},
+{name:'烤制精研',talents:['鲁智深','书文','彪子','大小说家','紫薇','孙悟空']},
+{name:'醉烧精研',talents:['宋江','陈医生','乾隆','唐志强','国际巨星','张良']},
+{name:'叫花精研',talents:['聂小倩','何律师','国民男神','主持人','牛魔王','小燕子']},
+{name:'酸汤精研',talents:['郑经理','步惊云','金蝉子','摇滚明星','紫霞仙子','永琪']},
+{name:'辣烧精研',talents:['刚毅','嬴政','大小说家','红衣教主','小燕子','青丘神女']},
+{name:'发酵精研',talents:['聂小倩','国际巨星','韩信','一代大侠','永琪']},
+{name:'捶打精研',talents:['强哥','嬴政','大小说家','白素贞','紫薇']},
+{name:'风干改进',talents:['国际巨星','红衣教主','黄飞鸿']},
+{name:'风干大师',talents:['国民男神','青丘神女','潘远航']}
+];
+var SUB_ITEMS=['初步研究','精准突破'];
+var CALC_TYPE='farm_talent_food';
+
+function countOwned(list){var c=0;list.forEach(function(a){if(ownedTalents[a])c++;});return c;}
+
+async function loadOwnedTalents(){
+try{
+document.getElementById('loadStatus').textContent='加载中...';
+var cats=await API.get('task_categories?select=id,name,parent_id&order=sort_order.asc');
+var talentL1=cats.find(function(c){return!c.parent_id&&c.name==='人才';});
+if(!talentL1){document.getElementById('loadStatus').textContent='未找到人才分类';return;}
+var l2s=cats.filter(function(c){return c.parent_id===talentL1.id;});
+var l3Names=[];l2s.forEach(function(l2){cats.filter(function(c){return c.parent_id===l2.id;}).forEach(function(l3){l3Names.push(l3.name);});});
+var abs=await API.get('member_task_abilities?member_id=eq.'+curUser.id+'&is_able=eq.true&select=task_definition_id');
+var checkedDefIds={};abs.forEach(function(a){checkedDefIds[a.task_definition_id]=true;});
+var allDefs=await API.get('task_definitions?select=id,category_id&limit=5000');
+var catHasTask={};allDefs.forEach(function(d){if(checkedDefIds[d.id])catHasTask[d.category_id]=true;});
+ownedTalents={};
+l3Names.forEach(function(name){cats.filter(function(c){return c.name===name;}).forEach(function(l3){if(catHasTask[l3.id])ownedTalents[name]=true;});});
+document.getElementById('loadStatus').textContent='已加载 '+Object.keys(ownedTalents).length+' 位人才';
+}catch(e){console.error(e);document.getElementById('loadStatus').textContent='加载失败';}
 }
-function init(){
-  curUser = getUser();
-  if(!curUser) return;
-  if(!curUser.is_admin){ alert('无权限访问'); window.location.href='../index.html'; return; }
-  document.getElementById('navUser').textContent = curUser.display_name || curUser.uid;
+
+function showTalentDetail(secName){
+var p=SECTIONS.find(function(x){return x.name===secName;});if(!p)return;
+var owned=countOwned(p.talents);
+var html='<h3>'+esc(p.name)+'</h3>';
+html+='<p style="font-size:13px;color:var(--text2);margin-bottom:12px;">人才：'+p.talents.length+' 位 | 已解锁：'+owned+' 位</p>';
+html+='<div class="talents">';
+p.talents.forEach(function(a){var cls=ownedTalents[a]?'owned':'unowned';html+='<div class="'+cls+'">'+(ownedTalents[a]?'✅':'⬜')+' '+esc(a)+'</div>';});
+html+='</div>';
+html+='<div style="margin-top:16px;text-align:right;"><button class="btn" onclick="closeTalentModal()">关闭</button></div>';
+document.getElementById('talentModalContent').innerHTML=html;
+document.getElementById('talentModal').classList.add('show');
+}
+function closeTalentModal(){document.getElementById('talentModal').classList.remove('show');}
+document.addEventListener('click',function(e){if(e.target===document.getElementById('talentModal'))closeTalentModal();});
+
+function renderInputTable(saved){
+saved=saved||{};
+var firstCount=countOwned(SECTIONS[0].talents);
+var html='';
+SECTIONS.forEach(function(sec,si){
+SUB_ITEMS.forEach(function(sub,sbi){
+var cls=(si%2===0)?'section-odd':'section-even';
+var key=sec.name+'|'+sub;
+var d=(saved&&saved[key])||{};
+var tc=countOwned(sec.talents);
+if(sbi===0){
+html+='<tr class="'+cls+'">'+
+'<td style="text-align:center;">'+(si+1)+'</td>'+
+'<td style="font-weight:600;">'+esc(sec.name)+' <span style="color:var(--accent);cursor:pointer;font-size:12px;" onclick="showTalentDetail(\''+esc(sec.name)+'\')" title="查看人才">ⓘ</span></td>'+
+'<td style="color:var(--text2);">初步研究</td>'+
+'<td class="talent-count">'+tc+'</td>'+
+'<td><input type="number" class="num level save-input" data-key="'+esc(key)+'" data-field="level" value="'+(d.level||0)+'" min="0" onchange="saveData()" style="width:58px;"/></td>'+
+'<td><input type="number" class="num cost save-input" data-key="'+esc(key)+'" data-field="cost" value="'+(d.cost||0)+'" min="0" onchange="saveData()"/></td>'+
+'<td><input type="number" class="num income save-input" data-key="'+esc(key)+'" data-field="income" data-sec="'+esc(sec.name)+'" data-first="'+(si===0?'1':'0')+'" value="'+(d.income||0)+'" min="0" onchange="onIncomeChange(this)" onfocus="onIncomeChange(this)"/></td>'+
+'</tr>';
+} else {
+html+='<tr class="'+cls+'">'+
+'<td style="text-align:center;">'+(si+1)+'</td>'+
+'<td></td>'+
+'<td style="color:var(--text2);">精准突破</td>'+
+'<td></td>'+
+'<td><input type="number" class="num level save-input" data-key="'+esc(key)+'" data-field="level" value="'+(d.level||0)+'" min="0" onchange="saveData()" style="width:58px;"/></td>'+
+'<td><input type="number" class="num cost save-input" data-key="'+esc(key)+'" data-field="cost" value="'+(d.cost||0)+'" min="0" onchange="saveData()"/></td>'+
+'<td><input type="number" class="num income save-input" data-key="'+esc(key)+'" data-field="income" data-sec="'+esc(sec.name)+'" data-first="0" value="'+(d.income||0)+'" min="0" onchange="saveData()"/></td>'+
+'</tr>';
+}
+});
+});
+document.getElementById('inputBody').innerHTML=html;
+if(saved&&saved._budget)document.getElementById('budget').value=saved._budget;
+try{var simSaved=JSON.parse(localStorage.getItem('calc_'+CALC_TYPE+'_sim')||'null');if(simSaved)lastSimResult=simSaved;}catch(e){}
+if(saved&&saved._resultHTML){
+document.getElementById('resultBody').innerHTML=saved._resultHTML;
+document.getElementById('resultBar').innerHTML=saved._resultBar||'';
+document.getElementById('resultCard').classList.add('show');
+document.getElementById('applyBtnWrap').style.display='block';
+}
+}
+
+function onIncomeChange(el){
+if(el.dataset.first!=='1')return;
+var firstIncome=parseInt(el.value)||0;
+var firstCount=countOwned(SECTIONS[0].talents);
+if(firstCount<=0)return;
+SECTIONS.forEach(function(sec,si){
+if(si===0)return;
+var tc=countOwned(sec.talents);
+var autoIncome=Math.round(firstIncome*tc/firstCount);
+var inp=document.querySelector('.income[data-key="'+esc(sec.name)+'|初步研究"]');
+if(inp){inp.value=autoIncome;inp.dispatchEvent(new Event('change'));}
+});
+saveData();
+}
+
+function loadSavedData(){
+return API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.'+CALC_TYPE+'&select=data&limit=1')
+.then(function(rows){return(rows&&rows.length>0)?rows[0].data:{};})
+.catch(function(e){console.warn(e);return{};});
+}
+
+var _saveTimer=null;
+function saveData(){
+clearTimeout(_saveTimer);
+_saveTimer=setTimeout(function(){
+var data={};
+document.querySelectorAll('.save-input').forEach(function(el){
+var key=el.dataset.key,field=el.dataset.field;
+if(!data[key])data[key]={};
+data[key][field]=parseInt(el.value)||0;
+});
+data._budget=document.getElementById('budget').value;
+var rb=document.getElementById('resultBody'),rr=document.getElementById('resultBar');
+if(rb.innerHTML&&document.getElementById('resultCard').classList.contains('show')){data._resultHTML=rb.innerHTML;data._resultBar=rr.innerHTML;}
+API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.'+CALC_TYPE+'&select=id&limit=1')
+.then(function(ex){if(ex&&ex.length)return API.patch('calculator_data?id=eq.'+ex[0].id,{data:data,updated_at:new Date().toISOString()});else return API.post('calculator_data',{member_id:curUser.id,calculator_type:CALC_TYPE,data:data});})
+.catch(function(e){console.warn(e);});
+},500);
+}
+
+function resetAll(){
+if(!confirm('确定清空所有数据和结果？'))return;
+API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.'+CALC_TYPE+'&select=id&limit=1')
+.then(function(ex){if(ex&&ex.length)return API.del('calculator_data?id=eq.'+ex[0].id);}).catch(function(e){});
+localStorage.removeItem('calc_'+CALC_TYPE+'_sim');
+document.getElementById('budget').value='0';
+document.querySelectorAll('.save-input').forEach(function(el){el.value='0';});
+document.getElementById('resultCard').classList.remove('show');
+document.getElementById('resultBody').innerHTML='';
+document.getElementById('resultBar').innerHTML='';
+document.getElementById('applyBtnWrap').style.display='none';
+lastSimResult=null;toast('已清空');
+}
+
+function gatherItems(){
+var items=[];
+SECTIONS.forEach(function(sec){
+SUB_ITEMS.forEach(function(sub){
+var key=sec.name+'|'+sub;
+var costEl=document.querySelector('.cost[data-key="'+esc(key)+'"]');
+var levelEl=document.querySelector('.level[data-key="'+esc(key)+'"]');
+var incomeEl=document.querySelector('.income[data-key="'+esc(key)+'"]');
+var cost=parseInt(costEl.value)||0;
+var income=parseInt(incomeEl.value)||0;
+var level=parseInt(levelEl.value)||0;
+if(cost<=0||income<=0)return;
+items.push({section:sec.name,sub:sub,level:level,cost:cost,income:income,ratio:income/cost});
+});
+});
+return items;
+}
+
+function levelsToTarget(currentCost,currentLevel,income,targetRatio){
+var cost=currentCost,lv=currentLevel,n=0,cumCost=0;
+while(income/cost>targetRatio){cumCost+=cost;cost=Math.round(cost*getGrowth(lv));lv++;n++;if(n>10000)break;}
+return{levels:n,cost:cumCost,newCost:cost,newLevel:lv};
+}
+
+function calculate(){
+var budget=parseInt(document.getElementById('budget').value)||0;
+if(budget<=0){toast('请输入可投入粮票','err');return;}
+var items=gatherItems();
+if(items.length===0){toast('请至少填写一项数据','err');return;}
+
+var sim=items.map(function(it){return{section:it.section,sub:it.sub,level:it.level,cost:it.cost,income:it.income,ratio:it.ratio,origRatio:it.ratio,upgraded:0,spent:0};});
+sim.sort(function(a,b){return b.ratio-a.ratio;});
+var remaining=budget,totalSpent=0;
+
+for(var iter=0;iter<500&&remaining>0;iter++){
+sim.sort(function(a,b){return b.ratio-a.ratio;});
+var bestR=sim[0].ratio,worstR=sim[sim.length-1].ratio;
+if(bestR-worstR<0.000001)break;
+var target=null;
+for(var i=1;i<sim.length;i++){if(sim[i].ratio<bestR-0.000001){target=sim[i].ratio;break;}}
+if(target===null)break;
+
+var needBudget=0,batch=[];
+for(var i=0;i<sim.length;i++){
+if(sim[i].ratio<bestR-0.0001)break;
+var it=sim[i];
+if(it.income/it.cost<=target)continue;
+var result=levelsToTarget(it.cost,it.level,it.income,target);
+if(result.levels>0){needBudget+=result.cost;batch.push({item:it,levels:result.levels,cost:result.cost,newCost:result.newCost,newLevel:result.newLevel});}
+}
+if(needBudget<=0)break;
+if(remaining>=needBudget){
+batch.forEach(function(b){b.item.cost=b.newCost;b.item.level=b.newLevel;b.item.ratio=b.item.income/b.item.cost;b.item.spent+=b.cost;b.item.upgraded+=b.levels;remaining-=b.cost;totalSpent+=b.cost;});
+}else{
+while(remaining>0){sim.sort(function(a,b){return b.ratio-a.ratio;});var best=sim[0];if(best.cost>remaining)break;remaining-=best.cost;totalSpent+=best.cost;best.spent+=best.cost;best.upgraded+=1;best.cost=Math.round(best.cost*getGrowth(best.level));best.level++;best.ratio=best.income/best.cost;}break;
+}
+}
+
+if(remaining>0){sim.sort(function(a,b){return b.ratio-a.ratio;});if(Math.abs(sim[0].ratio-sim[sim.length-1].ratio)<0.000001){while(remaining>0){var ok=false;for(var i=0;i<sim.length&&remaining>0;i++){if(sim[i].cost<=remaining){remaining-=sim[i].cost;totalSpent+=sim[i].cost;sim[i].spent+=sim[i].cost;sim[i].upgraded+=1;sim[i].cost=Math.round(sim[i].cost*getGrowth(sim[i].level));sim[i].level++;sim[i].ratio=sim[i].income/sim[i].cost;ok=true;}}if(!ok)break;}}}
+
+lastSimResult=sim;
+try{var simSave=sim.map(function(s){return{section:s.section,sub:s.sub,cost:Math.round(s.cost),level:s.level,income:s.income,upgraded:s.upgraded,spent:Math.round(s.spent)};});localStorage.setItem('calc_'+CALC_TYPE+'_sim',JSON.stringify(simSave));}catch(e){}
+renderResults(sim,budget,totalSpent,remaining);
+document.getElementById('applyBtnWrap').style.display='block';saveData();
+}
+
+function renderResults(sim,budget,spent,remaining){
+sim.sort(function(a,b){var ia=SECTIONS.findIndex(function(p){return p.name===a.section;}),ib=SECTIONS.findIndex(function(p){return p.name===b.section;});if(ia!==ib)return ia-ib;return SUB_ITEMS.indexOf(a.sub)-SUB_ITEMS.indexOf(b.sub);});
+var html='';
+sim.forEach(function(s,si){
+var cls=(si%2===0)?'section-odd':'section-even';
+html+='<tr class="'+cls+'">'+
+'<td style="text-align:center;">'+(si+1)+'</td>'+
+'<td>'+esc(s.section)+' <span style="color:var(--text2);">'+esc(s.sub)+'</span></td>'+
+'<td class="talent-count">-</td>'+
+'<td style="text-align:right;">'+s.origRatio.toFixed(4)+'</td>'+
+'<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
+'<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
+'<td style="text-align:right;">'+s.ratio.toFixed(4)+'</td></tr>';
+});
+document.getElementById('resultBody').innerHTML=html;
+document.getElementById('resultBar').innerHTML='<span>💰 预算 <span class="hl">'+budget.toLocaleString()+'</span> 万</span><span>|</span><span>📊 分配 <span class="hl">'+Math.round(spent).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span>';
+document.getElementById('resultCard').classList.add('show');
+}
+
+function applyResults(){
+if(!lastSimResult||lastSimResult.length===0){toast('无方案可保存','err');return;}
+if(!confirm('请确认已按当前方案升级，保存后将自动更新表格中的等级和升级消耗。'))return;
+lastSimResult.forEach(function(s){
+var key=s.section+'|'+s.sub;
+var levelEl=document.querySelector('.level[data-key="'+esc(key)+'"]');
+var costEl=document.querySelector('.cost[data-key="'+esc(key)+'"]');
+if(levelEl)levelEl.value=(parseInt(levelEl.value)||0)+s.upgraded;
+if(costEl)costEl.value=Math.round(s.cost);
+});
+document.getElementById('budget').value='0';lastSimResult=null;
+document.getElementById('resultCard').classList.remove('show');
+document.getElementById('resultBody').innerHTML='';document.getElementById('resultBar').innerHTML='';
+document.getElementById('applyBtnWrap').style.display='none';
+localStorage.removeItem('calc_'+CALC_TYPE+'_sim');saveData();
+toast('✅ 已保存，粮票已清零');
+}
+
+async function init(){
+curUser=getUser();if(!curUser)return;
+if(!curUser.is_admin){alert('无权限访问');window.location.href='../index.html';return;}
+document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
+await loadOwnedTalents();
+loadSavedData().then(function(saved){renderInputTable(saved);});
 }
 init();
 </script>
