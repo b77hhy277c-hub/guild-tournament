@@ -41,10 +41,21 @@ input.num:focus{border-color:var(--accent);}
 .toast.ok{background:#30d158;color:#fff;}
 .toast.err{background:#ff3b30;color:#fff;}
 @media(max-width:768px){.main{padding:12px 8px;}.top-bar{flex-direction:column;align-items:stretch;gap:8px;}.top-bar input{width:100%;}.top-bar .btn{width:100%;padding:12px;}th,td{padding:6px 4px;font-size:11px;}input.num{font-size:12px;padding:4px;width:60px;}}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--card);border-radius:14px;padding:28px;width:420px;max-width:94vw;max-height:70vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);border:1px solid var(--border-l);}
+.modal h3{font-size:18px;font-weight:600;margin-bottom:8px;}
+.modal .talents{font-size:14px;line-height:2;}
+.modal .talents .owned{color:#30d158;font-weight:600;}
+.modal .talents .unowned{color:var(--text3);}
+.talent-count{text-align:center;font-weight:600;color:var(--accent);}
 </style>
 </head>
 <body>
 <div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="talentModal"><div class="modal" id="talentModalContent"></div></div>
 
 <nav class="navbar">
 <a href="../bathhouse.html">← 返回澡堂</a>
@@ -62,7 +73,7 @@ input.num:focus{border-color:var(--accent);}
 
 <div class="card"><div style="overflow-x:auto;">
 <table><thead><tr>
-<th style="width:28px;">#</th><th style="width:50px;">编号</th><th>涉及人才</th><th style="width:60px;">项目</th>
+<th style="width:28px;">#</th><th style="width:50px;">编号</th><th>涉及人才</th><th style="width:44px;">人才</th><th style="width:60px;">项目</th>
 <th style="width:64px;">等级</th><th style="width:84px;">消耗（万）</th><th style="width:84px;">收入提升</th>
 </tr></thead><tbody id="inputBody"></tbody></table>
 </div></div>
@@ -113,6 +124,39 @@ var SUB_ITEMS=['上','下'];
 
 var curUser=null,lastSimResult=null;
 
+var ownedTalents={};
+function countOwned(list){var c=0;list.forEach(function(a){if(ownedTalents[a])c++;});return c;}
+function showTalentDetail(techId){
+var tech=DEPT.techs.find(function(x){return x.id===techId;});if(!tech)return;
+var owned=countOwned(tech.talents);
+var html='<h3>'+esc(tech.id)+'</h3>';
+html+='<p style="font-size:13px;color:var(--text2);margin-bottom:12px;">人才：'+tech.talents.length+' 位 | 已解锁：'+owned+' 位</p>';
+html+='<div class="talents">';
+tech.talents.forEach(function(a){var cls=ownedTalents[a]?'owned':'unowned';html+='<div class="'+cls+'">'+(ownedTalents[a]?'✅':'⬜')+' '+esc(a)+'</div>';});
+html+='</div>';
+html+='<div style="margin-top:16px;text-align:right;"><button class="btn" onclick="closeTalentModal()">关闭</button></div>';
+document.getElementById('talentModalContent').innerHTML=html;
+document.getElementById('talentModal').classList.add('show');
+}
+function closeTalentModal(){document.getElementById('talentModal').classList.remove('show');}
+document.addEventListener('click',function(e){if(e.target===document.getElementById('talentModal'))closeTalentModal();});
+
+async function loadOwnedTalents(){
+try{
+var cats=await API.get('task_categories?select=id,name,parent_id&order=sort_order.asc');
+var talentL1=cats.find(function(c){return!c.parent_id&&c.name==='人才';});
+if(!talentL1)return;
+var l2s=cats.filter(function(c){return c.parent_id===talentL1.id;});
+var l3Names=[];l2s.forEach(function(l2){cats.filter(function(c){return c.parent_id===l2.id;}).forEach(function(l3){l3Names.push(l3.name);});});
+var abs=await API.get('member_task_abilities?member_id=eq.'+curUser.id+'&is_able=eq.true&select=task_definition_id');
+var checkedDefIds={};abs.forEach(function(a){checkedDefIds[a.task_definition_id]=true;});
+var allDefs=await API.get('task_definitions?select=id,category_id&limit=5000');
+var catHasTask={};allDefs.forEach(function(d){if(checkedDefIds[d.id])catHasTask[d.category_id]=true;});
+ownedTalents={};
+l3Names.forEach(function(name){cats.filter(function(c){return c.name===name;}).forEach(function(l3){if(catHasTask[l3.id])ownedTalents[name]=true;});});
+}catch(e){console.error(e);}
+}
+
 function getUser(){var s=localStorage.getItem('guild_current_user');if(!s){window.location.href='../../login.html';return null;}try{var u=JSON.parse(s);if(!u.id)throw Error();return u;}catch(_){localStorage.removeItem('guild_current_user');window.location.href='../../login.html';return null;}}
 function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},2500);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -129,7 +173,7 @@ var level=parseInt(d.level)||0;
 var cost=(parseInt(d.cost)>0)?parseInt(d.cost):getCost(side,level);
 html+='<tr class="'+cls+'">'+
 '<td style="text-align:center;">'+(ti+1)+'</td>'+
-(sbi===0?'<td style="font-weight:600;vertical-align:top;" rowspan="2">'+esc(tech.id)+'</td><td style="font-size:11px;color:var(--text3);vertical-align:top;" rowspan="2">'+esc(tech.talents.join('、'))+'</td>':'')+
+(sbi===0?'<td style="font-weight:600;vertical-align:top;" rowspan="2">'+esc(tech.id)+' <span style="color:var(--accent);cursor:pointer;font-size:12px;" onclick="showTalentDetail(\''+esc(tech.id)+'\')" title="查看人才">ⓘ</span></td><td style="font-size:11px;color:var(--text3);vertical-align:top;" rowspan="2">'+esc(tech.talents.join('、'))+'</td><td class="talent-count" style="vertical-align:top;" rowspan="2">'+countOwned(tech.talents)+'</td>':'')+
 '<td style="color:var(--text2);">'+(side==='上'?'上面项目':'下面项目')+'</td>'+
 '<td><input type="number" class="num level save-input" data-key="'+esc(key)+'" data-side="'+side+'" value="'+level+'" min="0" onchange="onLevelChange(this)" style="width:58px;"/></td>'+
 '<td><input type="number" class="num cost save-input" data-key="'+esc(key)+'" data-field="cost" value="'+cost+'" min="0" onchange="saveData()"/></td>'+
@@ -297,7 +341,7 @@ async function init(){
 curUser=getUser();if(!curUser)return;
 if(!curUser.is_admin){alert('无权限访问');window.location.href='../../index.html';return;}
 document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
-loadSavedData().then(function(saved){renderInputTable(saved);});
+loadOwnedTalents().then(function(){loadSavedData().then(function(saved){renderInputTable(saved);});});
 }
 init();
 </script>
