@@ -173,13 +173,14 @@ function getGrowth(level){
   if(level >= 100) return GROWTH_MID;
   return GROWTH_LOW;
 }
+function nextCost(cost,lv){return Math.max(cost+1, Math.round(cost*getGrowth(lv)));}
 
 // Cost to upgrade N levels from currentLevel, starting at currentCost
 function calcUpgrade(currentCost, currentLevel, n){
   var cost = currentCost, lv = currentLevel, total = 0;
   for(var i = 0; i < n; i++){
     total += cost;
-    cost = Math.round(cost * getGrowth(lv));
+    cost = nextCost(cost,lv);
     lv++;
   }
   return { total: total, newCost: cost, newLevel: lv };
@@ -191,7 +192,7 @@ function levelsToTarget(currentCost, currentLevel, income, targetRatio){
   var cost = currentCost, lv = currentLevel, n = 0, cumCost = 0;
   while(income / cost > targetRatio){
     cumCost += cost;
-    cost = Math.round(cost * getGrowth(lv));
+    cost = nextCost(cost,lv);
     lv++;
     n++;
     if(n > 10000) break; // safety
@@ -374,7 +375,7 @@ function calculate(){
         totalSpent += best.cost;
         best.spent += best.cost;
         best.upgraded += 1;
-        best.cost = Math.round(best.cost * getGrowth(best.level));
+        best.cost = nextCost(best.cost,best.level);
         best.level++;
         best.ratio = best.income / best.cost;
       }
@@ -394,7 +395,7 @@ function calculate(){
             totalSpent += sim[i].cost;
             sim[i].spent += sim[i].cost;
             sim[i].upgraded += 1;
-            sim[i].cost = Math.round(sim[i].cost * getGrowth(sim[i].level));
+            sim[i].cost = nextCost(sim[i].cost,sim[i].level);
             sim[i].level++;
             sim[i].ratio = sim[i].income / sim[i].cost;
             ok = true;
@@ -455,10 +456,10 @@ function renderResults(sim, budget, spent, remaining){
       '<td style="text-align:center;">'+(secIdx+1)+'</td>'+
       '<td>'+esc(s.section)+'</td>'+
       '<td style="color:var(--text2);">'+esc(s.sub)+'</td>'+
-      '<td class="ratio">'+s.origRatio.toFixed(4)+'</td>'+
+      '<td class="ratio">'+s.origRatio.toFixed(6)+'</td>'+
       '<td class="upgrade">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
       '<td class="cost-total">'+Math.round(s.spent).toLocaleString()+'</td>'+
-      '<td class="ratio">'+s.ratio.toFixed(4)+'</td>'+
+      '<td class="ratio">'+s.ratio.toFixed(6)+'</td>'+
     '</tr>';
   });
   document.getElementById('resultBody').innerHTML = html;
