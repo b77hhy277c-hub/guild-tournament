@@ -389,19 +389,16 @@ if(stoppedBy)break;
 }
 }
 
-// Build sim output with origRatio tracking
+// Build sim output using stored origRatio
 var sim=[];
 techs.forEach(function(tech){
 if(tech.above.income>0){
 var aUp=tech.above.upgraded||0,aSp=tech.above.spent||0;
-var origCost=getCost('上',tech.above.level-aUp);
-sim.push({label:tech.id+' 上',cost:tech.above.cost,income:tech.above.income,level:tech.above.level,ratio:tech.above.income/tech.above.cost,origRatio:tech.above.income/origCost,upgraded:aUp,spent:aSp});
+sim.push({label:tech.id+' 上',cost:tech.above.cost,income:tech.above.income,level:tech.above.level,ratio:tech.above.income/tech.above.cost,origRatio:tech.above.origRatio,upgraded:aUp,spent:aSp});
 }
 if(!tech.below.locked&&tech.below.income>0){
 var bUp=tech.below.upgraded||0,bSp=tech.below.spent||0;
-var origLevel=tech.below.level-bUp;
-var origCost=origLevel>0?getCost('下',origLevel):getCost('下',1);
-sim.push({label:tech.id+' 下',cost:tech.below.cost,income:tech.below.income,level:tech.below.level,ratio:tech.below.income/tech.below.cost,origRatio:tech.below.income/origCost,upgraded:bUp,spent:bSp});
+sim.push({label:tech.id+' 下',cost:tech.below.cost,income:tech.below.income,level:tech.below.level,ratio:tech.below.income/tech.below.cost,origRatio:tech.below.origRatio,upgraded:bUp,spent:bSp});
 }
 });
 return{sim:sim,techs:techs,spent:totalSpent,remaining:remaining,stoppedBy:stoppedBy};
@@ -445,10 +442,10 @@ var techs=cloneTechs(g_techs);
 var result;
 
 if(opt===1){
-// Option 1: continue water-fill without stop, capped items can't grow beyond cap
-result=runWaterFill(techs,remaining,false);
+// Option 1: continue water-fill BUT with stopOnCap so it stops at next cap
+result=runWaterFill(techs,remaining,true);
 }else{
-// Option 2: invest in above to uncap, then continue
+// Option 2: invest in above to uncap, then continue with stopOnCap
 var stoppedTech=g_autoResults.stoppedBy;
 if(stoppedTech){
 var t=techs.find(function(x){return x.id===stoppedTech.id;});
@@ -459,29 +456,23 @@ var unlockCost=calcPathCost('上',t.above.level,targetAbove);
 if(unlockCost<=remaining){
 remaining-=unlockCost;
 t.above.level=targetAbove;t.above.cost=getCost('上',targetAbove);
+t.above.upgraded=(t.above.upgraded||0);t.above.spent=(t.above.spent||0)+unlockCost;
 t.spent+=unlockCost;
 if(cap===0){t.below.locked=false;t.below.level=1;t.below.cost=getCost('下',1);}
 }
 }
 }
-result=runWaterFill(techs,remaining,false);
+result=runWaterFill(techs,remaining,true);
 }
 
-var sim=result.sim;
-var html='';
-sim.forEach(function(s,si){
-var cls=(si%2===0)?'section-odd':'section-even';
-html+='<tr class="'+cls+'">'+
-'<td style="text-align:center;">'+(si+1)+'</td><td>'+esc(s.label)+'</td>'+
-'<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
-'<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
-'<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
-'<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
-});
-document.getElementById('resultBody').innerHTML=html;
-document.getElementById('resultBar').innerHTML='<span>已按选项'+(opt===1?'1（分散）':'2（专注）')+'分配</span><span>|</span><span>📊 消耗 <span class="hl">'+Math.round(g_budget-result.remaining).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(result.remaining).toLocaleString()+'</span></span>';
+// Update global state
+g_techs=result.techs;
+g_remaining=result.remaining;
+g_autoResults=result;
 
-lastSimResult=sim;
+// Show result - if another cap hit, re-render with options
+renderResultsWithOptions(result);
+lastSimResult=result.sim;
 }
 
 function renderResults(sim,budget,spent,remaining){
