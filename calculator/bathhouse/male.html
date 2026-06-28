@@ -285,6 +285,7 @@ var g_techs=null, g_budget=0, g_remaining=0, g_spent=0;
 var g_autoResults=null, g_option1Results=null, g_option2Results=null;
 
 function calculate(){
+try{
 var budget=parseInt(document.getElementById('budget').value)||0;
 if(budget<=0){toast('请输入可投入票据','err');return;}
 g_budget=budget;
@@ -320,6 +321,7 @@ g_remaining=result1.remaining;
 renderResultsWithOptions(result1);
 document.getElementById('applyBtnWrap').style.display='block';
 saveData();
+}catch(e){console.error(e);toast('计算错误: '+e.message,'err');}
 }
 
 function cloneTechs(src){return JSON.parse(JSON.stringify(src));}
@@ -518,7 +520,7 @@ async function init(){
 curUser=getUser();if(!curUser)return;
 if(!curUser.is_admin){alert('无权限访问');window.location.href='../../index.html';return;}
 document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
-loadOwnedTalents().then(function(){loadSavedData().then(function(saved){renderInputTable(saved);});});
+loadOwnedTalents().then(function(){loadSavedData().then(function(saved){try{renderInputTable(saved);}catch(e){document.getElementById('inputBody').innerHTML='<tr><td colspan="7" style="color:red;padding:20px;">渲染错误: '+e.message+'</td></tr>';console.error(e);}});}).catch(function(e){document.getElementById('inputBody').innerHTML='<tr><td colspan="7" style="color:red;padding:20px;">加载错误: '+e.message+'</td></tr>';});
 }
 init();
 </script>
