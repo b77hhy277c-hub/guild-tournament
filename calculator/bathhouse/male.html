@@ -446,8 +446,26 @@ var techs=cloneTechs(g_techs);
 var result;
 
 if(opt===1){
-// Option 1: continue water-fill BUT with stopOnCap so it stops at next cap
-result=runWaterFill(techs,remaining,true);
+// Option 1: allocate ALL remaining budget, skip capped items
+result=runWaterFill(techs,remaining,false);
+// Finalize: no more options
+g_techs=result.techs;g_remaining=result.remaining;g_autoResults=result;
+lastSimResult=result.sim;
+var html='';
+result.sim.forEach(function(s,si){
+var cls=(si%2===0)?'section-odd':'section-even';
+html+='<tr class="'+cls+'">'+
+'<td style="text-align:center;">'+(si+1)+'</td><td>'+esc(s.label)+'</td>'+
+'<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
+'<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
+'<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
+'<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
+});
+document.getElementById('resultBody').innerHTML=html;
+document.getElementById('resultBar').innerHTML='<span>已按选项1（分散）完成分配</span><span>|</span><span>📊 消耗 <span class="hl">'+Math.round(g_budget-result.remaining).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(result.remaining).toLocaleString()+'</span></span>';
+saveData();
+return;
+}
 }else{
 // Option 2: invest in above to uncap, then continue with stopOnCap
 var stoppedTech=g_autoResults.stoppedBy;
