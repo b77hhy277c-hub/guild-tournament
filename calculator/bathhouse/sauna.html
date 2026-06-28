@@ -461,7 +461,6 @@ document.getElementById('resultBody').innerHTML=html;
 document.getElementById('resultBar').innerHTML='<span>已按选项1（分散）完成分配</span><span>|</span><span>📊 消耗 <span class="hl">'+Math.round(g_budget-result.remaining).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(result.remaining).toLocaleString()+'</span></span>';
 saveData();
 return;
-}
 }else{
 // Option 2: invest in above to uncap, then continue with stopOnCap
 var stoppedTech=g_autoResults.stoppedBy;
