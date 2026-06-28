@@ -456,9 +456,11 @@ var cap=belowCap(t.above.level);
 var targetAbove=cap+100;
 var unlockCost=calcPathCost('上',t.above.level,targetAbove);
 if(unlockCost<=remaining){
+var oldAboveLevel=t.above.level;
 remaining-=unlockCost;
 t.above.level=targetAbove;t.above.cost=getCost('上',targetAbove);
-t.above.upgraded=(t.above.upgraded||0);t.above.spent=(t.above.spent||0)+unlockCost;
+t.above.upgraded=(t.above.upgraded||0)+(targetAbove-oldAboveLevel);
+t.above.spent=(t.above.spent||0)+unlockCost;
 t.spent+=unlockCost;
 if(cap===0){t.below.locked=false;t.below.level=1;t.below.cost=getCost('下',1);}
 }
