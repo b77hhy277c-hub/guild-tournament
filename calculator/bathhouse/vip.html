@@ -371,6 +371,21 @@ if(t.above.level>=100&&t.below.locked){t.below.locked=false;t.below.level=1;t.be
 t.below.upgraded=(t.below.upgraded||0)+1;t.below.spent=(t.below.spent||0)+best.cost;
 t.below.level++;t.below.cost=getCost('下',t.below.level);
 t.upgraded++;t.spent+=best.cost;
+// Post-upgrade: check if below just hit its cap
+if(stopOnCap){
+var cap=belowCap(t.above.level);
+if(t.below.level>=cap&&remaining>0){stoppedBy=t;break;}
+}
+}
+// Also check: any below already at cap with remaining budget → stop
+if(stopOnCap&&!stoppedBy&&remaining>0){
+techs.forEach(function(tech){
+if(!tech.below.locked&&tech.below.income>0){
+var cap=belowCap(tech.above.level);
+if(tech.below.level>=cap){stoppedBy=tech;}
+}
+});
+if(stoppedBy)break;
 }
 }
 
