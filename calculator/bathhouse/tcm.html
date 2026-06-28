@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>中医部</title>
+<title>男澡堂部</title>
 <style>
 :root{--bg:#fff;--bg2:#f5f5f7;--card:#fff;--hover:rgba(0,0,0,0.04);--text:#1d1d1f;--text2:#6e6e73;--text3:#aeaeb2;--accent:#007AFF;--accent-h:#0062d1;--border:#d2d2d7;--border-l:#e5e5ea;--shadow:0 4px 20px rgba(0,0,0,0.08);--r:12px;}
 @media(prefers-color-scheme:dark){:root{--bg:#000;--bg2:#1c1c1e;--card:#1c1c1e;--hover:rgba(255,255,255,0.08);--text:#f5f5f7;--text2:#8e8e93;--text3:#636366;--accent:#0A84FF;--accent-h:#409cff;--border:#38383a;--border-l:#2c2c2e;--shadow:0 1px 3px rgba(255,255,255,0.05);}}
@@ -59,7 +59,7 @@ input.num:focus{border-color:var(--accent);}
 
 <nav class="navbar">
 <a href="../bathhouse.html">← 返回澡堂</a>
-<span class="title">🪭 中医部</span>
+<span class="title">🚹 男澡堂部</span>
 <span class="user" id="navUser">--</span>
 </nav>
 
@@ -105,7 +105,7 @@ del:function(p){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'DELETE',headers
 var ABOVE_OFFSET=[0,10,20,20,30];
 function aboveCost(n){return 200+40*Math.floor(n/5)+ABOVE_OFFSET[n%5];}
 function belowCost(n){return n>=1?1040+40*(n-1):1040;}
-function getCost(side,level){return side==='上'?aboveCost(level):belowCost(level);}
+function getCost(side,level){return side==='能力'?aboveCost(level):belowCost(level);}
 
 var DEPT={
 name:'中医部',calcType:'bath_tcm',
@@ -120,7 +120,7 @@ techs:[
 {id:'18号',talents:['丽萍','小陈哥','强哥','聂小倩','武则天','聂风']},
 {id:'7号',talents:['赛车手','彪子','安塞腰鼓','林冲','牛魔王','福尔康']}
 ]};
-var SUB_ITEMS=['上','下'];
+var SUB_ITEMS=['能力','天赋'];
 
 var curUser=null,lastSimResult=null;
 
@@ -174,10 +174,10 @@ var cost=(parseInt(d.cost)>0)?parseInt(d.cost):getCost(side,level);
 html+='<tr class="'+cls+'">'+
 '<td style="text-align:center;">'+(ti+1)+'</td>'+
 (sbi===0?'<td style="font-weight:600;vertical-align:top;" rowspan="2">'+esc(tech.id)+' <span style="color:var(--accent);cursor:pointer;font-size:12px;" onclick="showTalentDetail(\''+esc(tech.id)+'\')" title="查看人才">ⓘ</span></td><td class="talent-count" style="vertical-align:top;" rowspan="2">'+countOwned(tech.talents)+'</td>':'')+
-'<td style="color:var(--text2);">'+(side==='上'?'上面项目':'下面项目')+'</td>'+
+'<td style="color:var(--text2);">'+(side==='能力'?'能力':'天赋')+'</td>'+
 '<td><input type="number" class="num level save-input" data-key="'+esc(key)+'" data-side="'+side+'" value="'+level+'" min="0" onchange="onLevelChange(this)" style="width:58px;"/></td>'+
 '<td style="text-align:center;font-weight:500;color:var(--text2);"><span class="cost-display" data-key="'+esc(key)+'">'+cost+'</span></td>'+
-'<td><input type="number" class="num income save-input" data-key="'+esc(key)+'" data-field="income" data-side="'+side+'" data-first="'+(ti===0&&side==='上'?'1':'0')+'" value="'+(d.income||0)+'" min="0" '+(ti===0||side==='下'?'':'readonly style="opacity:0.5;cursor:not-allowed;" ')+'onchange="'+(side==='上'?'onIncomeChange(this)':'saveData()')+'" onfocus="'+(side==='上'?'onIncomeChange(this)':'')+'"/></td>'+
+'<td><input type="number" class="num income save-input" data-key="'+esc(key)+'" data-field="income" data-side="'+side+'" data-first="'+(ti===0&&side==='能力'?'1':'0')+'" value="'+(d.income||0)+'" min="0" '+(ti===0||side==='天赋'?'':'readonly style="opacity:0.5;cursor:not-allowed;" ')+'onchange="'+(side==='能力'?'onIncomeChange(this)':'saveData()')+'" onfocus="'+(side==='能力'?'onIncomeChange(this)':'')+'"/></td>'+
 '</tr>';
 });
 });
@@ -202,7 +202,7 @@ DEPT.techs.forEach(function(tech,ti){
 if(ti===0)return;
 var tc=countOwned(tech.talents);
 var autoIncome=Math.round(firstIncome*tc/firstCount);
-var inp=document.querySelector('.income[data-key="'+esc(tech.id)+'|上"]');
+var inp=document.querySelector('.income[data-key="'+esc(tech.id)+'|能力"]');
 if(inp){inp.value=autoIncome;inp.dispatchEvent(new Event('change'));}
 });
 saveData();
@@ -285,6 +285,7 @@ var g_techs=null, g_budget=0, g_remaining=0, g_spent=0;
 var g_autoResults=null, g_option1Results=null, g_option2Results=null;
 
 function calculate(){
+try{
 var budget=parseInt(document.getElementById('budget').value)||0;
 if(budget<=0){toast('请输入可投入票据','err');return;}
 g_budget=budget;
@@ -292,7 +293,7 @@ g_budget=budget;
 // Build techs from DOM
 var techs=[];
 DEPT.techs.forEach(function(tech){
-var akey=tech.id+'|上',bkey=tech.id+'|下';
+var akey=tech.id+'|能力',bkey=tech.id+'|天赋';
 var aLevelEl=document.querySelector('.level[data-key="'+esc(akey)+'"]');
 var aIncomeEl=document.querySelector('.income[data-key="'+esc(akey)+'"]');
 var bIncomeEl=document.querySelector('.income[data-key="'+esc(bkey)+'"]');
@@ -300,11 +301,13 @@ var aLevel=parseInt(aLevelEl&&aLevelEl.value)||0;
 var aIncome=parseInt(aIncomeEl&&aIncomeEl.value)||0;
 var bIncome=parseInt(bIncomeEl&&bIncomeEl.value)||0;
 var belowLv=0; if(aLevel>=100){var bLevelEl=document.querySelector('.level[data-key="'+esc(bkey)+'"]');belowLv=parseInt(bLevelEl&&bLevelEl.value)||0;}
-var aCost=getCost('上',aLevel);
+var aCost=getCost('能力',aLevel);
 var cap=belowCap(aLevel);
 var belowLocked=aLevel<100;
-var bCost=belowLocked?0:(belowLv>0?getCost('下',belowLv):getCost('下',1));
-techs.push({id:tech.id,akey:akey,bkey:bkey,above:{level:aLevel,income:aIncome,cost:aCost},below:{level:belowLv,income:bIncome,cost:bCost,locked:belowLocked,cap:cap},upgraded:0,spent:0});
+var bCost=belowLocked?0:(belowLv>0?getCost('天赋',belowLv):getCost('天赋',1));
+var aOrigRatio=aIncome>0&&aCost>0?aIncome/aCost:0;
+var bOrigRatio=bIncome>0&&bCost>0?bIncome/bCost:0;
+techs.push({id:tech.id,akey:akey,bkey:bkey,above:{level:aLevel,income:aIncome,cost:aCost,origRatio:aOrigRatio},below:{level:belowLv,income:bIncome,cost:bCost,locked:belowLocked,cap:cap,origRatio:bOrigRatio},upgraded:0,spent:0});
 });
 g_techs=techs;
 
@@ -318,6 +321,7 @@ g_remaining=result1.remaining;
 renderResultsWithOptions(result1);
 document.getElementById('applyBtnWrap').style.display='block';
 saveData();
+}catch(e){console.error(e);toast('计算错误: '+e.message,'err');}
 }
 
 function cloneTechs(src){return JSON.parse(JSON.stringify(src));}
@@ -364,12 +368,12 @@ remaining-=best.cost;totalSpent+=best.cost;
 var t=best.tech;
 if(best.target==='above'){
 t.above.upgraded=(t.above.upgraded||0)+1;t.above.spent=(t.above.spent||0)+best.cost;
-t.above.level++;t.above.cost=getCost('上',t.above.level);
+t.above.level++;t.above.cost=getCost('能力',t.above.level);
 t.upgraded++;t.spent+=best.cost;
-if(t.above.level>=100&&t.below.locked){t.below.locked=false;t.below.level=1;t.below.cost=getCost('下',1);}
+if(t.above.level>=100&&t.below.locked){t.below.locked=false;t.below.level=1;t.below.cost=getCost('天赋',1);}
 }else{
 t.below.upgraded=(t.below.upgraded||0)+1;t.below.spent=(t.below.spent||0)+best.cost;
-t.below.level++;t.below.cost=getCost('下',t.below.level);
+t.below.level++;t.below.cost=getCost('天赋',t.below.level);
 t.upgraded++;t.spent+=best.cost;
 // Post-upgrade: check if below just hit its cap
 if(stopOnCap){
@@ -394,11 +398,11 @@ var sim=[];
 techs.forEach(function(tech){
 if(tech.above.income>0){
 var aUp=tech.above.upgraded||0,aSp=tech.above.spent||0;
-sim.push({label:tech.id+' 上',cost:tech.above.cost,income:tech.above.income,level:tech.above.level,ratio:tech.above.income/tech.above.cost,origRatio:tech.above.origRatio,upgraded:aUp,spent:aSp});
+sim.push({label:tech.id+' 能力',cost:tech.above.cost,income:tech.above.income,level:tech.above.level,ratio:tech.above.income/tech.above.cost,origRatio:tech.above.origRatio,upgraded:aUp,spent:aSp});
 }
 if(!tech.below.locked&&tech.below.income>0){
 var bUp=tech.below.upgraded||0,bSp=tech.below.spent||0;
-sim.push({label:tech.id+' 下',cost:tech.below.cost,income:tech.below.income,level:tech.below.level,ratio:tech.below.income/tech.below.cost,origRatio:tech.below.origRatio,upgraded:bUp,spent:bSp});
+sim.push({label:tech.id+' 天赋',cost:tech.below.cost,income:tech.below.income,level:tech.below.level,ratio:tech.below.income/tech.below.cost,origRatio:tech.below.origRatio,upgraded:bUp,spent:bSp});
 }
 });
 return{sim:sim,techs:techs,spent:totalSpent,remaining:remaining,stoppedBy:stoppedBy};
@@ -421,7 +425,7 @@ document.getElementById('resultBody').innerHTML=html;
 var barHtml='<span>💰 预算 <span class="hl">'+g_budget.toLocaleString()+'</span></span><span>|</span><span>📊 分配 <span class="hl">'+Math.round(spent).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span>';
 
 if(result.stoppedBy&&remaining>0){
-barHtml+='<div style="margin-top:8px;color:var(--danger);font-weight:500;">⚠️ '+result.stoppedBy.id+' 下项目已达上限，剩余 '+Math.round(remaining).toLocaleString()+' 票据</div>';
+barHtml+='<div style="margin-top:8px;color:var(--danger);font-weight:500;">⚠️ '+result.stoppedBy.id+' 天赋项目已达上限，剩余 '+Math.round(remaining).toLocaleString()+' 票据</div>';
 barHtml+='<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">';
 barHtml+='<button class="btn" onclick="applyOption(1)">📊 选项1：分散提升其余项目</button>';
 barHtml+='<button class="btn" style="background:#30d158;" onclick="applyOption(2)">🎯 选项2：专注提升优势项目（解锁上限）</button>';
@@ -469,15 +473,15 @@ var t=techs.find(function(x){return x.id===stoppedTech.id;});
 if(t){
 var cap=belowCap(t.above.level);
 var targetAbove=cap+100;
-var unlockCost=calcPathCost('上',t.above.level,targetAbove);
+var unlockCost=calcPathCost('能力',t.above.level,targetAbove);
 if(unlockCost<=remaining){
 var oldAboveLevel=t.above.level;
 remaining-=unlockCost;
-t.above.level=targetAbove;t.above.cost=getCost('上',targetAbove);
+t.above.level=targetAbove;t.above.cost=getCost('能力',targetAbove);
 t.above.upgraded=(t.above.upgraded||0)+(targetAbove-oldAboveLevel);
 t.above.spent=(t.above.spent||0)+unlockCost;
 t.spent+=unlockCost;
-if(cap===0){t.below.locked=false;t.below.level=1;t.below.cost=getCost('下',1);}
+if(cap===0){t.below.locked=false;t.below.level=1;t.below.cost=getCost('天赋',1);}
 }
 }
 }
@@ -533,204 +537,7 @@ async function init(){
 curUser=getUser();if(!curUser)return;
 if(!curUser.is_admin){alert('无权限访问');window.location.href='../../index.html';return;}
 document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
-
-function cloneTechs(src){return JSON.parse(JSON.stringify(src));}
-
-function runWaterFill(techs,budget,stopOnCap){
-var remaining=budget,totalSpent=0;
-var stoppedBy=null;
-
-while(remaining>0){
-// Collect all available items with their current ratios
-var items=[];
-techs.forEach(function(tech){
-// Above always available (if income>0)
-if(tech.above.income>0&&tech.above.cost>0){
-items.push({tech:tech,target:'above',cost:tech.above.cost,income:tech.above.income,ratio:tech.above.income/tech.above.cost});
-}
-// Below if unlocked and not at cap
-var cap=belowCap(tech.above.level);
-if(!tech.below.locked&&tech.below.income>0&&tech.below.cost>0){
-if(tech.below.level<cap){
-items.push({tech:tech,target:'below',cost:tech.below.cost,income:tech.below.income,ratio:tech.below.income/tech.below.cost});
-}
-}
-});
-if(items.length===0)break;
-
-// Sort by ratio desc
-items.sort(function(a,b){return b.ratio-a.ratio;});
-var best=items[0];
-if(best.cost>remaining)break;
-
-// Check if upgrading below would hit cap
-if(best.target==='below'&&stopOnCap){
-var t=best.tech;
-var cap=belowCap(t.above.level);
-if(t.below.level+1>cap){
-// This upgrade would exceed cap. STOP here.
-stoppedBy=t;
-break;
-}
-}
-
-remaining-=best.cost;totalSpent+=best.cost;
-var t=best.tech;
-if(best.target==='above'){
-t.above.upgraded=(t.above.upgraded||0)+1;t.above.spent=(t.above.spent||0)+best.cost;
-t.above.level++;t.above.cost=getCost('上',t.above.level);
-t.upgraded++;t.spent+=best.cost;
-if(t.above.level>=100&&t.below.locked){t.below.locked=false;t.below.level=1;t.below.cost=getCost('下',1);}
-}else{
-t.below.upgraded=(t.below.upgraded||0)+1;t.below.spent=(t.below.spent||0)+best.cost;
-t.below.level++;t.below.cost=getCost('下',t.below.level);
-t.upgraded++;t.spent+=best.cost;
-// Post-upgrade: check if below just hit its cap
-if(stopOnCap){
-var cap=belowCap(t.above.level);
-if(t.below.level>=cap&&remaining>0){stoppedBy=t;break;}
-}
-}
-// Also check: any below already at cap with remaining budget → stop
-if(stopOnCap&&!stoppedBy&&remaining>0){
-techs.forEach(function(tech){
-if(!tech.below.locked&&tech.below.income>0){
-var cap=belowCap(tech.above.level);
-if(tech.below.level>=cap){stoppedBy=tech;}
-}
-});
-if(stoppedBy)break;
-}
-}
-
-// Build sim output using stored origRatio
-var sim=[];
-techs.forEach(function(tech){
-if(tech.above.income>0){
-var aUp=tech.above.upgraded||0,aSp=tech.above.spent||0;
-sim.push({label:tech.id+' 上',cost:tech.above.cost,income:tech.above.income,level:tech.above.level,ratio:tech.above.income/tech.above.cost,origRatio:tech.above.origRatio,upgraded:aUp,spent:aSp});
-}
-if(!tech.below.locked&&tech.below.income>0){
-var bUp=tech.below.upgraded||0,bSp=tech.below.spent||0;
-sim.push({label:tech.id+' 下',cost:tech.below.cost,income:tech.below.income,level:tech.below.level,ratio:tech.below.income/tech.below.cost,origRatio:tech.below.origRatio,upgraded:bUp,spent:bSp});
-}
-});
-return{sim:sim,techs:techs,spent:totalSpent,remaining:remaining,stoppedBy:stoppedBy};
-}
-
-function renderResultsWithOptions(result){
-var sim=result.sim,spent=result.spent,remaining=result.remaining;
-var html='';
-sim.forEach(function(s,si){
-var cls=(si%2===0)?'section-odd':'section-even';
-html+='<tr class="'+cls+'">'+
-'<td style="text-align:center;">'+(si+1)+'</td><td>'+esc(s.label)+'</td>'+
-'<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
-'<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
-'<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
-'<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
-});
-document.getElementById('resultBody').innerHTML=html;
-
-var barHtml='<span>💰 预算 <span class="hl">'+g_budget.toLocaleString()+'</span></span><span>|</span><span>📊 分配 <span class="hl">'+Math.round(spent).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span>';
-
-if(result.stoppedBy&&remaining>0){
-barHtml+='<div style="margin-top:8px;color:var(--danger);font-weight:500;">⚠️ '+result.stoppedBy.id+' 下项目已达上限，剩余 '+Math.round(remaining).toLocaleString()+' 票据</div>';
-barHtml+='<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">';
-barHtml+='<button class="btn" onclick="applyOption(1)">📊 选项1：分散提升其余项目</button>';
-barHtml+='<button class="btn" style="background:#30d158;" onclick="applyOption(2)">🎯 选项2：专注提升优势项目（解锁上限）</button>';
-barHtml+='</div>';
-}
-
-document.getElementById('resultBar').innerHTML=barHtml;
-document.getElementById('resultCard').classList.add('show');
-
-lastSimResult=sim;
-}
-
-function applyOption(opt){
-var remaining=g_remaining;
-if(remaining<=0)return;
-
-var techs=cloneTechs(g_techs);
-var result;
-
-if(opt===1){
-// Option 1: continue water-fill BUT with stopOnCap so it stops at next cap
-result=runWaterFill(techs,remaining,true);
-}else{
-// Option 2: invest in above to uncap, then continue with stopOnCap
-var stoppedTech=g_autoResults.stoppedBy;
-if(stoppedTech){
-var t=techs.find(function(x){return x.id===stoppedTech.id;});
-if(t){
-var cap=belowCap(t.above.level);
-var targetAbove=cap+100;
-var unlockCost=calcPathCost('上',t.above.level,targetAbove);
-if(unlockCost<=remaining){
-var oldAboveLevel=t.above.level;
-remaining-=unlockCost;
-t.above.level=targetAbove;t.above.cost=getCost('上',targetAbove);
-t.above.upgraded=(t.above.upgraded||0)+(targetAbove-oldAboveLevel);
-t.above.spent=(t.above.spent||0)+unlockCost;
-t.spent+=unlockCost;
-if(cap===0){t.below.locked=false;t.below.level=1;t.below.cost=getCost('下',1);}
-}
-}
-}
-result=runWaterFill(techs,remaining,true);
-}
-
-// Update global state
-g_techs=result.techs;
-g_remaining=result.remaining;
-g_autoResults=result;
-
-// Show result - if another cap hit, re-render with options
-renderResultsWithOptions(result);
-lastSimResult=result.sim;
-}
-
-function renderResults(sim,budget,spent,remaining){
-var html='';
-sim.forEach(function(s,si){
-var cls=(si%2===0)?'section-odd':'section-even';
-html+='<tr class="'+cls+'">'+
-'<td style="text-align:center;">'+(si+1)+'</td>'+
-'<td>'+esc(s.label)+'</td>'+
-'<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
-'<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
-'<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
-'<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
-});
-document.getElementById('resultBody').innerHTML=html;
-document.getElementById('resultBar').innerHTML='<span>💰 预算 <span class="hl">'+budget.toLocaleString()+'</span></span><span>|</span><span>📊 分配 <span class="hl">'+Math.round(spent).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span>';
-document.getElementById('resultCard').classList.add('show');
-}
-
-function applyResults(){
-if(!lastSimResult||lastSimResult.length===0){toast('无方案可保存','err');return;}
-if(!confirm('请确认已按当前方案升级，保存后将自动更新表格中的等级。'))return;
-lastSimResult.forEach(function(s){
-var key=s.label.replace(' ','|');
-var levelEl=document.querySelector('.level[data-key="'+esc(key)+'"]');
-var costEl=document.querySelector('.cost[data-key="'+esc(key)+'"]');
-if(levelEl)levelEl.value=s.level;
-if(costEl)costEl.value=s.cost;
-});
-document.getElementById('budget').value='0';lastSimResult=null;
-document.getElementById('resultCard').classList.remove('show');
-document.getElementById('resultBody').innerHTML='';document.getElementById('resultBar').innerHTML='';
-document.getElementById('applyBtnWrap').style.display='none';
-localStorage.removeItem('calc_'+DEPT.calcType+'_sim');saveData();
-toast('✅ 已保存，票据已清零');
-}
-
-async function init(){
-curUser=getUser();if(!curUser)return;
-if(!curUser.is_admin){alert('无权限访问');window.location.href='../../index.html';return;}
-document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
-loadOwnedTalents().then(function(){loadSavedData().then(function(saved){renderInputTable(saved);});});
+loadOwnedTalents().then(function(){loadSavedData().then(function(saved){try{renderInputTable(saved);}catch(e){document.getElementById('inputBody').innerHTML='<tr><td colspan="7" style="color:red;padding:20px;">渲染错误: '+e.message+'</td></tr>';console.error(e);}});}).catch(function(e){document.getElementById('inputBody').innerHTML='<tr><td colspan="7" style="color:red;padding:20px;">加载错误: '+e.message+'</td></tr>';});
 }
 init();
 </script>
