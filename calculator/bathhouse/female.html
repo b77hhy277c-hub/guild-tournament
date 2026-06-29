@@ -538,12 +538,13 @@ function applyResults(){
 if(!lastSimResult||lastSimResult.length===0){toast('无方案可保存','err');return;}
 if(!confirm('请确认已按当前方案升级，保存后将自动更新表格中的等级。'))return;
 lastSimResult.forEach(function(s){
-var key=s.label.replace(' ','|');
-var levelEl=document.querySelector('.level[data-key="'+esc(key)+'"]');
-var costEl=document.querySelector('.cost[data-key="'+esc(key)+'"]');
-if(levelEl)levelEl.value=s.level;
-if(costEl)costEl.value=s.cost;
-});
+	var key=s.label.replace(' ','|');
+	var side=key.split('|')[1];
+	var levelEl=document.querySelector('.level[data-key="'+esc(key)+'"]');
+	var costSpan=document.querySelector('.cost-display[data-key="'+esc(key)+'"]');
+	if(levelEl)levelEl.value=s.level;
+	if(costSpan)costSpan.textContent=getCost(side,s.level);
+	});
 document.getElementById('budget').value='0';lastSimResult=null;
 document.getElementById('resultCard').classList.remove('show');
 document.getElementById('resultBody').innerHTML='';document.getElementById('resultBar').innerHTML='';
