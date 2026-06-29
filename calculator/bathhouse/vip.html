@@ -434,7 +434,7 @@ html+='<tr class="'+cls+'">'+
 });
 document.getElementById('resultBody').innerHTML=html;
 
-var barHtml='<span>💰 预算 <span class="hl">'+g_budget.toLocaleString()+'</span></span><span>|</span><span>📊 分配 <span class="hl">'+Math.round(spent).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span>';
+var barHtml='<span>💰 预算 <span class="hl">'+g_budget.toLocaleString()+'</span></span><span>|</span><span>📊 分配 <span class="hl">'+Math.round(g_budget-remaining).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span>';
 
 if(result.stoppedBy&&remaining>0){
 barHtml+='<div style="margin-top:8px;color:var(--danger);font-weight:500;">⚠️ '+result.stoppedBy.id+' 天赋项目已达上限，剩余 '+Math.round(remaining).toLocaleString()+' 票据</div>';
@@ -454,7 +454,7 @@ function applyOption(opt){
 var remaining=g_remaining;
 if(remaining<=0)return;
 
-var techs=cloneTechs(g_techs);
+var techs=cloneTechs(g_autoResults.techs);
 var result;
 
 if(opt===1){
@@ -523,7 +523,7 @@ html+='<tr class="'+cls+'">'+
 '<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
 document.getElementById('resultBody').innerHTML=html;
-document.getElementById('resultBar').innerHTML='<span>💰 预算 <span class="hl">'+budget.toLocaleString()+'</span></span><span>|</span><span>📊 分配 <span class="hl">'+Math.round(spent).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span>';
+document.getElementById('resultBar').innerHTML='<span>💰 预算 <span class="hl">'+budget.toLocaleString()+'</span></span><span>|</span><span>📊 分配 <span class="hl">'+Math.round(g_budget-remaining).toLocaleString()+'</span></span><span>|</span><span>📦 剩余 <span class="hl">'+Math.round(remaining).toLocaleString()+'</span></span>';
 document.getElementById('resultCard').classList.add('show');
 }
 
