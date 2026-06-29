@@ -57,13 +57,6 @@ input.num:focus{border-color:var(--accent);}
 .toggle-slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s;}
 .toggle-switch input:checked+.toggle-slider{background:var(--accent);}
 .toggle-switch input:checked+.toggle-slider:before{transform:translateX(16px);}
-.toggle-wrap{display:flex;align-items:center;gap:6px;margin-top:6px;}
-.toggle-switch{position:relative;display:inline-block;width:38px;height:22px;flex-shrink:0;}
-.toggle-switch input{opacity:0;width:0;height:0;}
-.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:0.3s;}
-.toggle-slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s;}
-.toggle-switch input:checked+.toggle-slider{background:var(--accent);}
-.toggle-switch input:checked+.toggle-slider:before{transform:translateX(16px);}
 </style>
 </head>
 <body>
@@ -124,7 +117,16 @@ function getCost(side,level){return side==='能力'?aboveCost(level):belowCost(l
 var DEPT={
 name:'女澡堂部',calcType:'bath_female',
 techs:[
-{id:'1号',talents:['丽萍','彪子','多情浪子','曾守信','步惊云']},
+	{id:'12号',talents:['张冰棍','唐志强','强哥','渔三哥','牛魔王','聂风']},
+	{id:'16号',talents:['赵阿棉','火炬手','林冲','何律师','书文','乾隆']},
+	{id:'20号',talents:['李书虫','菜雕师','宋江','安塞腰鼓','武则天','永琪']},
+	{id:'21号',talents:['电工陈','渔三哥','高启强','一代大侠','阿舟','夏紫薇','青丘神女']},
+	{id:'22号',talents:['肖卫平','何律师','主持人','大小说家','金蝉子','步惊云']},
+	{id:'26号',talents:['非主流','安塞腰鼓','紫霞仙子','高启强','孙悟空']},
+	{id:'28号',talents:['街机高手','一代大侠','红衣教主','主持人','国际巨星','永琪']},
+	{id:'29号',talents:['张冰棍','火炬手','黄飞鸿','紫霞仙子','国民男神','牛魔王']},
+	{id:'88号',talents:['肖卫平','唐志强','刚毅','鲁智深','阿星','夏紫薇']}
+	]},
 {id:'2号',talents:['赵阿棉','小陈哥','黄飞鸿','倪冬梅','陈医生','青丘神女']},
 {id:'6号',talents:['张大力','迈克周','鲁智深','郑经理','阿星','小燕子']},
 {id:'9号',talents:['白铁匠','曾守信','武松','刚毅','孙悟空','福尔康']},
