@@ -83,7 +83,7 @@ input.num:focus{border-color:var(--accent);}
 
 <div class="main">
 <div class="top-bar">
-<label>可投入票据（万）：</label>
+<label>可投入票据：</label>
 <input type="number" id="budget" value="0" min="0" onchange="saveData()"/>
 <button class="btn" onclick="calculate()">📊 计算最优点法</button>
 <button class="btn" style="background:var(--bg);color:var(--text);border:1px solid var(--border);" onclick="resetAll()">🔄 一键重填</button>
@@ -92,7 +92,7 @@ input.num:focus{border-color:var(--accent);}
 <div class="card"><div style="overflow-x:auto;">
 <table><thead><tr>
 <th style="width:28px;">#</th><th style="width:50px;">编号</th><th style="width:44px;">人才</th><th style="width:60px;">项目</th>
-<th style="width:64px;">等级</th><th style="width:84px;">消耗（万）</th><th style="width:84px;">收入提升</th>
+<th style="width:64px;">等级</th><th style="width:84px;">消耗</th><th style="width:84px;">收入提升</th>
 </tr></thead><tbody id="inputBody"></tbody></table>
 </div></div>
 
