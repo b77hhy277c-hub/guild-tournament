@@ -63,6 +63,7 @@ input.num:focus{border-color:var(--accent);}
 .num-stepper .step-btn:first-child{border-radius:6px 0 0 6px;border-right:none;}
 .num-stepper .step-btn:last-child{border-radius:0 6px 6px 0;border-left:none;}
 .num-stepper .step-btn:active{background:var(--hover);}
+.num-stepper:has(input[readonly]) .step-btn{opacity:0.3;pointer-events:none;}
 .num-stepper input.num{border-radius:0;text-align:center;margin:0;}
 .num-stepper input[type=number]::-webkit-outer-spin-button,
 .num-stepper input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
@@ -583,6 +584,7 @@ document.addEventListener('click',function(e){
 	if(!e.target.classList.contains('step-btn'))return;
 	var input=e.target.parentElement.querySelector('input.num');
 	if(!input)return;
+	if(input.readOnly)return;
 	var val=parseInt(input.value)||0;
 	var step=e.target.classList.contains('step-up')?1:-1;
 	input.value=Math.max(0,val+step);
