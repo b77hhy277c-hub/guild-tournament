@@ -49,6 +49,18 @@ input.num:focus{border-color:var(--accent);}
 .modal .talents .owned{color:#30d158;font-weight:600;}
 .modal .talents .unowned{color:var(--text3);}
 @media(max-width:768px){.main{padding:12px 8px;}.top-bar{flex-direction:column;align-items:stretch;gap:8px;}.top-bar input{width:100%;}.top-bar .btn{width:100%;padding:12px;}th,td{padding:6px 4px;font-size:11px;}input.num{font-size:12px;padding:4px;text-align:center;width:60px;}.card .usage-note{padding:12px 14px;font-size:12px;}.result-bar{flex-direction:column;align-items:flex-start;gap:4px;font-size:13px;}table{table-layout:auto;}}
+
+.num-stepper{display:inline-flex;align-items:center;}
+.num-stepper .step-btn{width:28px;height:28px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;user-select:none;-webkit-user-select:none;border-radius:0;flex-shrink:0;}
+.num-stepper .step-btn:first-child{border-radius:6px 0 0 6px;border-right:none;}
+.num-stepper .step-btn:last-child{border-radius:0 6px 6px 0;border-left:none;}
+.num-stepper .step-btn:active{background:var(--hover);}
+.num-stepper:has(input[readonly]) .step-btn{opacity:0.3;pointer-events:none;}
+.num-stepper input.num{border-radius:0;text-align:center;margin:0;}
+.num-stepper input[type=number]::-webkit-outer-spin-button,
+.num-stepper input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.num-stepper input[type=number]{-moz-appearance:textfield;}
+
 </style>
 </head>
 <body>
@@ -229,6 +241,7 @@ document.getElementById('resultBar').innerHTML=saved._resultBar||'';
 document.getElementById('resultCard').classList.add('show');
 document.getElementById('applyBtnWrap').style.display='block';
 }
+  initSteppers();
 }
 
 function onIncomeChange(el){
@@ -351,7 +364,7 @@ while(remaining>0){sim.sort(function(a,b){return b.ratio-a.ratio;});var best=sim
 lastSimResult=sim;
 try{var simSave=sim.map(function(s){return{section:s.section,sub:s.sub,cost:Math.round(s.cost),level:s.level,income:s.income,upgraded:s.upgraded,spent:Math.round(s.spent)};});localStorage.setItem('calc_'+CALC_TYPE+'_sim',JSON.stringify(simSave));}catch(e){}
 renderResults(sim,budget,totalSpent,remaining);
-document.getElementById('applyBtnWrap').style.display='block';saveData();
+document.getElementById('applyBtnWrap').style.display='block';initSteppers();saveData();
 }
 
 function renderResults(sim,budget,spent,remaining){
@@ -390,6 +403,37 @@ document.getElementById('applyBtnWrap').style.display='none';
 localStorage.removeItem('calc_'+CALC_TYPE+'_sim');saveData();
 toast('✅ 已保存，粮票已清零');
 }
+
+
+function initSteppers(){
+	document.querySelectorAll('input.num').forEach(function(input){
+		if(input.readOnly)return;
+		if(input.parentElement.classList.contains('num-stepper'))return;
+		var wrap=document.createElement('span');wrap.className='num-stepper';
+		var btnD=document.createElement('button');btnD.className='step-btn step-down';btnD.type='button';btnD.textContent='\u2212';
+		var btnU=document.createElement('button');btnU.className='step-btn step-up';btnU.type='button';btnU.textContent='+';
+		input.parentNode.insertBefore(wrap,input);
+		wrap.appendChild(btnD);wrap.appendChild(input);wrap.appendChild(btnU);
+	});
+	var budget=document.getElementById('budget');
+	if(budget&&!budget.parentElement.classList.contains('num-stepper')){
+		var wrap=document.createElement('span');wrap.className='num-stepper';
+		var btnD=document.createElement('button');btnD.className='step-btn step-down';btnD.type='button';btnD.textContent='\u2212';
+		var btnU=document.createElement('button');btnU.className='step-btn step-up';btnU.type='button';btnU.textContent='+';
+		budget.parentNode.insertBefore(wrap,budget);
+		wrap.appendChild(btnD);wrap.appendChild(budget);wrap.appendChild(btnU);
+	}
+}
+document.addEventListener('click',function(e){
+	if(!e.target.classList.contains('step-btn'))return;
+	var input=e.target.parentElement.querySelector('input.num');
+	if(!input)return;
+	if(input.readOnly)return;
+	var val=parseInt(input.value)||0;
+	var step=e.target.classList.contains('step-up')?1:-1;
+	input.value=Math.max(0,val+step);
+	input.dispatchEvent(new Event('change',{bubbles:true}));
+});
 
 async function init(){
 curUser=getUser();if(!curUser)return;
