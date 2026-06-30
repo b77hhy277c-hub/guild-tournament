@@ -455,10 +455,8 @@
       updateSidebar(currentUser);
       loadPositions();
       loadSideBiz();
-      // 蘑菇的计算器（仅超级管理员可见）
-      if(currentUser.is_admin){
-        document.getElementById('cardCalculator').style.display='block';
-      }
+      // 蘑菇的计算器（全员可见-测试中）
+      document.getElementById('cardCalculator').style.display='block';
       // 访问记录入口（仅超级管理员/副会长）
       if(currentUser.is_admin || currentUser.position==='副会长') {
         document.getElementById('cardVisits').style.display='block';
