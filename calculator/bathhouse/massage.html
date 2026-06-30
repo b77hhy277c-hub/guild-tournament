@@ -209,9 +209,9 @@ document.getElementById('resultBody').innerHTML=saved._resultHTML;
 document.getElementById('resultBar').innerHTML=saved._resultBar||'';
 document.getElementById('resultCard').classList.add('show');
 document.getElementById('applyBtnWrap').style.display='block';
+}
+}
 	initSteppers();
-}
-}
 
 
 function onIncomeChange(el){
@@ -346,7 +346,6 @@ g_remaining=result1.remaining;
 // Show with options
 renderResultsWithOptions(result1);
 document.getElementById('applyBtnWrap').style.display='block';
-	initSteppers();
 saveData();
 }catch(e){console.error(e);toast('计算错误: '+e.message,'err');}
 }
