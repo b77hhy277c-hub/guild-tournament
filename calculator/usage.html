@@ -114,7 +114,7 @@ async function loadData(){
 
 async function init(){
   curUser=getUser();if(!curUser)return;
-  if(!curUser.is_admin){alert('无权限访问');window.location.href='../calculator.html';return;}
+  // admin check removed for testing - all members have access
   document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
   await loadData();
 }

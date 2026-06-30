@@ -478,7 +478,7 @@ document.addEventListener('click',function(e){
 
 async function init(){
   curUser=getUser();if(!curUser)return;
-  if(!curUser.is_admin){alert('无权限访问');window.location.href='../index.html';return;}
+  // admin check removed for testing - all members have access
   document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
   loadOwnedArtists().then(function(){ buildInputTable(); });
 }
