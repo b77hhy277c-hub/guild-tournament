@@ -194,7 +194,7 @@ var level=parseInt(d.level)||0;
 var cost=(parseInt(d.cost)>0)?parseInt(d.cost):getCost(side,level);
 html+='<tr class="'+cls+'">'+
 '<td style="text-align:center;">'+(ti+1)+'</td>'+
-(sbi===0?'<td style="font-weight:600;vertical-align:top;" rowspan="2">'+esc(tech.id)+' <span style="color:var(--accent);cursor:pointer;font-size:12px;" onclick="showTalentDetail(\''+esc(tech.id)+'\')" title="查看人才">ⓘ</span>'+(ti===DEPT.techs.length-1?'<div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" class="last-tech-toggle" '+(saved&&saved._lastLocked===false?'checked':'')+' onchange="saveData()"/><span class="toggle-slider"></span></label><span style="font-size:11px;color:var(--text2);">参与</span></div>':'')+'</td><td class="talent-count" style="vertical-align:top;" rowspan="2">'+countOwned(tech.talents)+'</td>':'')+
+(sbi===0?'<td style="font-weight:600;vertical-align:top;" rowspan="2">'+esc(tech.id)+' <span style="color:var(--accent);cursor:pointer;font-size:12px;" onclick="showTalentDetail(\''+esc(tech.id)+'\')" title="查看人才">ⓘ</span>'+'<div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" class="tech-toggle" data-tech="'+esc(tech.id)+'" '+((saved&&saved._locked&&saved._locked[tech.id]===false)?'checked':'')+' onchange="saveData()"/><span class="toggle-slider"></span></label><span style="font-size:11px;color:var(--text2);">参与</span></div>'+'</td><td class="talent-count" style="vertical-align:top;" rowspan="2">'+countOwned(tech.talents)+'</td>':'')+
 '<td style="color:var(--text2);">'+(side==='能力'?'能力':'天赋')+'</td>'+
 '<td><input type="number" class="num level save-input" data-key="'+esc(key)+'" data-side="'+side+'" value="'+level+'" min="0" onchange="onLevelChange(this)" style="width:58px;"/></td>'+
 '<td style="text-align:center;font-weight:500;color:var(--text2);"><span class="cost-display" data-key="'+esc(key)+'">'+cost+'</span></td>'+
@@ -252,7 +252,7 @@ var key=el.dataset.key,f=el.dataset.field;
 if(f){if(!data[key])data[key]={};data[key][f]=parseInt(el.value)||0;}
 else {if(!data[key])data[key]={};data[key].level=parseInt(el.value)||0;}
 });
-var lt=document.querySelector('.last-tech-toggle');if(lt)data._lastLocked=!lt.checked;
+data._locked={};document.querySelectorAll('.tech-toggle').forEach(function(tg){data._locked[tg.dataset.tech]=!tg.checked;});
 	data._budget=document.getElementById('budget').value;
 var rb=document.getElementById('resultBody'),rr=document.getElementById('resultBar');
 if(rb.innerHTML&&document.getElementById('resultCard').classList.contains('show')){data._resultHTML=rb.innerHTML;data._resultBar=rr.innerHTML;}
@@ -269,7 +269,7 @@ API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.'+DEPT.c
 localStorage.removeItem('calc_'+DEPT.calcType+'_sim');
 document.getElementById('budget').value='0';
 document.querySelectorAll('.save-input').forEach(function(el){el.value='0';});
-	var lt=document.querySelector('.last-tech-toggle');if(lt)lt.checked=false;
+	document.querySelectorAll('.tech-toggle').forEach(function(t){t.checked=false;});
 document.getElementById('resultCard').classList.remove('show');
 document.getElementById('resultBody').innerHTML='';document.getElementById('resultBar').innerHTML='';
 document.getElementById('applyBtnWrap').style.display='none';lastSimResult=null;toast('已清空');
@@ -335,8 +335,8 @@ techs.push({id:tech.id,akey:akey,bkey:bkey,above:{level:aLevel,income:aIncome,co
 });
 g_techs=techs;
 	
-	// Check last tech toggle - if OFF, lock entire last tech
-	var lastToggle=document.querySelector('.last-tech-toggle');if(lastToggle&&!lastToggle.checked){var li=techs.length-1;techs[li].above.locked=true;techs[li].below.locked=true;}
+	// Check tech toggles - if OFF, lock that tech
+	document.querySelectorAll('.tech-toggle').forEach(function(tg){if(!tg.checked){var tid=tg.dataset.tech;var t=techs.find(function(x){return x.id===tid;});if(t){t.above.locked=true;t.below.locked=true;}}});
 
 // Phase 1: water-fill with caps
 var result1=runWaterFill(JSON.parse(JSON.stringify(techs)),budget,true);
