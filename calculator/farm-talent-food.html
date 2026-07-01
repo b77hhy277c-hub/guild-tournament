@@ -13,7 +13,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
 .navbar a{color:var(--accent);text-decoration:none;font-size:14px;}
 .navbar .title{font-size:16px;font-weight:600;}
 .navbar .user{font-size:13px;color:var(--text2);}
-.main{max-width:1100px;margin:0 auto;padding:24px;}
+.main{max-width:1200px;margin:0 auto;padding:24px;}
 .top-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:16px 20px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border-l);}
 .top-bar label{font-weight:500;}
 .top-bar input{width:130px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;}
@@ -21,8 +21,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
 .btn{padding:8px 22px;border-radius:8px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;border:none;background:var(--accent);color:#fff;transition:background 0.2s;}
 .btn:hover{background:var(--accent-h);}
 .card{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px;}
-table{width:100%;border-collapse:collapse;table-layout:fixed;}
-th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--border-l);font-size:13px;overflow:hidden;text-overflow:ellipsis;}
+table{width:100%;border-collapse:collapse;table-layout:auto;}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--border-l);font-size:13px;}
 th{font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);white-space:nowrap;}
 td{vertical-align:middle;}
 tr:hover td{background:var(--hover);}
@@ -94,7 +94,7 @@ input.num:focus{border-color:var(--accent);}
 <div class="card"><div style="overflow-x:auto;">
 <table><thead><tr>
 <th style="width:28px;">#</th><th style="width:72px;">栏目</th><th>项目</th><th style="width:48px;">人才</th>
-<th style="width:64px;">等级</th><th style="width:80px;">消耗（万）</th><th style="width:80px;">收入提升</th>
+<th style="width:90px;">等级</th><th style="width:110px;">消耗</th><th style="width:110px;">收入提升</th>
 </tr></thead><tbody id="inputBody"></tbody></table>
 </div></div>
 
