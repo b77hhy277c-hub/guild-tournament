@@ -133,7 +133,8 @@ async function loadFarmProjects(){
   } catch(e) { console.error(e); }
 }
 
-var allTalents = [];      // All available talent/artist names
+var allTalents = {};      // { '人才': { '农': ['name1',...], '商': [...] }, '艺人': {...} }
+var talentByL1L2 = {};    // flat map: name → { l1: '人才', l2: '农' }
 var assignments = {};     // { project_id: { talent_name: true } }
 var currentCalc = null;
 var changed = false;
@@ -146,21 +147,28 @@ function toast(m,t){
 async function loadAllTalents(){
   try {
     var cats = await API.get('task_categories?select=id,name,parent_id&order=sort_order.asc');
-    // Find L1: 人才 or 艺人
+    // Find L1: 人才 and 艺人
     var talentL1 = cats.find(function(c){return !c.parent_id && c.name==='人才';});
     var artistL1 = cats.find(function(c){return !c.parent_id && c.name==='艺人';});
 
-    var l1Ids = [];
-    if(talentL1) l1Ids.push(talentL1.id);
-    if(artistL1) l1Ids.push(artistL1.id);
+    allTalents = {};
 
-    // Get L2 categories under 人才/艺人
-    var l2s = cats.filter(function(c){return l1Ids.indexOf(c.parent_id)>=0;});
-    var l2Ids = l2s.map(function(c){return c.id;});
-
-    // Get all L3 talent names
-    allTalents = cats.filter(function(c){return l2Ids.indexOf(c.parent_id)>=0;}).map(function(c){return c.name;});
-    allTalents.sort();
+    [talentL1, artistL1].forEach(function(l1){
+      if(!l1) return;
+      allTalents[l1.name] = {};
+      // Find L2 children
+      var l2s = cats.filter(function(c){return c.parent_id===l1.id;});
+      l2s.forEach(function(l2){
+        allTalents[l1.name][l2.name] = [];
+        // Find L3 children
+        var l3s = cats.filter(function(c){return c.parent_id===l2.id;});
+        l3s.forEach(function(l3){
+          allTalents[l1.name][l2.name].push(l3.name);
+          talentByL1L2[l3.name] = { l1: l1.name, l2: l2.name };
+        });
+        allTalents[l1.name][l2.name].sort();
+      });
+    });
   } catch(e) {
     console.error(e);
     toast('加载人才列表失败','err');
@@ -202,13 +210,46 @@ function renderProjects(){
     html += '<div class="project-body'+bodyClass+'">';
     html += '<div class="talent-grid" data-pid="'+esc(pid)+'">';
 
-    allTalents.forEach(function(t){
-      var checked = assigned[t] ? ' checked' : '';
-      html += '<label class="talent-item'+checked+'" onclick="toggleTalent(this)">';
-      html += '<input type="checkbox" '+(checked?'checked':'')+'/>';
-      html += esc(t);
-      html += '</label>';
+    // Render talents grouped by L1 → L2
+    Object.keys(allTalents).sort().forEach(function(l1Name){
+      var l2Groups = allTalents[l1Name];
+      var l1HasAny = false;
+      var l1Html = '';
+      Object.keys(l2Groups).sort().forEach(function(l2Name){
+        var names = l2Groups[l2Name];
+        var l2HasAny = false;
+        var l2Html = '<div style="font-size:12px;color:var(--text2);margin:4px 0 2px;font-weight:600;">'+esc(l2Name)+'</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
+        names.forEach(function(t){
+          if(talentByL1L2[t] && talentByL1L2[t].l1 === l1Name){
+            var checked = assigned[t] ? ' checked' : '';
+            l2Html += '<label class="talent-item'+checked+'" onclick="toggleTalent(this)">';
+            l2Html += '<input type="checkbox" '+(checked?'checked':'')+'/>';
+            l2Html += esc(t);
+            l2Html += '</label>';
+            l2HasAny = true;
+          }
+        });
+        l2Html += '</div>';
+        if(l2HasAny) { l1Html += l2Html; l1HasAny = true; }
+      });
+      if(l1HasAny){
+        html += '<div style="width:100%;margin-bottom:8px;"><div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid var(--border-l);">'+esc(l1Name)+'</div>'+l1Html+'</div>';
+      }
     });
+
+    // Uncategorized talents (not in tournament DB)
+    var uncat = [];
+    Object.keys(assigned).forEach(function(t){
+      if(!talentByL1L2[t]) uncat.push(t);
+    });
+    if(uncat.length > 0){
+      html += '<div style="width:100%;margin-bottom:8px;"><div style="font-size:13px;font-weight:700;color:var(--danger);margin-bottom:4px;">未归类</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
+      uncat.forEach(function(t){
+        html += '<label class="talent-item checked" onclick="toggleTalent(this)">';
+        html += '<input type="checkbox" checked/>'+esc(t)+'</label>';
+      });
+      html += '</div></div>';
+    }
 
     html += '</div></div></div>';
   });
@@ -224,13 +265,11 @@ function toggleProject(header){
 }
 
 function toggleTalent(item){
-  item.classList.toggle('checked');
   var cb = item.querySelector('input');
   cb.checked = !cb.checked;
   item.classList.toggle('checked', cb.checked);
 
-  // Update assignments in-memory
-  var pid = item.parentElement.dataset.pid;
+  var pid = item.closest('.talent-grid').dataset.pid;
   var name = item.textContent.trim();
 
   if(!assignments[pid]) assignments[pid] = {};
@@ -240,7 +279,6 @@ function toggleTalent(item){
     delete assignments[pid][name];
   }
 
-  // Update count
   var count = Object.keys(assignments[pid]||{}).length;
   var header = item.closest('.project-card').querySelector('.count');
   if(header) header.textContent = '已选 '+count+' 人';

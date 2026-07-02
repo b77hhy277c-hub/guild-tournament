@@ -156,6 +156,18 @@ var CALC_TYPE='farm_talent_meat';
 
 function countOwned(list){var c=0;list.forEach(function(a){if(ownedTalents[a])c++;});return c;}
 
+async function loadProjectTalents(){
+try{
+var rows=await API.get('calculator_project_talents?calculator_type=eq.'+CALC_TYPE+'&select=project_id,talent_name&order=sort_order.asc');
+var map={};
+rows.forEach(function(r){
+if(!map[r.project_id])map[r.project_id]=[];
+map[r.project_id].push(r.talent_name);
+});
+SECTIONS.forEach(function(sec){if(map[sec.name])sec.talents=map[sec.name];});
+}catch(e){console.error(e);}
+}
+
 async function loadOwnedTalents(){
 try{
 document.getElementById('loadStatus').textContent='加载中...';
