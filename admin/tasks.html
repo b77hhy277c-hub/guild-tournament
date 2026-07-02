@@ -374,14 +374,8 @@ function openAdd(parentId, parentName){
   // Also check: if parent has no sub-categories but has tasks, it might be an L3 that hosts tasks
   var subCats = getChildren(parentId);
   if(parent && subCats.length===0 && parent.level >= 3){
-    // This is a leaf category → add task definition
+    // This is a leaf category (L3+) → add task definition
     modalIsTask = true;
-  } else if(parent && subCats.length===0 && parent.level === 2){
-    // L2 with no sub-cats (守护神/其他) → add task definition
-    var l1 = cats.find(function(c){ return c.id===parent.parent_id; });
-    if(l1 && (l1.name==='守护神'||l1.name==='其他')){
-      modalIsTask = true;
-    }
   }
 
   if(modalIsTask){
