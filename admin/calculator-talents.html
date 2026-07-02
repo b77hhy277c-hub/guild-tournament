@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>计算器项目管理</title>
+<style>
+:root{--bg:#fff;--bg2:#f5f5f7;--card:#fff;--hover:rgba(0,0,0,0.04);--text:#1d1d1f;--text2:#6e6e73;--text3:#aeaeb2;--accent:#007AFF;--accent-h:#0062d1;--border:#d2d2d7;--border-l:#e5e5ea;--shadow:0 4px 20px rgba(0,0,0,0.08);--r:12px;--danger:#ff3b30;}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--bg2:#1c1c1e;--card:#1c1c1e;--hover:rgba(255,255,255,0.08);--text:#f5f5f7;--text2:#8e8e93;--text3:#636366;--accent:#0A84FF;--accent-h:#409cff;--border:#38383a;--border-l:#2c2c2e;--shadow:0 1px 3px rgba(255,255,255,0.05);}}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;font-size:14px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;}
+.navbar{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 20px;border-bottom:1px solid var(--border-l);position:sticky;top:0;background:var(--bg);z-index:10;}
+.navbar a{color:var(--accent);text-decoration:none;font-size:14px;}
+.navbar .title{font-size:16px;font-weight:600;}
+.main{max-width:900px;margin:0 auto;padding:24px;}
+.top-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
+.top-bar select{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg);color:var(--text);min-width:200px;}
+.top-bar select:focus{border-color:var(--accent);outline:none;}
+.btn{padding:8px 22px;border-radius:8px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;border:none;background:var(--accent);color:#fff;transition:background 0.2s;}
+.btn:hover{background:var(--accent-h);}
+.btn.ghost{background:var(--bg);color:var(--text);border:1px solid var(--border);}
+
+.project-card{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);margin-bottom:12px;overflow:hidden;}
+.project-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg2);cursor:pointer;user-select:none;}
+.project-header:hover{background:var(--hover);}
+.project-header .name{font-weight:600;font-size:15px;}
+.project-header .count{font-size:13px;color:var(--text2);}
+.project-header .arrow{transition:transform 0.2s;font-size:12px;color:var(--text2);}
+.project-header.open .arrow{transform:rotate(90deg);}
+.project-body{display:none;padding:12px 16px;border-top:1px solid var(--border-l);}
+.project-body.show{display:block;}
+.talent-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.talent-item{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--border-l);border-radius:8px;cursor:pointer;font-size:13px;transition:all 0.15s;user-select:none;}
+.talent-item:hover{border-color:var(--accent);}
+.talent-item.checked{background:var(--accent);color:#fff;border-color:var(--accent);}
+.talent-item input{display:none;}
+
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;font-size:14px;font-weight:500;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.3s;box-shadow:var(--shadow);}
+.toast.show{opacity:1;}
+.toast.ok{background:#30d158;color:#fff;}
+.toast.err{background:#ff3b30;color:#fff;}
+
+.empty-state{text-align:center;padding:40px;color:var(--text3);}
+.loading{text-align:center;padding:20px;color:var(--text2);}
+
+@media(max-width:768px){.main{padding:12px 8px;}.top-bar{flex-direction:column;align-items:stretch;}.talent-grid{gap:6px;}.talent-item{padding:8px 10px;font-size:14px;}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<nav class="navbar">
+<a href="../admin.html">← 返回管理</a>
+<span class="title">计算器项目管理</span>
+</nav>
+
+<div class="main">
+<div class="top-bar">
+  <select id="calcSelect" onchange="onCalcChange()">
+    <option value="">-- 选择计算器 --</option>
+    <optgroup label="澡堂">
+      <option value="bath_female">🚺 女澡堂部</option>
+      <option value="bath_male">🚹 男澡堂部</option>
+      <option value="bath_massage">💆 按摩部</option>
+      <option value="bath_sauna">🧖 桑拿部</option>
+      <option value="bath_tcm">🏥 中医部</option>
+      <option value="bath_vip">👑 贵宾部</option>
+    </optgroup>
+    <optgroup label="农田">
+      <option value="farm_talent_food">🌾 人才锻炼-粮票</option>
+      <option value="farm_talent_meat">🥩 人才锻炼-肉票</option>
+      <option value="farm_artist">🎨 艺人锻炼</option>
+    </optgroup>
+  </select>
+  <button class="btn" onclick="saveAll()" id="btnSave" disabled>💾 保存</button>
+  <span id="saveStatus" style="font-size:13px;color:var(--text2);"></span>
+</div>
+
+<div id="content"><div class="empty-state">请选择计算器类型</div></div>
+</div>
+
+<script>
+var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API={
+  h:function(ct){var hd={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};if(ct)hd['Content-Type']='application/json';return hd;},
+  get:function(p){return fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.json();});},
+  post:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'Prefer':'return=representation'},this.h(1)),body:JSON.stringify(b)}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.json();});},
+  del:function(p){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'DELETE',headers:this.h(1)}).then(function(r){if(!r.ok)throw Error(r.statusText);});}
+};
+
+// Calculator config (project IDs)
+var CALC_CONFIG = {
+  bath_female:       {name:'女澡堂部',     projects:['12号','16号','20号','21号','22号','26号','28号','29号','88号']},
+  bath_male:         {name:'男澡堂部',     projects:['1号','2号','6号','9号','8号','12号','16号','18号','7号']},
+  bath_massage:      {name:'按摩部',       projects:['41号','40号','43号','42号','46号','48号','45号','140号','142号','47号','146号']},
+  bath_sauna:        {name:'桑拿部',       projects:['30号','31号','32号','36号','38号','130号','132号','136号','138号']},
+  bath_tcm:          {name:'中医部',       projects:['53号','55号','50号','52号','56号','58号','59号','158号']},
+  bath_vip:          {name:'贵宾部',       projects:['668号','666号','688号','808号','818号','828号','868号','888号']},
+  farm_talent_food:  {name:'人才锻炼-粮票', projects:[]},
+  farm_talent_meat:  {name:'人才锻炼-肉票', projects:[]},
+  farm_artist:       {name:'艺人锻炼',     projects:[]},
+};
+
+// Load farm section names from HTML files
+async function loadFarmProjects(){
+  // These are hardcoded in the HTML SECTIONS arrays. Load them dynamically.
+  // For now, parse from the existing HTML
+  try {
+    var resp = await fetch('../calculator/farm-talent-food.html');
+    var html = await resp.text();
+    var m = html.match(/SECTIONS\s*=\s*\[([\s\S]*?)\n\];/);
+    if(m){
+      var items = m[1].match(/\{name:'([^']+)'/g);
+      if(items) CALC_CONFIG.farm_talent_food.projects = items.map(function(x){return x.match(/\{name:'([^']+)'/)[1];});
+    }
+
+    resp = await fetch('../calculator/farm-talent-meat.html');
+    html = await resp.text();
+    m = html.match(/SECTIONS\s*=\s*\[([\s\S]*?)\n\];/);
+    if(m){
+      var items = m[1].match(/\{name:'([^']+)'/g);
+      if(items) CALC_CONFIG.farm_talent_meat.projects = items.map(function(x){return x.match(/\{name:'([^']+)'/)[1];});
+    }
+
+    resp = await fetch('../calculator/farm-artist.html');
+    html = await resp.text();
+    m = html.match(/PROJECTS\s*=\s*\[([\s\S]*?)\n\];/);
+    if(m){
+      var items = m[1].match(/\{name:'([^']+)'/g);
+      if(items) CALC_CONFIG.farm_artist.projects = items.map(function(x){return x.match(/\{name:'([^']+)'/)[1];});
+    }
+  } catch(e) { console.error(e); }
+}
+
+var allTalents = [];      // All available talent/artist names
+var assignments = {};     // { project_id: { talent_name: true } }
+var currentCalc = null;
+var changed = false;
+
+function toast(m,t){
+  var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';
+  clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},2500);
+}
+
+async function loadAllTalents(){
+  try {
+    var cats = await API.get('task_categories?select=id,name,parent_id&order=sort_order.asc');
+    // Find L1: 人才 or 艺人
+    var talentL1 = cats.find(function(c){return !c.parent_id && c.name==='人才';});
+    var artistL1 = cats.find(function(c){return !c.parent_id && c.name==='艺人';});
+
+    var l1Ids = [];
+    if(talentL1) l1Ids.push(talentL1.id);
+    if(artistL1) l1Ids.push(artistL1.id);
+
+    // Get L2 categories under 人才/艺人
+    var l2s = cats.filter(function(c){return l1Ids.indexOf(c.parent_id)>=0;});
+    var l2Ids = l2s.map(function(c){return c.id;});
+
+    // Get all L3 talent names
+    allTalents = cats.filter(function(c){return l2Ids.indexOf(c.parent_id)>=0;}).map(function(c){return c.name;});
+    allTalents.sort();
+  } catch(e) {
+    console.error(e);
+    toast('加载人才列表失败','err');
+  }
+}
+
+async function loadAssignments(calcType){
+  try {
+    var rows = await API.get('calculator_project_talents?calculator_type=eq.'+calcType+'&select=project_id,talent_name&order=sort_order.asc');
+    assignments = {};
+    rows.forEach(function(r){
+      if(!assignments[r.project_id]) assignments[r.project_id] = {};
+      assignments[r.project_id][r.talent_name] = true;
+    });
+  } catch(e) {
+    console.error(e);
+    assignments = {};
+  }
+}
+
+function renderProjects(){
+  var cfg = CALC_CONFIG[currentCalc];
+  if(!cfg) return;
+
+  var html = '';
+  cfg.projects.forEach(function(pid, pi){
+    var assigned = assignments[pid] || {};
+    var count = Object.keys(assigned).length;
+    var openClass = (pi === 0) ? ' open' : '';  // First project open by default
+    var bodyClass = (pi === 0) ? ' show' : '';
+
+    html += '<div class="project-card">';
+    html += '<div class="project-header'+openClass+'" onclick="toggleProject(this)">';
+    html += '<span class="name">'+esc(pid)+'</span>';
+    html += '<span style="display:flex;align-items:center;gap:12px;">';
+    html += '<span class="count">已选 '+count+' 人</span>';
+    html += '<span class="arrow">▶</span>';
+    html += '</span></div>';
+    html += '<div class="project-body'+bodyClass+'">';
+    html += '<div class="talent-grid" data-pid="'+esc(pid)+'">';
+
+    allTalents.forEach(function(t){
+      var checked = assigned[t] ? ' checked' : '';
+      html += '<label class="talent-item'+checked+'" onclick="toggleTalent(this)">';
+      html += '<input type="checkbox" '+(checked?'checked':'')+'/>';
+      html += esc(t);
+      html += '</label>';
+    });
+
+    html += '</div></div></div>';
+  });
+
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('btnSave').disabled = false;
+}
+
+function toggleProject(header){
+  header.classList.toggle('open');
+  var body = header.nextElementSibling;
+  body.classList.toggle('show');
+}
+
+function toggleTalent(item){
+  item.classList.toggle('checked');
+  var cb = item.querySelector('input');
+  cb.checked = !cb.checked;
+  item.classList.toggle('checked', cb.checked);
+
+  // Update assignments in-memory
+  var pid = item.parentElement.dataset.pid;
+  var name = item.textContent.trim();
+
+  if(!assignments[pid]) assignments[pid] = {};
+  if(cb.checked){
+    assignments[pid][name] = true;
+  } else {
+    delete assignments[pid][name];
+  }
+
+  // Update count
+  var count = Object.keys(assignments[pid]||{}).length;
+  var header = item.closest('.project-card').querySelector('.count');
+  if(header) header.textContent = '已选 '+count+' 人';
+
+  changed = true;
+}
+
+async function saveAll(){
+  if(!currentCalc) return;
+
+  var btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+
+  try {
+    // Delete all existing assignments for this calculator
+    await API.del('calculator_project_talents?calculator_type=eq.'+currentCalc);
+
+    // Batch insert new assignments
+    var rows = [];
+    Object.keys(assignments).forEach(function(pid){
+      var names = Object.keys(assignments[pid]||{});
+      names.forEach(function(name, i){
+        rows.push({
+          calculator_type: currentCalc,
+          project_id: pid,
+          talent_name: name,
+          sort_order: i + 1
+        });
+      });
+    });
+
+    // Insert in batches of 100
+    for(var i = 0; i < rows.length; i += 100){
+      await API.post('calculator_project_talents', rows.slice(i, i+100));
+    }
+
+    changed = false;
+    document.getElementById('saveStatus').textContent = '已保存 '+rows.length+' 条记录';
+    toast('✅ 保存成功');
+  } catch(e) {
+    console.error(e);
+    toast('保存失败: '+e.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '💾 保存';
+}
+
+async function onCalcChange(){
+  var val = document.getElementById('calcSelect').value;
+  if(!val){
+    document.getElementById('content').innerHTML = '<div class="empty-state">请选择计算器类型</div>';
+    document.getElementById('btnSave').disabled = true;
+    return;
+  }
+
+  currentCalc = val;
+  changed = false;
+  document.getElementById('saveStatus').textContent = '';
+  document.getElementById('btnSave').disabled = true;
+  document.getElementById('content').innerHTML = '<div class="loading">加载中...</div>';
+
+  // Ensure farm projects are loaded
+  if(!CALC_CONFIG[val].projects.length){
+    await loadFarmProjects();
+  }
+
+  await loadAssignments(val);
+  renderProjects();
+  document.getElementById('btnSave').disabled = false;
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+async function init(){
+  document.getElementById('content').innerHTML = '<div class="loading">加载人才数据...</div>';
+  await loadFarmProjects();
+  await loadAllTalents();
+  document.getElementById('content').innerHTML = '<div class="empty-state">请选择计算器类型</div>';
+}
+
+// Warn before leaving with unsaved changes
+window.addEventListener('beforeunload', function(e){
+  if(changed) e.preventDefault();
+});
+
+init();
+</script>
+</body>
+</html>

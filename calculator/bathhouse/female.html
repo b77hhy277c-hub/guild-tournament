@@ -128,15 +128,15 @@ function getCost(side,level){return side==='能力'?aboveCost(level):belowCost(l
 var DEPT={
 name:'女澡堂部',calcType:'bath_female',
 techs:[
-	{id:'12号',talents:['张冰棍','唐志强','强哥','渔三哥','牛魔王','聂风']},
-	{id:'16号',talents:['赵阿棉','火炬手','林冲','何律师','书文','乾隆']},
-	{id:'20号',talents:['李书虫','菜雕师','宋江','安塞腰鼓','武则天','永琪']},
-	{id:'21号',talents:['电工陈','渔三哥','高启强','一代大侠','阿舟','夏紫薇','青丘神女']},
-	{id:'22号',talents:['肖卫平','何律师','主持人','大小说家','金蝉子','步惊云']},
-	{id:'26号',talents:['非主流','安塞腰鼓','紫霞仙子','高启强','孙悟空']},
-	{id:'28号',talents:['街机高手','一代大侠','红衣教主','主持人','国际巨星','永琪']},
-	{id:'29号',talents:['张冰棍','火炬手','黄飞鸿','紫霞仙子','国民男神','牛魔王']},
-	{id:'88号',talents:['肖卫平','唐志强','刚毅','鲁智深','阿星','夏紫薇']}
+	{id:'12号',talents:[]},
+	{id:'16号',talents:[]},
+	{id:'20号',talents:[]},
+	{id:'21号',talents:[]},
+	{id:'22号',talents:[]},
+	{id:'26号',talents:[]},
+	{id:'28号',talents:[]},
+	{id:'29号',talents:[]},
+	{id:'88号',talents:[]}
 	]
 	};
 var SUB_ITEMS=['能力','天赋'];
@@ -159,6 +159,19 @@ document.getElementById('talentModal').classList.add('show');
 }
 function closeTalentModal(){document.getElementById('talentModal').classList.remove('show');}
 document.addEventListener('click',function(e){if(e.target===document.getElementById('talentModal'))closeTalentModal();});
+
+
+async function loadProjectTalents(){
+	try{
+		var rows=await API.get('calculator_project_talents?calculator_type=eq.'+DEPT.calcType+'&select=project_id,talent_name&order=sort_order.asc');
+		var map={};
+		rows.forEach(function(r){
+			if(!map[r.project_id])map[r.project_id]=[];
+			map[r.project_id].push(r.talent_name);
+		});
+		DEPT.techs.forEach(function(tech){if(map[tech.id])tech.talents=map[tech.id];});
+	}catch(e){console.error(e);}
+}
 
 async function loadOwnedTalents(){
 try{
@@ -593,7 +606,7 @@ async function init(){
 curUser=getUser();if(!curUser)return;
 if(!curUser.is_admin){alert('无权限访问');window.location.href='../../index.html';return;}
 document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
-loadOwnedTalents().then(function(){loadSavedData().then(function(saved){try{renderInputTable(saved);}catch(e){document.getElementById('inputBody').innerHTML='<tr><td colspan="7" style="color:red;padding:20px;">渲染错误: '+e.message+'</td></tr>';console.error(e);}});}).catch(function(e){document.getElementById('inputBody').innerHTML='<tr><td colspan="7" style="color:red;padding:20px;">加载错误: '+e.message+'</td></tr>';});
+loadProjectTalents().then(function(){loadOwnedTalents().then(function(){loadSavedData().then(function(saved){try{renderInputTable(saved);}catch(e){document.getElementById('inputBody').innerHTML='<tr><td colspan="7" style="color:red;padding:20px;">渲染错误: '+e.message+'</td></tr>';console.error(e);}});}).catch(function(e){document.getElementById('inputBody').innerHTML='<tr><td colspan="7" style="color:red;padding:20px;">加载错误: '+e.message+'</td></tr>';});});
 }
 init();
 </script>

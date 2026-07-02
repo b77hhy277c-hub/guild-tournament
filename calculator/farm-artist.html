@@ -182,24 +182,24 @@ function getGrowth(level){
 
 // 18 projects with assigned artists
 var PROJECTS=[
-  {name:'蔬果窖藏',artists:['海燕','淑珍','百灵鸟','丫蛋','港星','一代天后','白居易','小碧']},
-  {name:'沙拉制作',artists:['阿诗玛','英姿','桂芸','校园歌手','高启兰','白晶晶','铁扇公主','枫遥']},
-  {name:'食补技巧',artists:['新娘子','机车女郎','小芳','选美皇后','艳红','静静','阿莲','小燕子']},
-  {name:'远航秘方',artists:['童心','吕销售','邻家女孩','陈书婷','葬爱','晚蔚','玫瑰小姐','孔慈','青丘神女']},
-  {name:'时令水果',artists:['古丽','秋菊','艺术生','奕君','春三十娘','铃儿','幽若','兰心']},
-  {name:'甜品调色',artists:['素芬','舞狮少女','玉兰','青青','港星','彩霞','上官婉儿','含香']},
-  {name:'节日好礼',artists:['淑珍','马教练','歌婷','阿雅','高启兰','静静','顾倾倾','夏雨荷']},
-  {name:'品种改良',artists:['英姿','白素贞','厂花','若楠','选美皇后','葬爱','白居易','楚楚']},
-  {name:'水果出口',artists:['海燕','聂小倩','思敏','杜鹃','艳红','奕君','上官婉儿','第二梦','青丘神女']},
-  {name:'催熟工艺',artists:['阿诗玛','云雪晴','苏秘书','彩霞','红衣教主','晚蔚','白晶晶','含香']},
-  {name:'饮品制作',artists:['新娘子','歌婷','百灵鸟','陈书婷','紫霞仙子','百变天后','春三十娘','夏雨荷']},
-  {name:'蔬果一体',artists:['童心','秋菊','白素贞','厂花','桂芸','一代天后','阿莲','第二梦']},
-  {name:'窖藏精研',artists:['古丽','素芬','聂小倩','机车女郎','思敏','玫瑰小姐','妲己','楚楚']},
-  {name:'沙拉精研',artists:['舞狮少女','云雪晴','吕销售','阿雅','红衣教主','女儿国国王','铃儿','小燕子']},
-  {name:'食补精研',artists:['若楠','紫霞仙子','顾倾倾','百变天后','铁扇公主','芈月','枫遥','兰心']},
-  {name:'秘方精研',artists:['白素贞','玉兰','杜鹃','红衣教主','女儿国国王','幽若']},
-  {name:'节气精研',artists:['聂小倩','马教练','苏秘书','紫霞仙子','妲己','孔慈']},
-  {name:'甜品精研',artists:['芈月','小碧','昭儿']}
+  {name:'蔬果窖藏',artists:[]},
+  {name:'沙拉制作',artists:[]},
+  {name:'食补技巧',artists:[]},
+  {name:'远航秘方',artists:[]},
+  {name:'时令水果',artists:[]},
+  {name:'甜品调色',artists:[]},
+  {name:'节日好礼',artists:[]},
+  {name:'品种改良',artists:[]},
+  {name:'水果出口',artists:[]},
+  {name:'催熟工艺',artists:[]},
+  {name:'饮品制作',artists:[]},
+  {name:'蔬果一体',artists:[]},
+  {name:'窖藏精研',artists:[]},
+  {name:'沙拉精研',artists:[]},
+  {name:'食补精研',artists:[]},
+  {name:'秘方精研',artists:[]},
+  {name:'节气精研',artists:[]},
+  {name:'甜品精研',artists:[]}
 ];
 
 var lastSimResult=null;
@@ -224,6 +224,19 @@ function closeArtistModal(){document.getElementById('artistModal').classList.rem
 document.addEventListener('click',function(e){if(e.target===document.getElementById('artistModal'))closeArtistModal();});
 
 // Load user's owned artists
+
+async function loadProjectTalents(){
+	try{
+		var rows=await API.get('calculator_project_talents?calculator_type=eq.'+CALC_TYPE+'&select=project_id,talent_name&order=sort_order.asc');
+		var map={};
+		rows.forEach(function(r){
+			if(!map[r.project_id])map[r.project_id]=[];
+			map[r.project_id].push(r.talent_name);
+		});
+		PROJECTS.forEach(function(proj){if(map[proj.name])proj.artists=map[proj.name];});
+	}catch(e){console.error(e);}
+}
+
 async function loadOwnedArtists(){
   try {
     document.getElementById('loadStatus').textContent='加载中...';
@@ -480,7 +493,7 @@ async function init(){
   curUser=getUser();if(!curUser)return;
   if(!curUser.is_admin){alert('无权限访问');window.location.href='../index.html';return;}
   document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
-  loadOwnedArtists().then(function(){ buildInputTable(); });
+  loadProjectTalents().then(function(){ loadOwnedArtists().then(function(){ buildInputTable(); }); });
 }
 init();
 </script>
