@@ -249,12 +249,15 @@ async function loadOwnedArtists(){
     // Find L2s under 艺人 (属性)
     var l2s=cats.filter(function(c){return c.parent_id===talentL1.id;});
     var l3Names=[];
-    l2s.forEach(function(l2){
-      cats.filter(function(c){return c.parent_id===l2.id;}).forEach(function(l3){
-        l3Names.push(l3.name);
+      var artistL3Ids={};
+      l2s.forEach(function(l2){
+        cats.filter(function(c){return c.parent_id===l2.id;}).forEach(function(l3){
+          l3Names.push(l3.name);
+          if(!artistL3Ids[l3.name])artistL3Ids[l3.name]={};
+          artistL3Ids[l3.name][l3.id]=true;
+        });
       });
-    });
-    // Get user's checked abilities
+      // Get user's checked abilities
     var abs=await API.get('member_task_abilities?member_id=eq.'+curUser.id+'&is_able=eq.true&select=task_definition_id');
     var checkedDefIds={};
     abs.forEach(function(a){checkedDefIds[a.task_definition_id]=true;});
