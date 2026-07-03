@@ -350,7 +350,7 @@ INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name
 INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '蔬果窖藏', '港星', 5);
 INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '蔬果窖藏', '一代天后', 6);
 INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '蔬果窖藏', '白居易', 7);
-INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '蔬果窖藏', '小碧', 8);
+INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '蔬果窖藏', '青宁', 8);
 INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '沙拉制作', '阿诗玛', 1);
 INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '沙拉制作', '英姿', 2);
 INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '沙拉制作', '桂芸', 3);
@@ -478,7 +478,7 @@ INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name
 INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '节气精研', '妲己', 5);
 INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '节气精研', '孔慈', 6);
 INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '甜品精研', '芈月', 1);
-INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '甜品精研', '小碧', 2);
+INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '甜品精研', '青宁', 2);
 INSERT INTO calculator_project_talents (calculator_type, project_id, talent_name, sort_order) VALUES ('farm_artist', '甜品精研', '昭儿', 3);
 
 -- farm_talent_food (27 projects)
