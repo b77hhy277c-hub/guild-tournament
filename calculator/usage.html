@@ -114,7 +114,14 @@ async function loadData(){
 
 async function init(){
   curUser=getUser();if(!curUser)return;
-  if(!curUser.is_admin){alert('无权限访问');window.location.href='../index.html';return;}
+  	// Global lock: if enabled, only superadmin can access
+	API.get('calculator_data?calculator_type=eq._global_lock&select=data&limit=1').then(function(rows){
+		if(rows.length>0&&rows[0].data&&rows[0].data.locked&&!curUser.is_admin){
+			alert('计算器维护中，仅超级管理员可访问');
+			window.location.href='../calculator.html';
+		}
+	});
+	if(!curUser.is_admin){alert('无权限访问');window.location.href='../index.html';return;}
   document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
   await loadData();
 }

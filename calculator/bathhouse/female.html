@@ -604,7 +604,14 @@ document.addEventListener('click',function(e){
 
 async function init(){
 curUser=getUser();if(!curUser)return;
-if(!curUser.is_admin){alert('无权限访问');window.location.href='../../index.html';return;}
+	// Global lock: if enabled, only superadmin can access
+	API.get('calculator_data?calculator_type=eq._global_lock&select=data&limit=1').then(function(rows){
+		if(rows.length>0&&rows[0].data&&rows[0].data.locked&&!curUser.is_admin){
+			alert('计算器维护中，仅超级管理员可访问');
+			window.location.href='../../index.html';
+		}
+	});
+	if(!curUser.is_admin){alert('无权限访问');window.location.href='../../index.html';return;}
 document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
 loadProjectTalents().then(function(){loadOwnedTalents().then(function(){loadSavedData().then(function(saved){try{renderInputTable(saved);}catch(e){document.getElementById('inputBody').innerHTML='<tr><td colspan="7" style="color:red;padding:20px;">渲染错误: '+e.message+'</td></tr>';console.error(e);}});}).catch(function(e){document.getElementById('inputBody').innerHTML='<tr><td colspan="7" style="color:red;padding:20px;">加载错误: '+e.message+'</td></tr>';});});
 }

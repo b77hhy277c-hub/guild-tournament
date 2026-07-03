@@ -40,6 +40,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
 .toast.ok{background:#30d158;color:#fff;}
 .toast.err{background:#ff3b30;color:#fff;}
 
+.toggle-switch{position:relative;display:inline-block;cursor:pointer;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:24px;transition:background 0.25s;}
+.toggle-slider::before{content:"";position:absolute;width:20px;height:20px;left:2px;top:2px;background:#fff;border-radius:50%;transition:transform 0.25s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.toggle-switch input:checked+.toggle-slider{background:var(--accent);}
+.toggle-switch input:checked+.toggle-slider::before{transform:translateX(20px);}
+
 .empty-state{text-align:center;padding:40px;color:var(--text3);}
 .loading{text-align:center;padding:20px;color:var(--text2);}
 
@@ -55,7 +62,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
 </nav>
 
 <div class="main">
-<div class="top-bar">
+<div class="top-bar" style="justify-content:space-between;">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
   <select id="calcSelect" onchange="onCalcChange()">
     <option value="">-- 选择计算器 --</option>
     <optgroup label="澡堂">
@@ -74,6 +82,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
   </select>
   <button class="btn" onclick="saveAll()" id="btnSave" disabled>💾 保存</button>
   <span id="saveStatus" style="font-size:13px;color:var(--text2);"></span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;border:1px solid var(--border-l);">
+    <span style="font-size:13px;font-weight:500;">🔒 全局锁定</span>
+    <label class="toggle-switch" style="width:44px;height:24px;">
+      <input type="checkbox" id="globalLockToggle" onchange="toggleGlobalLock(this)" />
+      <span class="toggle-slider" style="border-radius:24px;"></span>
+    </label>
+    <span id="lockStatus" style="font-size:12px;color:var(--text2);">--</span>
+  </div>
 </div>
 
 <div id="content"><div class="empty-state">请选择计算器类型</div></div>
@@ -354,7 +371,34 @@ async function onCalcChange(){
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+async function loadGlobalLock(){
+  try {
+    var rows = await API.get('calculator_data?calculator_type=eq._global_lock&select=data&limit=1');
+    var locked = rows.length > 0 && rows[0].data && rows[0].data.locked;
+    document.getElementById('globalLockToggle').checked = locked;
+    document.getElementById('lockStatus').textContent = locked ? '已锁定' : '未锁定';
+  } catch(e) { console.error(e); }
+}
+
+async function toggleGlobalLock(cb){
+  var locked = cb.checked;
+  try {
+    var existing = await API.get('calculator_data?calculator_type=eq._global_lock&select=id&limit=1');
+    if(existing.length > 0){
+      await API.patch('calculator_data?id=eq.'+existing[0].id, {data:{locked:locked}, updated_at:new Date().toISOString()});
+    } else {
+      await API.post('calculator_data', {member_id:'00000000-0000-0000-0000-000000000000', calculator_type:'_global_lock', data:{locked:locked}});
+    }
+    document.getElementById('lockStatus').textContent = locked ? '已锁定' : '未锁定';
+    toast(locked ? '🔒 已锁定，仅超管可访问计算器' : '🔓 已解锁，所有成员可访问');
+  } catch(e) {
+    cb.checked = !locked;
+    toast('操作失败: '+e.message, 'err');
+  }
+}
+
 async function init(){
+  loadGlobalLock();
   document.getElementById('content').innerHTML = '<div class="loading">加载人才数据...</div>';
   await loadFarmProjects();
   await loadAllTalents();
