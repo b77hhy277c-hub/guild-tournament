@@ -129,7 +129,6 @@ function init(){
 			window.location.href='../index.html';
 		}
 	});
-	if(!curUser.is_admin){alert('无权限访问');window.location.href='../index.html';return;}
   document.getElementById('navUser').textContent = curUser.display_name || curUser.uid;
 }
 init();
