@@ -225,17 +225,7 @@ document.addEventListener('click',function(e){if(e.target===document.getElementB
 
 // Load user's owned artists
 
-async function loadProjectTalents(){
-	try{
-		var rows=await API.get('calculator_project_talents?calculator_type=eq.'+CALC_TYPE+'&select=project_id,talent_name&order=sort_order.asc');
-		var map={};
-		rows.forEach(function(r){
-			if(!map[r.project_id])map[r.project_id]=[];
-			map[r.project_id].push(r.talent_name);
-		});
-		PROJECTS.forEach(function(proj){if(map[proj.name])proj.artists=map[proj.name];});
-	}catch(e){console.error(e);}
-}
+var CALC_TYPE='farm_artist';
 
 async function loadProjectTalents(){
 try{
