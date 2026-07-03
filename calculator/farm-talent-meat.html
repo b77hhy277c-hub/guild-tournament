@@ -175,13 +175,13 @@ var cats=await API.get('task_categories?select=id,name,parent_id&order=sort_orde
 var talentL1=cats.find(function(c){return!c.parent_id&&c.name==='人才';});
 if(!talentL1){document.getElementById('loadStatus').textContent='未找到人才分类';return;}
 var l2s=cats.filter(function(c){return c.parent_id===talentL1.id;});
-var l3Names=[];l2s.forEach(function(l2){cats.filter(function(c){return c.parent_id===l2.id;}).forEach(function(l3){l3Names.push(l3.name);});});
+var l3Names=[];var talentL3Ids={};l2s.forEach(function(l2){cats.filter(function(c){return c.parent_id===l2.id;}).forEach(function(l3){if(!talentL3Ids[l3.name])talentL3Ids[l3.name]={};talentL3Ids[l3.name][l3.id]=true;});});
 var abs=await API.get('member_task_abilities?member_id=eq.'+curUser.id+'&is_able=eq.true&select=task_definition_id');
 var checkedDefIds={};abs.forEach(function(a){checkedDefIds[a.task_definition_id]=true;});
 var allDefs=await API.get('task_definitions?select=id,category_id&limit=5000');
 var catHasTask={};allDefs.forEach(function(d){if(checkedDefIds[d.id])catHasTask[d.category_id]=true;});
 ownedTalents={};
-l3Names.forEach(function(name){cats.filter(function(c){return c.name===name;}).forEach(function(l3){if(catHasTask[l3.id])ownedTalents[name]=true;});});
+Object.keys(talentL3Ids).forEach(function(name){var ids=talentL3Ids[name];for(var id in ids){if(catHasTask[id]){ownedTalents[name]=true;break;}}});
 document.getElementById('loadStatus').textContent='已加载 '+Object.keys(ownedTalents).length+' 位人才';
 }catch(e){console.error(e);document.getElementById('loadStatus').textContent='加载失败';}
 }
