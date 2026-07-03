@@ -97,6 +97,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
 </div>
 
 <script>
+var curUser=null;
+function getUser(){var s=localStorage.getItem('guild_current_user');if(!s){window.location.href='../login.html';return null;}try{var u=JSON.parse(s);if(!u.id)throw Error();return u;}catch(_){localStorage.removeItem('guild_current_user');window.location.href='../login.html';return null;}}
+
 var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
 var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
 var API={
@@ -388,7 +391,7 @@ async function toggleGlobalLock(cb){
     if(existing.length > 0){
       await API.patch('calculator_data?id=eq.'+existing[0].id, {data:{locked:locked}, updated_at:new Date().toISOString()});
     } else {
-      await API.post('calculator_data', {member_id:'00000000-0000-0000-0000-000000000000', calculator_type:'_global_lock', data:{locked:locked}});
+      await API.post('calculator_data', {member_id:curUser.id, calculator_type:'_global_lock', data:{locked:locked}});
     }
     document.getElementById('lockStatus').textContent = locked ? '已锁定' : '未锁定';
     toast(locked ? '🔒 已锁定，仅超管可访问计算器' : '🔓 已解锁，所有成员可访问');
@@ -399,6 +402,7 @@ async function toggleGlobalLock(cb){
 }
 
 async function init(){
+  curUser=getUser();if(!curUser)return;
   loadGlobalLock();
   document.getElementById('content').innerHTML = '<div class="loading">加载人才数据...</div>';
   await loadFarmProjects();
