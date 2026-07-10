@@ -129,7 +129,7 @@ function getUser(){var s=localStorage.getItem('guild_current_user');if(!s){windo
 function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},2500);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function getGrowth(lv){if(lv>=200)return 1.009;if(lv>=100)return 1.01;return 1.012;}
-function nextCost(cost,lv){return Math.round(cost*getGrowth(lv));}
+function nextCost(cost,lv){return Math.round(cost*getGrowth(lv)*100)/100;}
 
 var SECTIONS=[
 {name:'腌制改进',talents:['郑经理','乾隆','街机高手','张冰棍','李书虫','阿舟']},
@@ -275,7 +275,7 @@ var data={};
 document.querySelectorAll('.save-input').forEach(function(el){
 var key=el.dataset.key,field=el.dataset.field;
 if(!data[key])data[key]={};
-data[key][field]=parseInt(el.value)||0;
+data[key][field]=parseFloat(el.value)||0;
 });
 data._budget=document.getElementById('budget').value;
 var rb=document.getElementById('resultBody'),rr=document.getElementById('resultBar');
@@ -308,8 +308,8 @@ var key=sec.name+'|'+sub;
 var costEl=document.querySelector('.cost[data-key="'+esc(key)+'"]');
 var levelEl=document.querySelector('.level[data-key="'+esc(key)+'"]');
 var incomeEl=document.querySelector('.income[data-key="'+esc(key)+'"]');
-var cost=parseInt(costEl.value)||0;
-var income=parseInt(incomeEl.value)||0;
+var cost=parseFloat(costEl.value)||0;
+var income=parseFloat(incomeEl.value)||0;
 var level=parseInt(levelEl.value)||0;
 if(cost<=0||income<=0)return;
 items.push({section:sec.name,sub:sub,level:level,cost:cost,income:income,ratio:income/cost});
@@ -357,14 +357,14 @@ if(needBudget<=0)break;
 if(remaining>=needBudget){
 batch.forEach(function(b){b.item.cost=b.newCost;b.item.level=b.newLevel;b.item.ratio=b.item.income/b.item.cost;b.item.spent+=b.cost;b.item.upgraded+=b.levels;remaining-=b.cost;totalSpent+=b.cost;});
 }else{
-while(remaining>0){sim.sort(function(a,b){return b.ratio-a.ratio;});var best=sim[0];if(best.cost>remaining)break;remaining-=best.cost;totalSpent+=best.cost;best.spent+=best.cost;best.upgraded+=1;best.cost=Math.round(best.cost*getGrowth(best.level));best.level++;best.ratio=best.income/best.cost;}break;
+while(remaining>0){sim.sort(function(a,b){return b.ratio-a.ratio;});var best=sim[0];if(best.cost>remaining)break;remaining-=best.cost;totalSpent+=best.cost;best.spent+=best.cost;best.upgraded+=1;best.cost=nextCost(best.cost,best.level);best.level++;best.ratio=best.income/best.cost;}break;
 }
 }
 
 while(remaining>0){sim.sort(function(a,b){return b.ratio-a.ratio;});var best=sim[0];if(best.cost>remaining)break;remaining-=best.cost;totalSpent+=best.cost;best.spent+=best.cost;best.upgraded+=1;best.cost=nextCost(best.cost,best.level);best.level++;best.ratio=best.income/best.cost;}
 
 lastSimResult=sim;
-try{var simSave=sim.map(function(s){return{section:s.section,sub:s.sub,cost:Math.round(s.cost),level:s.level,income:s.income,upgraded:s.upgraded,spent:Math.round(s.spent)};});localStorage.setItem('calc_'+CALC_TYPE+'_sim',JSON.stringify(simSave));}catch(e){}
+try{var simSave=sim.map(function(s){return{section:s.section,sub:s.sub,cost:Math.round(s.cost*100)/100,level:s.level,income:s.income,upgraded:s.upgraded,spent:Math.round(s.spent*100)/100};});localStorage.setItem('calc_'+CALC_TYPE+'_sim',JSON.stringify(simSave));}catch(e){}
 renderResults(sim,budget,totalSpent,remaining);
 document.getElementById('applyBtnWrap').style.display='block';initSteppers();saveData();
 }
@@ -396,7 +396,7 @@ var key=s.section+'|'+s.sub;
 var levelEl=document.querySelector('.level[data-key="'+esc(key)+'"]');
 var costEl=document.querySelector('.cost[data-key="'+esc(key)+'"]');
 if(levelEl)levelEl.value=(parseInt(levelEl.value)||0)+s.upgraded;
-if(costEl)costEl.value=Math.round(s.cost);
+if(costEl)costEl.value=Math.round(s.cost*100)/100;
 });
 document.getElementById('budget').value='0';lastSimResult=null;
 document.getElementById('resultCard').classList.remove('show');
