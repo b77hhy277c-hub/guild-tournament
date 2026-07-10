@@ -129,7 +129,7 @@ function getUser(){var s=localStorage.getItem('guild_current_user');if(!s){windo
 function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},2500);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function getGrowth(lv){if(lv>=200)return 1.009;if(lv>=100)return 1.01;return 1.012;}
-function nextCost(cost,lv){return Math.max(cost+1, Math.round(cost*getGrowth(lv)));}
+function nextCost(cost,lv){return Math.round(cost*getGrowth(lv));}
 
 var SECTIONS=[
 {name:'腌制改进',talents:['郑经理','乾隆','街机高手','张冰棍','李书虫','阿舟']},

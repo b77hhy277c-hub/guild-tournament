@@ -197,7 +197,7 @@ function getGrowth(level){
   if(level >= 100) return GROWTH_MID;
   return GROWTH_LOW;
 }
-function nextCost(cost,lv){return Math.max(cost+1, Math.round(cost*getGrowth(lv)));}
+function nextCost(cost,lv){return Math.round(cost*getGrowth(lv));}
 
 // Cost to upgrade N levels from currentLevel, starting at currentCost
 function calcUpgrade(currentCost, currentLevel, n){
