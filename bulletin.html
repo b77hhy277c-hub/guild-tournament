@@ -109,6 +109,7 @@ var API={
   get:function(p){return fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}).then(function(r){if(!r.ok)return r.text().then(function(t){throw Error(r.status+' '+r.statusText+(t?' - '+t:''));});return r.json();});},
   post:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'Prefer':'return=representation'},this.h(1)),body:JSON.stringify(b)}).then(function(r){if(!r.ok)return r.text().then(function(t){throw Error(r.status+' '+r.statusText+(t?' - '+t:''));});return r.json();});},
   patch:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'PATCH',headers:this.h(1),body:JSON.stringify(b)}).then(function(r){if(!r.ok)return r.text().then(function(t){throw Error(r.status+' '+r.statusText+(t?' - '+t:''));});return r.text().then(function(t){return t?JSON.parse(t):null;});});},
+  del:function(p){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'DELETE',headers:this.h(1)}).then(function(r){if(!r.ok)return r.text().then(function(t){throw Error(r.status+' '+r.statusText+(t?' - '+t:''));});});},
 };
 
 var curUser=null;
@@ -237,15 +238,11 @@ async function saveBulletin(){
   };
 
   try{
-    var savedId=bulletinData&&bulletinData._id;
-    if(savedId){
-      await API.patch('calculator_data?id=eq.'+savedId,{data:data});
-    }else{
-      var result=await API.post('calculator_data',{member_id:curUser.id,calculator_type:'_bulletin',data:data});
-      if(result&&result.length>0)savedId=result[0].id;
-    }
+    var existing=await API.get('calculator_data?calculator_type=eq._bulletin&select=id&limit=1');
+    if(existing.length>0)await API.del('calculator_data?id=eq.'+existing[0].id);
+    var result=await API.post('calculator_data',{member_id:curUser.id,calculator_type:'_bulletin',data:data});
     bulletinData=data;
-    bulletinData._id=savedId;
+    bulletinData._id=result&&result.length>0?result[0].id:null;
     renderView();
     toggleEdit();
     toast('✅ 公告已保存');
