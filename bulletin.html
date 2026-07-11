@@ -106,9 +106,9 @@ var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
 var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
 var API={
   h:function(ct){var hd={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};if(ct)hd['Content-Type']='application/json';return hd;},
-  get:function(p){return fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.json();});},
-  post:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'Prefer':'return=representation'},this.h(1)),body:JSON.stringify(b)}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.json();});},
-  patch:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'PATCH',headers:this.h(1),body:JSON.stringify(b)}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.text().then(function(t){return t?JSON.parse(t):null;});});},
+  get:function(p){return fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}).then(function(r){if(!r.ok)return r.text().then(function(t){throw Error(r.status+' '+r.statusText+(t?' - '+t:''));});return r.json();});},
+  post:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'Prefer':'return=representation'},this.h(1)),body:JSON.stringify(b)}).then(function(r){if(!r.ok)return r.text().then(function(t){throw Error(r.status+' '+r.statusText+(t?' - '+t:''));});return r.json();});},
+  patch:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'PATCH',headers:this.h(1),body:JSON.stringify(b)}).then(function(r){if(!r.ok)return r.text().then(function(t){throw Error(r.status+' '+r.statusText+(t?' - '+t:''));});return r.text().then(function(t){return t?JSON.parse(t):null;});});},
 };
 
 var curUser=null;
