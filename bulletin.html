@@ -166,13 +166,25 @@ function onImagePicked(input){
   var file=input.files[0];
   if(!file)return;
   if(file.size>10*1024*1024){toast('图片不能超过10MB','err');input.value='';return;}
-  var reader=new FileReader();
-  reader.onload=function(e){
-    document.getElementById('editImage').value=e.target.result;
-    showPreview(e.target.result);
+  // Resize image to max 1200px wide before base64
+  var img=new Image();
+  var url=URL.createObjectURL(file);
+  img.onload=function(){
+    URL.revokeObjectURL(url);
+    var canvas=document.createElement('canvas');
+    var MAX=1200;
+    var w=img.width,h=img.height;
+    if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+    if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+    canvas.width=w;canvas.height=h;
+    var ctx=canvas.getContext('2d');
+    ctx.drawImage(img,0,0,w,h);
+    var base64=canvas.toDataURL('image/jpeg',0.85);
+    document.getElementById('editImage').value=base64;
+    showPreview(base64);
     document.getElementById('editImageFile').value='';
   };
-  reader.readAsDataURL(file);
+  img.src=url;
 }
 function onImageUrlInput(){
   var url=document.getElementById('editImage').value.trim();
