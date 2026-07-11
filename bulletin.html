@@ -225,17 +225,15 @@ async function saveBulletin(){
   };
 
   try{
-    if(bulletinData&&bulletinData._id){
-      await API.patch('calculator_data?id=eq.'+bulletinData._id,{data:data});
+    var savedId=bulletinData&&bulletinData._id;
+    if(savedId){
+      await API.patch('calculator_data?id=eq.'+savedId,{data:data});
     }else{
       var result=await API.post('calculator_data',{member_id:curUser.id,calculator_type:'_bulletin',data:data});
-      if(result&&result.length>0)bulletinData={_id:result[0].id};
+      if(result&&result.length>0)savedId=result[0].id;
     }
     bulletinData=data;
-    bulletinData._id=bulletinData._id||(bulletinData?bulletinData._id:null);
-    // Re-fetch to get correct id
-    var rows=await API.get('calculator_data?calculator_type=eq._bulletin&select=id,data&limit=1');
-    if(rows.length>0){bulletinData=rows[0].data;bulletinData._id=rows[0].id;}
+    bulletinData._id=savedId;
     renderView();
     toggleEdit();
     toast('✅ 公告已保存');
