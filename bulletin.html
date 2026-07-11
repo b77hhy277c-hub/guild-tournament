@@ -26,7 +26,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
 
 .bulletin-body{flex:1;min-width:0;}
 .bulletin-body h1{font-size:24px;font-weight:700;margin-bottom:16px;}
-.bulletin-body .content{font-size:15px;line-height:2.2;color:var(--text2);white-space:pre-wrap;margin-bottom:24px;}
+.bulletin-body .content{font-size:15px;line-height:1.8;color:var(--text2);margin-bottom:24px;}
+.bulletin-body .content p{margin:0 0 16px 0;}
+.bulletin-body .content p:last-child{margin-bottom:0;}
 .bulletin-body .link-btn{display:inline-block;padding:10px 24px;background:var(--accent);color:#fff;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px;transition:background 0.2s;}
 .bulletin-body .link-btn:hover{background:var(--accent-h);}
 
@@ -40,7 +42,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
 .edit-form label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:4px;margin-top:16px;}
 .edit-form input,.edit-form textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;}
 .edit-form input:focus,.edit-form textarea:focus{border-color:var(--accent);}
-.edit-form textarea{min-height:200px;resize:vertical;line-height:2;}
+.edit-form textarea{min-height:200px;resize:vertical;line-height:1.6;}
 .edit-form .hint{font-size:12px;color:var(--text3);margin-top:4px;}
 .preview-wrap{display:flex;align-items:flex-start;gap:8px;}
 
@@ -153,7 +155,10 @@ function renderView(){
   // Right content
   html+='<div class="bulletin-body">';
   html+='<h1>'+esc(bulletinData.title)+'</h1>';
-  html+='<div class="content">'+esc(bulletinData.content||'')+'</div>';
+  var paras=(bulletinData.content||'').split('\n\n');
+html+='<div class="content">';
+paras.forEach(function(p){html+='<p>'+esc(p)+'</p>';});
+html+='</div>';
   if(bulletinData.link_url){
     html+='<a href="'+esc(bulletinData.link_url)+'" target="_blank" class="link-btn">'+esc(bulletinData.link_text||'查看详情')+' →</a>';
   }
