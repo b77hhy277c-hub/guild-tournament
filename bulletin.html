@@ -42,6 +42,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
 .edit-form input:focus,.edit-form textarea:focus{border-color:var(--accent);}
 .edit-form textarea{min-height:200px;resize:vertical;line-height:1.6;}
 .edit-form .hint{font-size:12px;color:var(--text3);margin-top:4px;}
+.preview-wrap{display:flex;align-items:flex-start;gap:8px;}
 
 .empty-state{text-align:center;padding:60px 20px;color:var(--text3);}
 .empty-state .icon{font-size:48px;margin-bottom:12px;}
@@ -75,9 +76,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
   <label>标题</label>
   <input type="text" id="editTitle" placeholder="公告标题"/>
 
-  <label>图片 URL</label>
-  <input type="text" id="editImage" placeholder="粘贴图片链接（支持任意图床URL）"/>
-  <div class="hint">建议尺寸 16:9，支持 jpg/png/webp，粘贴图片直链即可</div>
+  <label>📷 上传图片</label>
+  <input type="file" id="editImageFile" accept="image/*" onchange="onImagePicked(this)" style="padding:8px;"/>
+  <div class="hint">支持 jpg/png/webp，最大 10MB。也可直接粘贴图片链接：</div>
+  <input type="text" id="editImage" placeholder="或粘贴图片链接（图床URL / base64）" oninput="onImageUrlInput()"/>
+  <div class="preview-wrap" id="imagePreview" style="display:none;margin-top:8px;">
+    <img id="previewImg" src="" style="max-width:300px;max-height:200px;border-radius:8px;border:1px solid var(--border-l);"/>
+    <button type="button" class="btn-ghost" onclick="clearImage()" style="margin-left:8px;">✕ 清除</button>
+  </div>
 
   <label>公告内容</label>
   <textarea id="editContent" placeholder="输入公告内容..."></textarea>
@@ -156,6 +162,33 @@ function renderView(){
   vm.className='';
 }
 
+function onImagePicked(input){
+  var file=input.files[0];
+  if(!file)return;
+  if(file.size>10*1024*1024){toast('图片不能超过10MB','err');input.value='';return;}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    document.getElementById('editImage').value=e.target.result;
+    showPreview(e.target.result);
+    document.getElementById('editImageFile').value='';
+  };
+  reader.readAsDataURL(file);
+}
+function onImageUrlInput(){
+  var url=document.getElementById('editImage').value.trim();
+  if(url)showPreview(url);else hidePreview();
+}
+function showPreview(url){
+  document.getElementById('imagePreview').style.display='flex';
+  document.getElementById('previewImg').src=url;
+}
+function hidePreview(){document.getElementById('imagePreview').style.display='none';}
+function clearImage(){
+  document.getElementById('editImage').value='';
+  document.getElementById('editImageFile').value='';
+  hidePreview();
+}
+
 function toggleEdit(){
   var ef=document.getElementById('editMode');
   var vm=document.getElementById('viewMode');
@@ -170,6 +203,7 @@ function toggleEdit(){
     // Show edit - populate fields
     document.getElementById('editTitle').value=bulletinData?bulletinData.title||'':'';
     document.getElementById('editImage').value=bulletinData?bulletinData.image_url||'':'';
+    if(bulletinData&&bulletinData.image_url)showPreview(bulletinData.image_url);else hidePreview();
     document.getElementById('editContent').value=bulletinData?bulletinData.content||'':'';
     document.getElementById('editLinkUrl').value=bulletinData?bulletinData.link_url||'':'';
     document.getElementById('editLinkText').value=bulletinData?bulletinData.link_text||'':'';
