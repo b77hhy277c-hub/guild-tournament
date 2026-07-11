@@ -251,7 +251,11 @@ async function saveBulletin(){
     toast('✅ 公告已保存');
   }catch(e){
     console.error(e);
-    toast('保存失败: '+e.message,'err');
+    var msg=e.message||String(e);
+    // Check if image is too large
+    var imgLen=(data.image_url||'').length;
+    if(imgLen>500000)msg='图片过大('+Math.round(imgLen/1024)+'KB)，请使用更小的图片';
+    toast('保存失败: '+msg,'err');
   }
 }
 
