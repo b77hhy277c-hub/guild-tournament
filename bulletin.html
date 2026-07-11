@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>公会公告板</title>
+<style>
+:root{--bg:#fff;--bg2:#f5f5f7;--card:#fff;--hover:rgba(0,0,0,0.04);--text:#1d1d1f;--text2:#6e6e73;--text3:#aeaeb2;--accent:#007AFF;--accent-h:#0062d1;--border:#d2d2d7;--border-l:#e5e5ea;--shadow:0 4px 20px rgba(0,0,0,0.08);--r:14px;}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--bg2:#1c1c1e;--card:#1c1c1e;--hover:rgba(255,255,255,0.08);--text:#f5f5f7;--text2:#8e8e93;--text3:#636366;--accent:#0A84FF;--accent-h:#409cff;--border:#38383a;--border-l:#2c2c2e;--shadow:0 1px 3px rgba(255,255,255,0.05);}}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;font-size:15px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;}
+
+.navbar{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 20px;border-bottom:1px solid var(--border-l);position:sticky;top:0;background:var(--bg);z-index:10;backdrop-filter:blur(20px);}
+.navbar a{color:var(--accent);text-decoration:none;font-size:14px;}
+.navbar .title{font-size:16px;font-weight:600;}
+.navbar .user{font-size:13px;color:var(--text2);}
+
+.main{max-width:900px;margin:0 auto;padding:32px 24px;}
+
+.bulletin-layout{display:flex;gap:32px;align-items:flex-start;}
+@media(max-width:640px){.bulletin-layout{flex-direction:column;}}
+
+.bulletin-image{flex:0 0 45%;max-width:45%;}
+.bulletin-image img{width:100%;border-radius:var(--r);box-shadow:var(--shadow);display:block;}
+.bulletin-image .no-image{width:100%;aspect-ratio:4/3;background:var(--bg2);border-radius:var(--r);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:48px;}
+
+.bulletin-body{flex:1;min-width:0;}
+.bulletin-body h1{font-size:24px;font-weight:700;margin-bottom:16px;}
+.bulletin-body .content{font-size:15px;line-height:1.8;color:var(--text2);white-space:pre-wrap;margin-bottom:24px;}
+.bulletin-body .link-btn{display:inline-block;padding:10px 24px;background:var(--accent);color:#fff;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px;transition:background 0.2s;}
+.bulletin-body .link-btn:hover{background:var(--accent-h);}
+
+.edit-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.btn{padding:8px 20px;border-radius:8px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;border:none;background:var(--accent);color:#fff;transition:background 0.2s;}
+.btn:hover{background:var(--accent-h);}
+.btn-ghost{padding:8px 20px;border-radius:8px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text);}
+
+.edit-form{display:none;}
+.edit-form.show{display:block;}
+.edit-form label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:4px;margin-top:16px;}
+.edit-form input,.edit-form textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;}
+.edit-form input:focus,.edit-form textarea:focus{border-color:var(--accent);}
+.edit-form textarea{min-height:200px;resize:vertical;line-height:1.6;}
+.edit-form .hint{font-size:12px;color:var(--text3);margin-top:4px;}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3);}
+.empty-state .icon{font-size:48px;margin-bottom:12px;}
+
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;font-size:14px;font-weight:500;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.3s;box-shadow:var(--shadow);}
+.toast.show{opacity:1;}
+.toast.ok{background:#30d158;color:#fff;}
+.toast.err{background:#ff3b30;color:#fff;}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<nav class="navbar">
+<a href="index.html">← 返回主界面</a>
+<span class="title">📋 公会公告板</span>
+<span class="user" id="navUser">--</span>
+</nav>
+
+<div class="main">
+<div class="edit-bar" id="editBar" style="display:none;">
+  <button class="btn" id="btnEdit" onclick="toggleEdit()">✏️ 编辑</button>
+</div>
+
+<div id="viewMode" class="empty-state">
+  <div class="icon">📋</div>
+  <div>暂无公告</div>
+</div>
+
+<div id="editMode" class="edit-form">
+  <label>标题</label>
+  <input type="text" id="editTitle" placeholder="公告标题"/>
+
+  <label>图片 URL</label>
+  <input type="text" id="editImage" placeholder="粘贴图片链接（支持任意图床URL）"/>
+  <div class="hint">建议尺寸 16:9，支持 jpg/png/webp，粘贴图片直链即可</div>
+
+  <label>公告内容</label>
+  <textarea id="editContent" placeholder="输入公告内容..."></textarea>
+
+  <label>链接地址（可选）</label>
+  <input type="text" id="editLinkUrl" placeholder="https://..."/>
+
+  <label>链接文字（可选）</label>
+  <input type="text" id="editLinkText" placeholder="如：查看详情 →"/>
+
+  <div style="margin-top:24px;display:flex;gap:12px;">
+    <button class="btn" onclick="saveBulletin()">💾 保存</button>
+    <button class="btn-ghost" onclick="toggleEdit()">取消</button>
+  </div>
+</div>
+</div>
+
+<script>
+var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API={
+  h:function(ct){var hd={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};if(ct)hd['Content-Type']='application/json';return hd;},
+  get:function(p){return fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.json();});},
+  post:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'Prefer':'return=representation'},this.h(1)),body:JSON.stringify(b)}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.json();});},
+  patch:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'PATCH',headers:this.h(1),body:JSON.stringify(b)}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.text().then(function(t){return t?JSON.parse(t):null;});});},
+};
+
+var curUser=null;
+var bulletinData=null;
+
+function getUser(){var s=localStorage.getItem('guild_current_user');if(!s){window.location.href='login.html';return null;}try{var u=JSON.parse(s);if(!u.id)throw Error();return u;}catch(_){localStorage.removeItem('guild_current_user');window.location.href='login.html';return null;}}
+function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},2500);}
+
+function canEdit(){return curUser&&(curUser.is_admin||curUser.position==='会长'||curUser.position==='副会长');}
+
+async function loadBulletin(){
+  try{
+    var rows=await API.get('calculator_data?calculator_type=eq._bulletin&select=data&limit=1');
+    if(rows.length>0&&rows[0].data){
+      bulletinData=rows[0].data;
+      bulletinData._id=rows[0].id;
+    }
+    renderView();
+  }catch(e){console.error(e);}
+}
+
+function renderView(){
+  var vm=document.getElementById('viewMode');
+  if(!bulletinData||!bulletinData.title){
+    vm.className='empty-state';
+    vm.innerHTML='<div class="icon">📋</div><div>暂无公告</div>';
+    return;
+  }
+
+  var html='<div class="bulletin-layout">';
+
+  // Left image
+  html+='<div class="bulletin-image">';
+  if(bulletinData.image_url){
+    html+='<img src="'+esc(bulletinData.image_url)+'" alt="公告图片" onerror="this.parentElement.innerHTML=\'<div class=no-image>🖼️</div>\'"/>';
+  }else{
+    html+='<div class="no-image">🖼️</div>';
+  }
+  html+='</div>';
+
+  // Right content
+  html+='<div class="bulletin-body">';
+  html+='<h1>'+esc(bulletinData.title)+'</h1>';
+  html+='<div class="content">'+esc(bulletinData.content||'')+'</div>';
+  if(bulletinData.link_url){
+    html+='<a href="'+esc(bulletinData.link_url)+'" target="_blank" class="link-btn">'+esc(bulletinData.link_text||'查看详情')+' →</a>';
+  }
+  html+='</div></div>';
+
+  vm.innerHTML=html;
+  vm.className='';
+}
+
+function toggleEdit(){
+  var ef=document.getElementById('editMode');
+  var vm=document.getElementById('viewMode');
+  var btn=document.getElementById('btnEdit');
+
+  if(ef.classList.contains('show')){
+    // Cancel - hide edit
+    ef.classList.remove('show');
+    vm.style.display='';
+    btn.textContent='✏️ 编辑';
+  }else{
+    // Show edit - populate fields
+    document.getElementById('editTitle').value=bulletinData?bulletinData.title||'':'';
+    document.getElementById('editImage').value=bulletinData?bulletinData.image_url||'':'';
+    document.getElementById('editContent').value=bulletinData?bulletinData.content||'':'';
+    document.getElementById('editLinkUrl').value=bulletinData?bulletinData.link_url||'':'';
+    document.getElementById('editLinkText').value=bulletinData?bulletinData.link_text||'':'';
+    ef.classList.add('show');
+    vm.style.display='none';
+    btn.textContent='👁️ 预览';
+  }
+}
+
+async function saveBulletin(){
+  var data={
+    title:document.getElementById('editTitle').value.trim(),
+    image_url:document.getElementById('editImage').value.trim(),
+    content:document.getElementById('editContent').value.trim(),
+    link_url:document.getElementById('editLinkUrl').value.trim(),
+    link_text:document.getElementById('editLinkText').value.trim(),
+    updated_at:new Date().toISOString(),
+    updated_by:curUser.display_name||curUser.uid
+  };
+
+  try{
+    if(bulletinData&&bulletinData._id){
+      await API.patch('calculator_data?id=eq.'+bulletinData._id,{data:data});
+    }else{
+      var result=await API.post('calculator_data',{member_id:curUser.id,calculator_type:'_bulletin',data:data});
+      if(result&&result.length>0)bulletinData={_id:result[0].id};
+    }
+    bulletinData=data;
+    bulletinData._id=bulletinData._id||(bulletinData?bulletinData._id:null);
+    // Re-fetch to get correct id
+    var rows=await API.get('calculator_data?calculator_type=eq._bulletin&select=id,data&limit=1');
+    if(rows.length>0){bulletinData=rows[0].data;bulletinData._id=rows[0].id;}
+    renderView();
+    toggleEdit();
+    toast('✅ 公告已保存');
+  }catch(e){
+    console.error(e);
+    toast('保存失败: '+e.message,'err');
+  }
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+async function init(){
+  curUser=getUser();if(!curUser)return;
+  document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
+  if(canEdit())document.getElementById('editBar').style.display='flex';
+  await loadBulletin();
+}
+init();
+</script>
+</body>
+</html>

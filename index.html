@@ -172,6 +172,26 @@
       font-size: 15px; color: var(--text-secondary); margin-bottom: 36px;
     }
 
+    /* --- 公告板卡片 --- */
+    .bulletin-card {
+      display:flex; align-items:center; gap:20px;
+      background:var(--bg-card); border:1px solid var(--border-light);
+      border-radius:14px; padding:16px 20px; margin-bottom:24px;
+      box-shadow:var(--shadow); cursor:pointer;
+      text-decoration:none; color:inherit;
+      transition:all 0.25s ease-in-out;
+      max-width:720px;
+    }
+    .bulletin-card:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,0,0,0.12); }
+    .bulletin-img-wrap {
+      flex-shrink:0; width:100px; height:66px; border-radius:14px;
+      overflow:hidden; background:var(--bg-hover);
+    }
+    .bulletin-img-wrap img { width:100%; height:100%; object-fit:cover; }
+    .bulletin-info { min-width:0; }
+    .bulletin-label { font-size:12px; color:var(--text2); margin-bottom:4px; }
+    .bulletin-title { font-size:16px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
     /* --- 卡片网格 --- */
     .card-grid {
       display: grid;
@@ -317,6 +337,17 @@
       <p class="subtitle">选择一个功能模块开始使用</p>
       <p class="position-line" id="positionLine" style="font-size:14px;color:var(--text2);margin-bottom:24px;">会长：-- ｜ 副会长：--</p>
 
+      <!-- 公告板 -->
+      <a href="bulletin.html" class="bulletin-card" id="cardBulletin" style="display:none;">
+        <div class="bulletin-img-wrap">
+          <img id="bulletinThumb" src="" alt="" onerror="this.style.display='none'" />
+        </div>
+        <div class="bulletin-info">
+          <div class="bulletin-label">📋 公告</div>
+          <div class="bulletin-title" id="bulletinTitle">--</div>
+        </div>
+      </a>
+
       <div class="card-grid">
         <!-- 公会竞标赛 -->
         <a href="tournament/" class="card">
@@ -427,7 +458,21 @@
       }
     }
 
-    async function init() {
+    async function loadBulletin(){
+  try{
+    var rows=await API.get('calculator_data?calculator_type=eq._bulletin&select=data&limit=1');
+    if(rows.length>0&&rows[0].data&&rows[0].data.title){
+      var b=rows[0].data;
+      document.getElementById('cardBulletin').style.display='flex';
+      document.getElementById('bulletinTitle').textContent=b.title;
+      var img=document.getElementById('bulletinThumb');
+      if(b.image_url){ img.src=b.image_url; img.style.display=''; }
+      else img.style.display='none';
+    }
+  }catch(e){}
+}
+
+async function init() {
       currentUser = getUser();
       if (!currentUser) return;
 
@@ -455,6 +500,7 @@
       updateSidebar(currentUser);
       loadPositions();
       loadSideBiz();
+      loadBulletin();
       // 蘑菇的计算器（全局锁：锁关全员可见，锁开仅超管）
 	      fetch('https://nifmryfrgfdjjbrdrgpo.supabase.co/rest/v1/calculator_data?calculator_type=eq._global_lock&select=data&limit=1',{
 	        headers:{apikey:'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U',Authorization:'Bearer sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U'}
