@@ -229,6 +229,7 @@
       font-size: 14px; color: var(--text-secondary); line-height: 1.5;
     }
 
+
     /* --- 更新日志 --- */
     .changelog {
       margin-top:40px; padding-top:24px;
@@ -254,35 +255,6 @@
     .changelog-edit textarea {
       width:100%; padding:10px 14px; border:1px solid var(--border);
       border-radius:8px; font-size:14px; font-family:inherit;
-      background:var(--bg-card); color:var(--text); outline:none; resize:vertical;
-    }
-    .changelog-edit textarea:focus { border-color:var(--accent); }
-
-    /* --- 更新日志 --- */
-    .changelog {
-      margin-top:40px; padding-top:24px;
-      border-top:1px solid var(--border-light);
-      max-width:720px;
-    }
-    .changelog-header {
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:12px;
-    }
-    .changelog-title { font-size:15px; font-weight:600; color:var(--text); }
-    .changelog-edit-btn {
-      font-size:12px; padding:4px 12px; border-radius:0;
-      border:1px solid var(--border); background:var(--bg-card);
-      color:var(--text-secondary); cursor:pointer; font-family:inherit;
-    }
-    .changelog-edit-btn:hover { background:var(--bg-hover); }
-    .changelog-content {
-      font-size:14px; color:var(--text-secondary); line-height:1.8;
-      white-space:pre-wrap;
-    }
-    .changelog-content p { margin:0 0 8px 0; }
-    .changelog-edit textarea {
-      width:100%; padding:10px 14px; border:1px solid var(--border);
-      border-radius:0; font-size:14px; font-family:inherit;
       background:var(--bg-card); color:var(--text); outline:none; resize:vertical;
     }
     .changelog-edit textarea:focus { border-color:var(--accent); }
@@ -414,7 +386,7 @@
           <div class="card-desc">管理、查询任务</div>
         </a>
 
-        <!-- 点赞指南（暂时隐藏）
+        <!-- 点赞指南（暂时隐藏） -->
         <a href="guide.html" class="card" style="display:none;">
           <div class="card-icon">👍</div>
           <div class="card-title">点赞指南</div>
@@ -445,7 +417,6 @@
           <div class="card-desc">全公会大锤小锤数量</div>
         </a>
       </div>
-
       <!-- 更新日志 -->
       <div class="changelog" id="changelogSection">
         <div class="changelog-header">
@@ -462,21 +433,6 @@
         </div>
       </div>
 
-      <!-- 更新日志 -->
-      <div class="changelog" id="changelogSection">
-        <div class="changelog-header">
-          <span class="changelog-title">📝 更新日志</span>
-          <button class="changelog-edit-btn" id="btnEditChangelog" style="display:none;" onclick="toggleChangelogEdit()">✏️ 编辑</button>
-        </div>
-        <div class="changelog-content" id="changelogView"></div>
-        <div class="changelog-edit" id="changelogEdit" style="display:none;">
-          <textarea id="changelogTextarea" rows="8" placeholder="输入更新日志内容..."></textarea>
-          <div style="display:flex;gap:8px;margin-top:8px;">
-            <button class="btn btn-primary" onclick="saveChangelog()" style="width:auto;border-radius:0;">💾 保存</button>
-            <button class="btn btn-secondary" onclick="toggleChangelogEdit()" style="width:auto;">取消</button>
-          </div>
-        </div>
-      </div>
     </main>
   </div>
 
@@ -548,94 +504,7 @@
       }
     }
 
-    async function loadChangelog(){
-  try{
-    var rows=await API.get('calculator_data?calculator_type=eq._changelog&select=data&limit=1');
-    if(rows.length>0&&rows[0].data&&rows[0].data.content){
-      var c=rows[0].data;
-      var html='';
-      c.content.split('\n\n').forEach(function(p){ html+='<p>'+escHtml(p)+'</p>'; });
-      document.getElementById('changelogView').innerHTML=html;
-    }else{
-      document.getElementById('changelogView').innerHTML='<span style="color:var(--text-tertiary);">暂无更新日志</span>';
-    }
-    if(currentUser&&currentUser.is_admin){
-      document.getElementById('btnEditChangelog').style.display='inline-block';
-    }
-  }catch(e){}
-}
-
-function toggleChangelogEdit(){
-  var view=document.getElementById('changelogView');
-  var edit=document.getElementById('changelogEdit');
-  var btn=document.getElementById('btnEditChangelog');
-  if(edit.style.display==='none'){
-    // Populate textarea from current view content
-    var text=view.textContent.trim();
-    if(text==='暂无更新日志')text='';
-    document.getElementById('changelogTextarea').value=text;
-    view.style.display='none'; edit.style.display='block';
-    btn.textContent='👁️ 预览';
-  }else{
-    view.style.display=''; edit.style.display='none';
-    btn.textContent='✏️ 编辑';
-  }
-}
-
-async function saveChangelog(){
-  var content=document.getElementById('changelogTextarea').value.trim();
-  try{
-    var existing=await API.get('calculator_data?calculator_type=eq._changelog&select=id&limit=1');
-    if(existing.length>0)await API.del('calculator_data?id=eq.'+existing[0].id);
-    await API.post('calculator_data',{member_id:currentUser.id,calculator_type:'_changelog',data:{
-      content:content,updated_at:new Date().toISOString(),updated_by:currentUser.display_name||currentUser.uid
-    }});
-    // Refresh view
-    var html='';
-    content.split('\n\n').forEach(function(p){ html+='<p>'+escHtml(p)+'</p>'; });
-    document.getElementById('changelogView').innerHTML=html||'<span style="color:var(--text-tertiary);">暂无更新日志</span>';
-    toggleChangelogEdit();
-  }catch(e){ console.error(e); alert('保存失败: '+e.message); }
-}
-
-function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function toggleChangelogEdit(){
-  var view=document.getElementById('changelogView');
-  var edit=document.getElementById('changelogEdit');
-  var btn=document.getElementById('btnEditChangelog');
-  if(edit.style.display==='none'){
-    var text=document.getElementById('changelogView').textContent.trim();
-    if(text==='暂无更新日志')text='';
-    document.getElementById('changelogTextarea').value=text;
-    view.style.display='none';edit.style.display='block';
-    btn.textContent='👁️ 预览';
-  }else{
-    view.style.display='';edit.style.display='none';
-    btn.textContent='✏️ 编辑';
-  }
-}
-
-async function saveChangelog(){
-  var content=document.getElementById('changelogTextarea').value.trim();
-  var hd={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json'};
-  var data={content:content,updated_at:new Date().toISOString(),updated_by:currentUser.display_name||currentUser.uid};
-  try{
-    var rows=await API.get('calculator_data?calculator_type=eq._changelog&select=id&limit=1');
-    if(rows.length>0){
-      await fetch(SUPABASE_URL+'/rest/v1/calculator_data?id=eq.'+rows[0].id,{method:'PATCH',headers:hd,body:JSON.stringify({data:data})});
-    }else{
-      hd['Prefer']='return=representation';
-      await fetch(SUPABASE_URL+'/rest/v1/calculator_data',{method:'POST',headers:hd,body:JSON.stringify({member_id:currentUser.id,calculator_type:'_changelog',data:data})});
-    }
-    var html='';
-    content.split('\n\n').forEach(function(p){html+='<p>'+escHtml(p)+'</p>';});
-    document.getElementById('changelogView').innerHTML=html||'<span style="color:var(--text-tertiary);">暂无更新日志</span>';
-    toggleChangelogEdit();
-  }catch(e){console.error(e);alert('保存失败: '+e.message);}
-}
-
-async function loadBulletin(){
+    async function loadBulletin(){
   try{
     var rows=await API.get('calculator_data?calculator_type=eq._bulletin&select=data&limit=1');
     if(rows.length>0&&rows[0].data&&rows[0].data.title){
@@ -678,7 +547,6 @@ async function init() {
       loadPositions();
       loadSideBiz();
       loadBulletin();
-      loadChangelog();
       // 蘑菇的计算器（全局锁：锁关全员可见，锁开仅超管）
 	      fetch('https://nifmryfrgfdjjbrdrgpo.supabase.co/rest/v1/calculator_data?calculator_type=eq._global_lock&select=data&limit=1',{
 	        headers:{apikey:'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U',Authorization:'Bearer sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U'}
