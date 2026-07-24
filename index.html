@@ -518,6 +518,58 @@
   }catch(e){}
 }
 
+async function loadChangelog(){
+  try{
+    var rows=await API.get('calculator_data?calculator_type=eq._changelog&select=data&limit=1');
+    if(rows.length>0&&rows[0].data&&rows[0].data.content){
+      var c=rows[0].data;var h='';
+      c.content.split('\n\n').forEach(function(p){h+='<p>'+escHtml(p)+'</p>';});
+      document.getElementById('changelogView').innerHTML=h;
+    }else{
+      document.getElementById('changelogView').innerHTML='<span style="color:var(--text-tertiary);">暂无更新日志</span>';
+    }
+    if(currentUser&&currentUser.is_admin){
+      document.getElementById('btnEditChangelog').style.display='inline-block';
+    }
+  }catch(e){}
+}
+
+function toggleChangelogEdit(){
+  var view=document.getElementById('changelogView');
+  var edit=document.getElementById('changelogEdit');
+  var btn=document.getElementById('btnEditChangelog');
+  if(edit.style.display==='none'){
+    var text=view.textContent.trim();
+    if(text==='暂无更新日志')text='';
+    document.getElementById('changelogTextarea').value=text;
+    view.style.display='none';edit.style.display='block';
+    btn.textContent='👁️ 预览';
+  }else{
+    view.style.display='';edit.style.display='none';
+    btn.textContent='✏️ 编辑';
+  }
+}
+
+async function saveChangelog(){
+  var content=document.getElementById('changelogTextarea').value.trim();
+  var data={content:content,updated_at:new Date().toISOString(),updated_by:currentUser.display_name||currentUser.uid};
+  var hd={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json'};
+  try{
+    var rows=await API.get('calculator_data?calculator_type=eq._changelog&select=id&limit=1');
+    if(rows.length>0){
+      await fetch(SUPABASE_URL+'/rest/v1/calculator_data?id=eq.'+rows[0].id,{method:'PATCH',headers:hd,body:JSON.stringify({data:data})});
+    }else{
+      hd['Prefer']='return=representation';
+      await fetch(SUPABASE_URL+'/rest/v1/calculator_data',{method:'POST',headers:hd,body:JSON.stringify({member_id:currentUser.id,calculator_type:'_changelog',data:data})});
+    }
+    var h='';content.split('\n\n').forEach(function(p){h+='<p>'+escHtml(p)+'</p>';});
+    document.getElementById('changelogView').innerHTML=h||'<span style="color:var(--text-tertiary);">暂无更新日志</span>';
+    toggleChangelogEdit();
+  }catch(e){console.error(e);alert('保存失败: '+e.message);}
+}
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
 async function init() {
       currentUser = getUser();
       if (!currentUser) return;
@@ -547,6 +599,7 @@ async function init() {
       loadPositions();
       loadSideBiz();
       loadBulletin();
+      loadChangelog();
       // 蘑菇的计算器（全局锁：锁关全员可见，锁开仅超管）
 	      fetch('https://nifmryfrgfdjjbrdrgpo.supabase.co/rest/v1/calculator_data?calculator_type=eq._global_lock&select=data&limit=1',{
 	        headers:{apikey:'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U',Authorization:'Bearer sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U'}
