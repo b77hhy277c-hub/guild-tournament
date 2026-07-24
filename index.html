@@ -440,16 +440,28 @@
     var SUPABASE_ANON_KEY = 'sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
 
     var API = {
-      headers: function () {
-        return {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
-        };
+      headers: function (ct) {
+        var h = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
+        if (ct) h['Content-Type'] = 'application/json';
+        return h;
       },
       get: async function (path) {
         var res = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: this.headers() });
         if (!res.ok) throw new Error(await res.text());
         return res.json();
+      },
+      post: async function (path, body) {
+        var res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+          method: 'POST', headers: this.headers(1), body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+      },
+      del: async function (path) {
+        var res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+          method: 'DELETE', headers: this.headers()
+        });
+        if (!res.ok) throw new Error(await res.text());
       },
     };
 
