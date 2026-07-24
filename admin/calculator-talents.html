@@ -169,7 +169,6 @@ function toast(m,t){
 async function loadAllTalents(){
   try {
     var cats = await API.get('task_categories?select=id,name,parent_id&order=sort_order.asc&limit=5000');
-    // Find L1: 人才 and 艺人
     var talentL1 = cats.find(function(c){return !c.parent_id && c.name==='人才';});
     var artistL1 = cats.find(function(c){return !c.parent_id && c.name==='艺人';});
 
@@ -178,17 +177,14 @@ async function loadAllTalents(){
     [talentL1, artistL1].forEach(function(l1){
       if(!l1) return;
       allTalents[l1.name] = {};
-      // Find L2 children
       var l2s = cats.filter(function(c){return c.parent_id===l1.id;});
       l2s.forEach(function(l2){
         allTalents[l1.name][l2.name] = [];
-        // Find L3 children
         var l3s = cats.filter(function(c){return c.parent_id===l2.id;});
         l3s.forEach(function(l3){
           allTalents[l1.name][l2.name].push(l3.name);
           talentByL1L2[l3.name] = { l1: l1.name, l2: l2.name };
         });
-        allTalents[l1.name][l2.name].sort();
       });
     });
   } catch(e) {
