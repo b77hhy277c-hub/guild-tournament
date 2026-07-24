@@ -81,6 +81,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
     </optgroup>
   </select>
   <button class="btn" onclick="saveAll()" id="btnSave" disabled>💾 保存</button>
+  <button class="btn" style="background:var(--bg);color:var(--text);border:1px solid var(--border);" onclick="refreshTalents()">🔄 刷新人才列表</button>
   <span id="saveStatus" style="font-size:13px;color:var(--text2);"></span>
   </div>
   <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;border:1px solid var(--border-l);">
@@ -167,7 +168,7 @@ function toast(m,t){
 
 async function loadAllTalents(){
   try {
-    var cats = await API.get('task_categories?select=id,name,parent_id&order=sort_order.asc');
+    var cats = await API.get('task_categories?select=id,name,parent_id&order=sort_order.asc&limit=5000');
     // Find L1: 人才 and 艺人
     var talentL1 = cats.find(function(c){return !c.parent_id && c.name==='人才';});
     var artistL1 = cats.find(function(c){return !c.parent_id && c.name==='艺人';});
@@ -347,6 +348,14 @@ async function saveAll(){
 
   btn.disabled = false;
   btn.textContent = '💾 保存';
+}
+
+async function refreshTalents(){
+  document.getElementById('content').innerHTML='<div class="loading">重新加载人才数据...</div>';
+  await loadAllTalents();
+  if(currentCalc) onCalcChange();
+  else document.getElementById('content').innerHTML='<div class="empty-state">请选择计算器类型</div>';
+  toast('人才列表已刷新');
 }
 
 async function onCalcChange(){
