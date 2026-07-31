@@ -457,7 +457,7 @@ html+='<tr class="'+cls+'">'+
 '<td style="text-align:center;">'+(si+1)+'</td><td>'+esc(s.label)+'</td>'+
 '<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
 '<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
-'<td style="text-align:center;">Lv.'+(s.level||'?')+'</td>'+
+'<td style="text-align:center;">(s.level||'?')+'</td>'+
 '<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
 '<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
@@ -499,7 +499,7 @@ html+='<tr class="'+cls+'">'+
 '<td style="text-align:center;">'+(si+1)+'</td><td>'+esc(s.label)+'</td>'+
 '<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
 '<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
-'<td style="text-align:center;">Lv.'+(s.level||'?')+'</td>'+
+'<td style="text-align:center;">(s.level||'?')+'</td>'+
 '<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
 '<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
@@ -549,7 +549,7 @@ html+='<tr class="'+cls+'">'+
 '<td>'+esc(s.label)+'</td>'+
 '<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
 '<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
-'<td style="text-align:center;">Lv.'+(s.level||'?')+'</td>'+
+'<td style="text-align:center;">(s.level||'?')+'</td>'+
 '<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
 '<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
