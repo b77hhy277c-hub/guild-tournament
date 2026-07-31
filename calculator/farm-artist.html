@@ -137,7 +137,6 @@
           <th style="width:48px;">艺人</th>
           <th style="width:68px;">性价比</th>
           <th style="width:56px;">升N级</th>
-          <th style="width:56px;">升级至</th>
           <th style="width:72px;">消耗</th>
           <th style="width:68px;">新价比</th>
           <th style="width:60px;">魅力</th>
@@ -430,7 +429,6 @@ function renderResults(sim,budget,spent,remaining,totalCharm){
       '<td class="artist-count">'+s.artists+'</td>'+
       '<td style="text-align:right;">'+s.origRatio.toFixed(2)+'</td>'+
       '<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
-      '<td style="text-align:center;">'+(s.level||'?')+'</td>'+
       '<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
       '<td style="text-align:right;">'+s.ratio.toFixed(2)+'</td>'+
       '<td style="text-align:center;color:#30d158;font-weight:600;">'+(charmInc>0?'+'+charmInc:'-')+'</td>'+
@@ -467,7 +465,7 @@ function applyResults(){
 
 
 function initSteppers(){
-	document.querySelectorAll('input.level:not([readonly])').forEach(function(input){
+	document.querySelectorAll('input.num').forEach(function(input){
 		if(input.readOnly)return;
 		if(input.parentElement.classList.contains('num-stepper'))return;
 		var wrap=document.createElement('span');wrap.className='num-stepper';
