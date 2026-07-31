@@ -102,7 +102,7 @@ input.num:focus{border-color:var(--accent);}
 <div style="overflow-x:auto;">
 <table><thead><tr>
 <th style="width:28px;">#</th><th>项目</th><th style="width:48px;">人才</th>
-<th style="width:68px;">性价比</th><th style="width:56px;">升N级</th>
+<th style="width:68px;">性价比</th><th style="width:56px;">升N级</th><th style="width:48px;">升级至</th>
 <th style="width:72px;">消耗</th><th style="width:68px;">新价比</th>
 </tr></thead><tbody id="resultBody"></tbody></table>
 </div>
@@ -380,6 +380,7 @@ html+='<tr class="'+cls+'">'+
 '<td class="talent-count">'+countOwned((SECTIONS.find(function(p){return p.name===s.section;})||{}).talents||[])+'</td>'+
 '<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
 '<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
+'<td style="text-align:center;">'+(s.level||'')+'</td>'+
 '<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
 '<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
@@ -408,7 +409,7 @@ toast('✅ 已保存，肉票已清零');
 
 
 function initSteppers(){
-	document.querySelectorAll('input.num').forEach(function(input){
+	document.querySelectorAll('input.level:not([readonly])').forEach(function(input){
 		if(input.readOnly)return;
 		if(input.parentElement.classList.contains('num-stepper'))return;
 		var wrap=document.createElement('span');wrap.className='num-stepper';
