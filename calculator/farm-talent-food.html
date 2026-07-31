@@ -390,6 +390,7 @@ html+='<tr class="'+cls+'">'+
 '<td class="talent-count">'+countOwned((SECTIONS.find(function(p){return p.name===s.section;})||{}).talents||[])+'</td>'+
 '<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
 '<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
+'<td style="text-align:center;">Lv.'+(s.level||'?')+'</td>'+
 '<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
 '<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
@@ -418,7 +419,7 @@ toast('✅ 已保存，粮票已清零');
 
 
 function initSteppers(){
-	document.querySelectorAll('input.num').forEach(function(input){
+	document.querySelectorAll('input.level:not([readonly])').forEach(function(input){
 		if(input.readOnly)return;
 		if(input.parentElement.classList.contains('num-stepper'))return;
 		var wrap=document.createElement('span');wrap.className='num-stepper';

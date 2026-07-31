@@ -100,7 +100,7 @@ input.num:focus{border-color:var(--accent);}
 <div class="result-bar" id="resultBar"></div>
 <div style="overflow-x:auto;">
 <table><thead><tr>
-<th style="width:28px;">#</th><th>项目</th><th style="width:68px;">性价比</th><th style="width:56px;">升N级</th><th style="width:72px;">消耗</th><th style="width:68px;">新价比</th>
+<th style="width:28px;">#</th><th>项目</th><th style="width:68px;">性价比</th><th style="width:56px;">升N级</th><th style="width:56px;">升级至</th><th style="width:72px;">消耗</th><th style="width:68px;">新价比</th>
 </tr></thead><tbody id="resultBody"></tbody></table>
 </div>
 <div id="applyBtnWrap" style="padding:14px 20px;border-top:1px solid var(--border-l);display:none;">
@@ -455,6 +455,7 @@ html+='<tr class="'+cls+'">'+
 '<td style="text-align:center;">'+(si+1)+'</td><td>'+esc(s.label)+'</td>'+
 '<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
 '<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
+'<td style="text-align:center;">Lv.'+(s.level||'?')+'</td>'+
 '<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
 '<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
@@ -496,6 +497,7 @@ html+='<tr class="'+cls+'">'+
 '<td style="text-align:center;">'+(si+1)+'</td><td>'+esc(s.label)+'</td>'+
 '<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
 '<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
+'<td style="text-align:center;">Lv.'+(s.level||'?')+'</td>'+
 '<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
 '<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
@@ -545,6 +547,7 @@ html+='<tr class="'+cls+'">'+
 '<td>'+esc(s.label)+'</td>'+
 '<td style="text-align:right;">'+s.origRatio.toFixed(6)+'</td>'+
 '<td style="text-align:center;font-weight:600;color:var(--accent);">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
+'<td style="text-align:center;">Lv.'+(s.level||'?')+'</td>'+
 '<td style="text-align:right;font-weight:600;">'+Math.round(s.spent).toLocaleString()+'</td>'+
 '<td style="text-align:right;">'+s.ratio.toFixed(6)+'</td></tr>';
 });
@@ -574,7 +577,7 @@ toast('✅ 已保存，票据已清零');
 
 
 function initSteppers(){
-	document.querySelectorAll('input.num').forEach(function(input){
+	document.querySelectorAll('input.level:not([readonly])').forEach(function(input){
 		if(input.parentElement.classList.contains('num-stepper'))return;
 		var wrap=document.createElement('span');wrap.className='num-stepper';
 		var btnD=document.createElement('button');btnD.className='step-btn step-down';btnD.type='button';btnD.textContent='\u2212';
