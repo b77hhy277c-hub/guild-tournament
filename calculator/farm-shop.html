@@ -149,7 +149,8 @@
           <th>栏目</th>
           <th>项目</th>
           <th style="width:80px;">当前性价比</th>
-          <th style="width:70px;">建议升N级</th>
+          <th style="width:56px;">升N级</th>
+          <th style="width:56px;">升级至</th>
           <th style="width:90px;">消耗粮票</th>
           <th style="width:80px;">新性价比</th>
         </tr>
@@ -475,6 +476,7 @@ function renderResults(sim, budget, spent, remaining){
       '<td style="color:var(--text2);">'+esc(s.sub)+'</td>'+
       '<td class="ratio">'+s.origRatio.toFixed(6)+'</td>'+
       '<td class="upgrade">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
+      '<td style="text-align:center;">Lv.'+(s.level||'?')+'</td>'+
       '<td class="cost-total">'+Math.round(s.spent).toLocaleString()+'</td>'+
       '<td class="ratio">'+s.ratio.toFixed(6)+'</td>'+
     '</tr>';
@@ -489,7 +491,7 @@ function renderResults(sim, budget, spent, remaining){
 
 
 function initSteppers(){
-	document.querySelectorAll('input.num').forEach(function(input){
+	document.querySelectorAll('input.level:not([readonly])').forEach(function(input){
 		if(input.readOnly)return;
 		if(input.parentElement.classList.contains('num-stepper'))return;
 		var wrap=document.createElement('span');wrap.className='num-stepper';
