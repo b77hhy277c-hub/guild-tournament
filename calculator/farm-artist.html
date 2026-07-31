@@ -372,7 +372,7 @@ function gatherItems(){
   PROJECTS.forEach(function(p){
     var costEl=document.querySelector('.cost[data-name="'+esc(p.name)+'"]');
     var levelEl=document.querySelector('.level[data-name="'+esc(p.name)+'"]');
-    var cost=parseInt(costEl.value)||0;
+    var cost=parseFloat(costEl.value)||0;
     var level=parseInt(levelEl.value)||0;
     var count=countOwned(p.artists);
     if(cost<=0||count<=0)return;
@@ -401,14 +401,14 @@ function calculate(){
     totalSpent+=best.cost;
     best.spent+=best.cost;
     best.upgraded+=1;
-    best.cost=Math.round(best.cost*getGrowth(best.level));
+    best.cost=Math.round(best.cost*getGrowth(best.level)*100)/100;
     best.level++;
     best.ratio=best.cost/best.artists;
   }
 
   lastSimResult=sim;
   try{
-    var simSave=sim.map(function(s){return{name:s.name,cost:Math.round(s.cost),level:s.level,artists:s.artists,upgraded:s.upgraded,spent:Math.round(s.spent)};});
+    var simSave=sim.map(function(s){return{name:s.name,cost:Math.round(s.cost*100)/100,level:s.level,artists:s.artists,upgraded:s.upgraded,spent:Math.round(s.spent*100)/100};});
     localStorage.setItem('calc_artist_sim',JSON.stringify(simSave));
   }catch(e){}
   var totalCharm=0;sim.forEach(function(s){totalCharm+=s.upgraded*s.artists*2;});
