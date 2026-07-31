@@ -476,7 +476,7 @@ function renderResults(sim, budget, spent, remaining){
       '<td style="color:var(--text2);">'+esc(s.sub)+'</td>'+
       '<td class="ratio">'+s.origRatio.toFixed(6)+'</td>'+
       '<td class="upgrade">'+(s.upgraded>0?'+'+s.upgraded:'-')+'</td>'+
-      '<td style="text-align:center;">(s.level||'?')+'</td>'+
+      '<td style="text-align:center;">'+(s.level||'?')+'</td>'+
       '<td class="cost-total">'+Math.round(s.spent).toLocaleString()+'</td>'+
       '<td class="ratio">'+s.ratio.toFixed(6)+'</td>'+
     '</tr>';
