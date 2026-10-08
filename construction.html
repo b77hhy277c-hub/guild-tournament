@@ -21,8 +21,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
 .btn-danger:hover{background:#e03020;}
 .card{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
 .table-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;min-width:640px;}
-th,td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--border-l);font-size:13px;}
+table{width:100%;border-collapse:collapse;min-width:600px;}
+th,td{padding:7px 5px;text-align:center;border-bottom:1px solid var(--border-l);font-size:13px;}
 th{font-size:12px;font-weight:600;color:var(--text2);background:var(--bg2);white-space:nowrap;}
 td{vertical-align:middle;}
 /* 间隔底色 */
@@ -68,14 +68,14 @@ input[type=checkbox]:disabled{cursor:not-allowed;opacity:0.5;}
 <tr>
 <th rowspan="2" style="width:36px;">序</th>
 <th rowspan="2" class="member-name">成员</th>
-<th colspan="4" class="group-col">初级建设</th>
 <th rowspan="2" class="group-col">中级建设</th>
 <th rowspan="2" class="group-col">高级建设</th>
 <th colspan="2" class="group-col">道具建设</th>
+<th colspan="4" class="group-col">初级建设</th>
 </tr>
 <tr>
-<th class="group-col">1</th><th>2</th><th>3</th><th>4</th>
 <th class="group-col">1</th><th>2</th>
+<th class="group-col">1</th><th>2</th><th>3</th><th>4</th>
 </tr>
 </thead>
 <tbody id="memberBody"><tr><td colspan="10" class="empty-state">加载成员中...</td></tr></tbody>
@@ -155,11 +155,6 @@ var disabled=canEdit?'':'disabled';
 html+='<tr class="'+(canEdit?'draggable':'')+'" data-mid="'+esc(mid)+'" '+(canEdit?'draggable="true"':'')+' ondragstart="onDragStart(event,\''+esc(mid)+'\')" ondragover="onDragOver(event)" ondrop="onDrop(event,\''+esc(mid)+'\')" ondragend="onDragEnd()">';
 html+='<td class="drag-handle">'+(canEdit?'⋮⋮':'')+'</td>';
 html+='<td class="member-name">'+esc(m.display_name||m.uid)+'</td>';
-// 初级建设 4
-for(var i=1;i<=4;i++){
-var k='c'+i;
-html+='<td'+(i===1?' class="group-col"':'')+'><input type="checkbox" data-mid="'+esc(mid)+'" data-key="'+k+'" '+(chk[k]?'checked':'')+' '+disabled+' onchange="onCheck(this)"/></td>';
-}
 // 中级 1
 html+='<td class="group-col"><input type="checkbox" data-mid="'+esc(mid)+'" data-key="m1" '+(chk.m1?'checked':'')+' '+disabled+' onchange="onCheck(this)"/></td>';
 // 高级 1
@@ -167,7 +162,12 @@ html+='<td class="group-col"><input type="checkbox" data-mid="'+esc(mid)+'" data
 // 道具建设 2
 for(var j=1;j<=2;j++){
 var k2='i'+j;
-html+='<td'+(j===1?' class="group-col"':'')+'><input type="checkbox" data-mid="'+esc(mid)+'" data-key="'+k2+'" '+(chk.k2?'checked':'')+' '+disabled+' onchange="onCheck(this)"/></td>';
+html+='<td'+(j===1?' class="group-col"':'')+'><input type="checkbox" data-mid="'+esc(mid)+'" data-key="'+k2+'" '+(chk[k2]?'checked':'')+' '+disabled+' onchange="onCheck(this)"/></td>';
+}
+// 初级建设 4
+for(var i=1;i<=4;i++){
+var k='c'+i;
+html+='<td'+(i===1?' class="group-col"':'')+'><input type="checkbox" data-mid="'+esc(mid)+'" data-key="'+k+'" '+(chk[k]?'checked':'')+' '+disabled+' onchange="onCheck(this)"/></td>';
 }
 html+='</tr>';
 });
