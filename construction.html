@@ -21,7 +21,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
 .btn-danger:hover{background:#e03020;}
 .card{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
 .table-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;min-width:440px;}
+table{width:100%;border-collapse:collapse;min-width:400px;}
 th,td{padding:7px 5px;text-align:center;border-bottom:1px solid var(--border-l);font-size:13px;}
 th{font-size:12px;font-weight:600;color:var(--text2);background:var(--bg2);white-space:nowrap;}
 td{vertical-align:middle;}
@@ -33,7 +33,7 @@ tr.draggable{cursor:grab;}
 tr.draggable:active{cursor:grabbing;}
 tr.drag-over td{border-top:2px solid var(--accent);}
 .drag-handle{color:var(--text3);font-size:16px;user-select:none;-webkit-user-select:none;cursor:grab;width:36px;}
-.member-name{text-align:left;font-weight:500;white-space:nowrap;padding-right:8px;}
+.member-name{text-align:left;font-weight:500;white-space:nowrap;width:3.5em;max-width:3.5em;overflow:hidden;text-overflow:ellipsis;}
 .narrow-col{width:3em;}
 /* 大号可点击 checkbox */
 input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;vertical-align:middle;}
