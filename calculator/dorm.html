@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>唱声宿舍分配</title>
+<style>
+:root{--bg:#fff;--bg2:#f5f5f7;--card:#fff;--hover:rgba(0,0,0,0.04);--text:#1d1d1f;--text2:#6e6e73;--text3:#aeaeb2;--accent:#007AFF;--accent-h:#0062d1;--border:#d2d2d7;--border-l:#e5e5ea;--shadow:0 4px 20px rgba(0,0,0,0.08);--r:12px;--green:#34c759;--red:#ff3b30;--purple:#af52de;}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--bg2:#1c1c1e;--card:#1c1c1e;--hover:rgba(255,255,255,0.08);--text:#f5f5f7;--text2:#8e8e93;--text3:#636366;--accent:#0A84FF;--accent-h:#409cff;--border:#38383a;--border-l:#2c2c2e;--shadow:0 1px 3px rgba(255,255,255,0.05);}}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;font-size:14px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;line-height:1.5;}
+.navbar{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 20px;border-bottom:1px solid var(--border-l);position:sticky;top:0;background:var(--bg);z-index:10;backdrop-filter:blur(20px);}
+.navbar a{color:var(--accent);text-decoration:none;font-size:14px;}
+.navbar .title{font-size:16px;font-weight:600;}
+.navbar .user{font-size:13px;color:var(--text2);}
+.main{max-width:1080px;margin:0 auto;padding:24px 16px 48px;}
+h1{font-size:22px;font-weight:650;margin:0 0 6px;letter-spacing:-.01em;}
+.sub{color:var(--text2);font-size:13px;margin:0;}
+.stats{display:flex;gap:10px;margin:16px 0 18px;flex-wrap:wrap;}
+.stat{flex:1 1 0;min-width:120px;background:var(--card);border-radius:var(--r);padding:12px 14px;border:1px solid var(--border-l);box-shadow:var(--shadow);}
+.stat .k{font-size:12px;color:var(--text2);margin-bottom:2px;}
+.stat .v{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;}
+@media(max-width:900px){.cols{grid-template-columns:minmax(0,1fr);}}
+.panel{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 14px 10px;overflow:hidden;}
+.panel h2{font-size:13px;font-weight:600;color:var(--text2);margin:0 0 10px;display:flex;justify-content:space-between;align-items:baseline;}
+.panel h2 span{font-weight:400;font-size:12px;}
+.table-scroll{overflow-x:auto;margin:0 -14px;padding:0 14px;}
+table{border-collapse:separate;border-spacing:0;width:100%;font-variant-numeric:tabular-nums;}
+th{font-size:11px;font-weight:500;color:var(--text2);text-align:center;padding:0 0 6px;white-space:nowrap;}
+th.l,td.l{text-align:left;}
+td{padding:0;border-top:1px solid var(--border-l);}
+.idx{font-size:11px;color:var(--text3);width:26px;text-align:center;}
+.rname{font-size:13px;white-space:nowrap;padding-right:8px;}
+input.lv{width:100%;min-width:44px;border:1px solid transparent;border-radius:7px;background:var(--bg2);padding:6px 2px;font-size:13px;text-align:center;font-family:inherit;font-variant-numeric:tabular-nums;color:var(--text);-moz-appearance:textfield;appearance:textfield;margin:3px 0;}
+input.lv::-webkit-outer-spin-button,input.lv::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+input.lv:focus{outline:none;border-color:var(--accent);background:var(--bg);box-shadow:0 0 0 3px rgba(0,113,227,.12);}
+input.lv::placeholder{color:var(--text3);}
+.gift{text-align:right;font-size:12.5px;color:var(--text);white-space:nowrap;padding-left:8px;padding-right:8px;font-variant-numeric:tabular-nums;min-width:86px;}
+th.giftcol{text-align:right;padding-right:8px;}
+.gift.zero{color:var(--text3);}
+.group{border:1px solid var(--border-l);border-radius:11px;padding:10px 12px;margin-bottom:10px;}
+.group:last-child{margin-bottom:0;}
+.ghead{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.tag{font-size:12px;font-weight:600;color:#fff;border-radius:6px;padding:1px 8px;line-height:18px;}
+.gsum{font-size:16px;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
+.gdiff{margin-left:auto;font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums;}
+.grooms{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;}
+.groom{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--text);}
+.groom .rn{color:var(--text2);font-size:11px;width:20px;flex:none;}
+.groom .rg{font-variant-numeric:tabular-nums;color:var(--text2);}
+.empty{padding:26px 8px;text-align:center;color:var(--text3);font-size:13px;}
+.foot{display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap;}
+button{font-family:inherit;font-size:12.5px;color:var(--accent);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;}
+button:hover{background:var(--hover);}
+button:active{transform:scale(.98);}
+.hint{font-size:11.5px;color:var(--text3);}
+.only-narrow{display:none;}
+.chips{display:flex;gap:8px;margin-bottom:14px;}
+.chip{flex:1 1 0;min-width:0;background:var(--card);border:1px solid var(--border-l);border-radius:10px;padding:8px 4px 6px;text-align:center;cursor:grab;position:relative;overflow:hidden;user-select:none;transition:box-shadow .15s,transform .15s;}
+.chip::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:var(--c);}
+.chip .cn{display:block;font-size:15px;font-weight:650;line-height:1.15;color:var(--text);}
+.chip .cp{display:block;font-size:11px;color:var(--text2);line-height:1.5;white-space:nowrap;}
+.chip:hover{box-shadow:0 2px 8px rgba(0,0,0,.07);}
+.chip:active{cursor:grabbing;}
+.chip.dragging{opacity:.4;}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;font-size:14px;font-weight:500;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.3s;box-shadow:var(--shadow);}
+.toast.show{opacity:1;}
+.toast.ok{background:#30d158;color:#fff;}
+.toast.err{background:#ff3b30;color:#fff;}
+@media(max-width:640px){.main{padding:16px 12px 36px;}h1{font-size:19px;}.sub{font-size:12px;}.stat{padding:10px 12px;min-width:0;}.stat .v{font-size:16px;}.stat .k{font-size:11px;}.panel{padding:12px 12px 8px;}.table-scroll{margin:0 -12px;padding:0 12px;}th.giftcol,td.giftcol{display:none;}.idx{width:18px;font-size:10px;}.rname{font-size:12px;padding-right:4px;}input.lv{min-width:34px;padding:7px 0;font-size:12.5px;border-radius:6px;}.grooms{grid-template-columns:1fr;}.gsum{font-size:15px;}.only-wide{display:none;}.only-narrow{display:inline;}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<nav class="navbar">
+<a href="../calculator.html">← 返回蘑菇的计算器</a>
+<span class="title">🎤 唱声宿舍分配</span>
+<span class="user" id="navUser">--</span>
+</nav>
+
+<div class="main">
+<header>
+<h1>唱声宿舍分配</h1>
+<p class="sub">填入 16 间宿舍的 6 个家具等级（0 或留空 = 未解锁），自动给出粉丝礼物最均衡的四组分配方案</p>
+</header>
+
+<div class="stats">
+<div class="stat"><div class="k">总粉丝礼物期望</div><div class="v" id="vTotal">—</div></div>
+<div class="stat"><div class="k">每组目标</div><div class="v" id="vMean">—</div></div>
+<div class="stat"><div class="k">极差（越小越均衡）</div><div class="v" id="vSpread">—</div></div>
+</div>
+
+<div class="cols">
+<section class="panel">
+<h2>宿舍家具等级 <span>6 个槽位 · 0 = 未解锁</span></h2>
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th></th><th class="l">宿舍</th>
+<th>槽1</th><th>槽2</th><th>槽3</th><th>槽4</th><th>槽5</th><th>槽6</th>
+<th class="giftcol" style="text-align:right">粉丝礼物期望</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+<div class="foot">
+<button id="btnClear">清空</button>
+<button id="btnSample">填入示例</button>
+<span class="hint" id="hint">输入后自动计算</span>
+</div>
+</section>
+
+<section class="panel">
+<h2>属性优先级 <span>左 = 拿最高组</span></h2>
+<div class="chips" id="chips"></div>
+<h2 style="margin-top:4px">推荐分配方案 <span>按合计降序依次对应</span></h2>
+<div id="result"></div>
+<div class="hint" style="margin-top:8px"><span class="only-wide">拖动色块调整顺序，也可以点色块往前移一位</span><span class="only-narrow">点一下色块，就能往前移一位</span></div>
+</section>
+</div>
+</div>
+
+<script>
+var SUPABASE_URL='https://nifmryfrgfdjjbrdrgpo.supabase.co';
+var SUPABASE_ANON_KEY='sb_publishable_AdLuePdaPCWznuSa6D0ruA_dL9K919U';
+var API={
+h:function(ct){var hd={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};if(ct)hd['Content-Type']='application/json';return hd;},
+get:function(p){return fetch(SUPABASE_URL+'/rest/v1/'+p,{headers:this.h()}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.json();});},
+post:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'POST',headers:Object.assign({'Prefer':'return=representation'},this.h(1)),body:JSON.stringify(b)}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.json();});},
+patch:function(p,b){return fetch(SUPABASE_URL+'/rest/v1/'+p,{method:'PATCH',headers:this.h(1),body:JSON.stringify(b)}).then(function(r){if(!r.ok)throw Error(r.statusText);return r.text().then(function(t){return t?JSON.parse(t):null;});});}
+};
+
+var CALC_TYPE='dorm_singing';
+var curUser=null;
+
+function getUser(){var s=localStorage.getItem('guild_current_user');if(!s){window.location.href='../login.html';return null;}try{var u=JSON.parse(s);if(!u.id)throw Error();return u;}catch(_){localStorage.removeItem('guild_current_user');window.location.href='../login.html';return null;}}
+function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast '+(t||'ok')+' show';clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},2500);}
+
+/* ===== 计算内核（与桌面版完全一致） ===== */
+var BASE=8.0223,PER_LEVEL=0.0077,SLOT_MAX=6,ROOM_COUNT=16,GROUP_SIZE=4,GROUP_COUNT=4;
+var ATTRS=[
+{key:1,name:'歌',color:'#34c759'},
+{key:2,name:'舞',color:'#ff3b30'},
+{key:3,name:'演',color:'#0071e3'},
+{key:4,name:'艺',color:'#af52de'}
+];
+var ROOMS=['春雨居','春燕居','春花居','春芽居','夏荷阁','夏凉阁','夏田阁','夏竹阁','秋香榭','秋暮榭','秋吟榭','秋染榭','冬寒涧','冬霜涧','冬雪涧','冬暖涧'];
+
+function slotGift(level){
+var L=Number(level);
+if(!isFinite(L)||L<=0)return 0;
+return (BASE+L*PER_LEVEL)*Math.ceil(L/10);
+}
+
+function greedyGroups(gifts){
+var groups=[],g;
+for(g=0;g<GROUP_COUNT;g+=1)groups.push({idx:[],sum:0});
+for(var i=0;i<gifts.length;i+=1){
+var target=-1;
+for(g=0;g<GROUP_COUNT;g+=1){
+if(groups[g].idx.length>=GROUP_SIZE)continue;
+if(target===-1){target=g;continue;}
+if(groups[g].sum<groups[target].sum-1e-9)target=g;
+else if(Math.abs(groups[g].sum-groups[target].sum)<=1e-9&&groups[g].idx.length<groups[target].idx.length)target=g;
+}
+if(target===-1)break;
+groups[target].idx.push(i);
+groups[target].sum+=gifts[i];
+}
+return groups;
+}
+
+function optimize(gifts){
+var n=gifts.length;
+if(n!==ROOM_COUNT)return null;
+var total=0,i;
+for(i=0;i<n;i+=1)total+=gifts[i];
+var mean=total/GROUP_COUNT;
+var order=gifts.map(function(v,k){return k;}).sort(function(a,b){return(gifts[b]-gifts[a])||(a-b);});
+var v=order.map(function(k){return gifts[k];});
+var best={spread:Infinity,dev:Infinity,sums:null,groups:null};
+var init=greedyGroups(v);
+(function(){
+var sums=init.map(function(g){return g.sum;});
+var dev=0;
+for(var k=0;k<sums.length;k+=1)dev+=(sums[k]-mean)*(sums[k]-mean);
+best={spread:Math.max.apply(null,sums)-Math.min.apply(null,sums),dev:dev,sums:sums,groups:init.map(function(g){return g.idx.slice();})};
+})();
+var stack=[],used=new Array(n).fill(false);
+function record(){
+var last=[],k;
+for(k=0;k<n;k+=1)if(!used[k])last.push(k);
+var lastSum=0;
+for(k=0;k<last.length;k+=1)lastSum+=v[last[k]];
+var sums=stack.map(function(g){return g.sum;}).concat([lastSum]);
+var spread=Math.max.apply(null,sums)-Math.min.apply(null,sums);
+var dev=0;
+for(k=0;k<sums.length;k+=1)dev+=(sums[k]-mean)*(sums[k]-mean);
+var better=spread<best.spread-1e-9||(spread<=best.spread+1e-9&&dev<best.dev-1e-9);
+if(better){best={spread:spread,dev:dev,sums:sums,groups:stack.map(function(g){return g.idx.slice();}).concat([last])};}
+}
+function dfs(){
+if(stack.length===GROUP_COUNT-1){record();return;}
+var first=-1,k;
+for(k=0;k<n;k+=1)if(!used[k]){first=k;break;}
+if(first===-1)return;
+var rest=[];
+for(k=first+1;k<n;k+=1)if(!used[k])rest.push(k);
+var pick=[];
+function choose(start,left){
+if(left===0){
+var idx=[first].concat(pick),sum=0,j;
+for(j=0;j<idx.length;j+=1)sum+=v[idx[j]];
+for(j=0;j<idx.length;j+=1)used[idx[j]]=true;
+stack.push({idx:idx,sum:sum});
+var max=-Infinity,min=Infinity;
+for(j=0;j<stack.length;j+=1){
+if(stack[j].sum>max)max=stack[j].sum;
+if(stack[j].sum<min)min=stack[j].sum;
+}
+if(max-min<=best.spread+1e-9)dfs();
+stack.pop();
+for(j=0;j<idx.length;j+=1)used[idx[j]]=false;
+return;
+}
+for(var m=start;m<=rest.length-left;m+=1){
+pick.push(rest[m]);
+choose(m+1,left-1);
+pick.pop();
+}
+}
+choose(0,GROUP_SIZE-1);
+}
+dfs();
+if(!best.groups)return null;
+var groups=best.groups.map(function(group){return group.map(function(k){return order[k];}).sort(function(a,b){return a-b;});});
+return{groups:groups,sums:best.sums,spread:best.spread,total:total,mean:mean};
+}
+
+/* ===== 界面 ===== */
+var POS_NAMES=['最高组','次高组','第三组','最低组'];
+var ATTR_MAP={};
+ATTRS.forEach(function(a){ATTR_MAP[a.key]=a;});
+
+var tbody=document.getElementById('tbody');
+var resultEl=document.getElementById('result');
+var chipsEl=document.getElementById('chips');
+var vTotal=document.getElementById('vTotal');
+var vMean=document.getElementById('vMean');
+var vSpread=document.getElementById('vSpread');
+var hintEl=document.getElementById('hint');
+var inputs=[];
+
+var order=[1,2,3,4];
+var dragIndex=-1;
+var loadedLevels=null;
+var loadedOrder=null;
+
+function isPermutation(list){
+if(!Array.isArray(list)||list.length!==4)return false;
+var seen={};
+for(var i=0;i<list.length;i+=1){
+var k=Number(list[i]);
+if(!ATTR_MAP[k]||seen[k])return false;
+seen[k]=true;
+}
+return true;
+}
+
+function renderOrder(){
+var html='';
+order.forEach(function(key,i){
+var a=ATTR_MAP[key];
+html+='<div class="chip" draggable="true" tabindex="0" role="button" data-key="'+key+'" style="--c:'+a.color+'" title="'+a.name+'：'+POS_NAMES[i]+'（拖动或点击调整）"><span class="cn">'+a.name+'</span><span class="cp">'+POS_NAMES[i]+'</span></div>';
+});
+chipsEl.innerHTML=html;
+bindChips();
+}
+
+function moveChip(index,delta){
+var to=index+delta;
+if(to<0)to=order.length-1;
+if(to>=order.length)to=0;
+if(to===index)return;
+var item=order.splice(index,1)[0];
+order.splice(to,0,item);
+afterOrderChange();
+}
+
+function afterOrderChange(){
+renderOrder();
+saveData();
+recalc();
+}
+
+function bindChips(){
+var nodes=chipsEl.querySelectorAll('.chip');
+Array.prototype.forEach.call(nodes,function(node,index){
+node.addEventListener('click',function(){moveChip(index,-1);});
+node.addEventListener('keydown',function(e){
+if(e.key==='ArrowLeft'){e.preventDefault();moveChip(index,-1);}
+else if(e.key==='ArrowRight'){e.preventDefault();moveChip(index,1);}
+});
+node.addEventListener('dragstart',function(e){
+dragIndex=index;
+node.classList.add('dragging');
+if(e.dataTransfer){
+e.dataTransfer.effectAllowed='move';
+try{e.dataTransfer.setData('text/plain',String(index));}catch(err){}
+}
+});
+node.addEventListener('dragend',function(){node.classList.remove('dragging');dragIndex=-1;});
+node.addEventListener('dragover',function(e){e.preventDefault();});
+node.addEventListener('drop',function(e){
+e.preventDefault();
+var from=dragIndex;
+if(from===-1){
+var dt=e.dataTransfer&&e.dataTransfer.getData('text/plain');
+from=dt===''||dt==null?-1:Number(dt);
+}
+if(from===-1||from===index||isNaN(from)||from>=order.length)return;
+var item=order.splice(from,1)[0];
+order.splice(index,0,item);
+dragIndex=-1;
+afterOrderChange();
+});
+});
+}
+
+function money(v){
+return v.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function buildTable(){
+var html='';
+for(var r=0;r<ROOM_COUNT;r+=1){
+html+='<tr>';
+html+='<td class="idx">'+(r+1)+'</td>';
+html+='<td class="rname">'+ROOMS[r]+'</td>';
+for(var c=0;c<SLOT_MAX;c+=1){
+html+='<td><input class="lv" type="number" inputmode="numeric" min="0" step="1" data-r="'+r+'" data-c="'+c+'" placeholder="0" aria-label="'+ROOMS[r]+' 槽'+(c+1)+'"></td>';
+}
+html+='<td class="gift giftcol zero" id="gift-'+r+'">0.00</td>';
+html+='</tr>';
+}
+tbody.innerHTML=html;
+inputs=Array.prototype.slice.call(tbody.querySelectorAll('input.lv'));
+inputs.forEach(function(el){el.addEventListener('input',onChange);});
+}
+
+function readLevels(){
+var levels=[];
+for(var r=0;r<ROOM_COUNT;r+=1)levels.push([0,0,0,0,0,0]);
+inputs.forEach(function(el){
+var r=Number(el.getAttribute('data-r'));
+var c=Number(el.getAttribute('data-c'));
+var val=Number(el.value);
+levels[r][c]=isFinite(val)&&val>0?val:0;
+});
+return levels;
+}
+
+function fillLevels(levels){
+inputs.forEach(function(el){
+var r=Number(el.getAttribute('data-r'));
+var c=Number(el.getAttribute('data-c'));
+var v=levels&&levels[r]?levels[r][c]:0;
+el.value=v>0?String(v):'';
+});
+}
+
+var timer=null;
+function onChange(){
+if(timer)clearTimeout(timer);
+timer=setTimeout(function(){recalc();saveData();},160);
+}
+
+function recalc(){
+timer=null;
+var levels=readLevels();
+var gifts=levels.map(function(lv){return lv.reduce(function(s,x){return s+slotGift(x);},0);});
+gifts.forEach(function(g,r){
+var cell=document.getElementById('gift-'+r);
+cell.textContent=g>0?money(g):'0.00';
+cell.className='gift giftcol'+(g>0?'':' zero');
+});
+var total=gifts.reduce(function(a,b){return a+b;},0);
+if(total<=0){
+vTotal.textContent='—';
+vMean.textContent='—';
+vSpread.textContent='—';
+resultEl.innerHTML='<div class="empty">填入家具等级后，这里会给出四组分配方案</div>';
+return;
+}
+var t0=performance.now();
+var opt=optimize(gifts);
+var cost=performance.now()-t0;
+vTotal.textContent=money(total);
+vMean.textContent=money(opt.mean);
+vSpread.textContent=money(opt.spread);
+var ranked=opt.groups.map(function(group,i){return{group:group,sum:opt.sums[i]};}).sort(function(a,b){return(b.sum-a.sum)||(a.group[0]-b.group[0]);});
+var html='';
+ranked.forEach(function(item,gi){
+var attr=ATTR_MAP[order[gi]]||ATTRS[gi];
+var diff=item.sum-opt.mean;
+var sign=diff>=0?'+':'−';
+html+='<div class="group">';
+html+='<div class="ghead">';
+html+='<span class="tag" style="background:'+attr.color+'">'+attr.name+'</span>';
+html+='<span class="gsum">'+money(item.sum)+'</span>';
+html+='<span class="gdiff">'+sign+money(Math.abs(diff))+'</span>';
+html+='</div><div class="grooms">';
+item.group.map(function(index){return{index:index,gift:gifts[index]};}).sort(function(a,b){return(b.gift-a.gift)||(a.index-b.index);}).forEach(function(room){
+html+='<div class="groom">';
+html+='<span class="rn">'+(room.index+1)+'</span>';
+html+='<span style="flex:1">'+ROOMS[room.index]+'</span>';
+html+='<span class="rg">'+money(room.gift)+'</span>';
+html+='</div>';
+});
+html+='</div></div>';
+});
+resultEl.innerHTML=html;
+hintEl.textContent='已按最优解计算 · '+Math.round(cost)+' ms';
+}
+
+/* ===== Supabase 保存/加载 ===== */
+var _saveTimer=null;
+function saveData(){
+clearTimeout(_saveTimer);
+_saveTimer=setTimeout(function(){
+var data={levels:readLevels(),order:order};
+API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.'+CALC_TYPE+'&select=id&limit=1')
+.then(function(ex){if(ex&&ex.length)return API.patch('calculator_data?id=eq.'+ex[0].id,{data:data,updated_at:new Date().toISOString()});else return API.post('calculator_data',{member_id:curUser.id,calculator_type:CALC_TYPE,data:data});})
+.catch(function(e){console.warn('saveData:',e);});
+},500);
+}
+
+function loadSavedData(){
+return API.get('calculator_data?member_id=eq.'+curUser.id+'&calculator_type=eq.'+CALC_TYPE+'&select=data&limit=1')
+.then(function(rows){return(rows&&rows.length>0)?rows[0].data:{};})
+.catch(function(e){return{};});
+}
+
+var SAMPLE=[
+[356,356,356,356,356,0],
+[255,255,255,255,255,0],
+[174,174,174,174,174,0],
+[159,159,159,159,159,0],
+[150,150,150,150,150,0],
+[150,150,150,150,150,0],
+[150,150,150,150,150,0],
+[150,150,150,150,150,0],
+[142,142,142,142,0,0],
+[133,133,133,133,0,0],
+[125,125,125,125,0,0],
+[116,116,116,116,0,0],
+[109,109,109,0,0,0],
+[105,105,105,0,0,0],
+[101,101,101,0,0,0],
+[96,96,96,0,0,0]
+];
+
+document.getElementById('btnClear').addEventListener('click',function(){
+if(!confirm('确定清空所有宿舍等级？'))return;
+fillLevels(null);
+recalc();
+saveData();
+});
+document.getElementById('btnSample').addEventListener('click',function(){
+fillLevels(SAMPLE);
+recalc();
+saveData();
+});
+
+async function init(){
+curUser=getUser();if(!curUser)return;
+document.getElementById('navUser').textContent=curUser.display_name||curUser.uid;
+// Global lock check
+try{
+var lockRows=await API.get('calculator_data?calculator_type=eq._global_lock&select=data&limit=1');
+if(lockRows.length>0&&lockRows[0].data&&lockRows[0].data.locked&&!curUser.is_admin){
+alert('计算器维护中，仅超级管理员可访问');
+window.location.href='../index.html';
+return;
+}
+}catch(e){}
+buildTable();
+var saved=await loadSavedData();
+if(saved&&Array.isArray(saved.levels)&&saved.levels.length===ROOM_COUNT){
+fillLevels(saved.levels);
+}
+if(saved&&isPermutation(saved.order))order=saved.order.map(Number);
+renderOrder();
+recalc();
+}
+init();
+</script>
+</body>
+</html>
