@@ -19,11 +19,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Ne
 .btn{padding:10px 22px;border-radius:8px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;border:none;transition:background 0.2s;}
 .btn-danger{background:#ff3b30;color:#fff;}
 .btn-danger:hover{background:#e03020;}
-.card{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
-.table-wrap{overflow-x:auto;}
+.card{background:var(--card);border:1px solid var(--border-l);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;overflow:clip;}
+.table-wrap{overflow-x:clip;}
+@media(max-width:768px){.table-wrap{overflow-x:auto;}}
 table{width:100%;border-collapse:collapse;min-width:400px;}
 th,td{padding:7px 5px;text-align:center;border-bottom:1px solid var(--border-l);font-size:13px;}
 th{font-size:12px;font-weight:600;color:var(--text2);background:var(--bg2);white-space:nowrap;}
+/* 粘性表头 */
+thead th{position:sticky;z-index:5;background:var(--bg2);}
+/* 计数行 */
+thead tr.count-row th{font-size:11px;font-weight:700;color:var(--accent);background:var(--bg2);}
 td{vertical-align:middle;}
 /* 间隔底色 */
 tbody tr:nth-child(even) td{background:rgba(127,127,127,0.05);}
@@ -67,8 +72,8 @@ input[type=checkbox]:disabled{cursor:not-allowed;opacity:0.5;}
 <table>
 <thead>
 <tr>
-<th rowspan="2" style="width:36px;">序</th>
-<th rowspan="2" class="member-name">成员</th>
+<th rowspan="3" style="width:36px;">序</th>
+<th rowspan="3" class="member-name">成员</th>
 <th rowspan="2" class="group-col narrow-col">中级<br>建设</th>
 <th rowspan="2" class="group-col narrow-col">高级<br>建设</th>
 <th colspan="2" class="group-col">道具建设</th>
@@ -77,6 +82,12 @@ input[type=checkbox]:disabled{cursor:not-allowed;opacity:0.5;}
 <tr>
 <th class="group-col narrow-col">1</th><th class="narrow-col">2</th>
 <th class="group-col narrow-col">1</th><th class="narrow-col">2</th><th class="narrow-col">3</th><th class="narrow-col">4</th>
+</tr>
+<tr class="count-row">
+<th class="group-col narrow-col" id="count-m1">0</th>
+<th class="group-col narrow-col" id="count-h1">0</th>
+<th class="group-col narrow-col" id="count-i1">0</th><th class="narrow-col" id="count-i2">0</th>
+<th class="group-col narrow-col" id="count-c1">0</th><th class="narrow-col" id="count-c2">0</th><th class="narrow-col" id="count-c3">0</th><th class="narrow-col" id="count-c4">0</th>
 </tr>
 </thead>
 <tbody id="memberBody"><tr><td colspan="10" class="empty-state">加载成员中...</td></tr></tbody>
@@ -174,12 +185,39 @@ html+='</tr>';
 });
 document.getElementById('memberBody').innerHTML=html;
 document.getElementById('loadStatus').textContent='共 '+members.length+' 位成员'+(canEdit?'（可编辑）':'（只读）');
+updateCounts();
+fixStickyHeader();
+}
+
+function updateCounts(){
+var counts={};
+CHECK_KEYS.forEach(function(k){counts[k]=0;});
+members.forEach(function(m){
+var c=checks[m.id]||{};
+CHECK_KEYS.forEach(function(k){if(c[k])counts[k]++;});
+});
+CHECK_KEYS.forEach(function(k){
+var el=document.getElementById('count-'+k);
+if(el)el.textContent=counts[k];
+});
+}
+
+function fixStickyHeader(){
+var rows=document.querySelectorAll('thead tr');
+var top=48; // 导航栏高度
+Array.prototype.forEach.call(rows,function(tr){
+Array.prototype.forEach.call(tr.querySelectorAll('th'),function(th){
+th.style.top=top+'px';
+});
+top+=tr.offsetHeight;
+});
 }
 
 function onCheck(el){
 var mid=el.dataset.mid,key=el.dataset.key;
 if(!checks[mid])checks[mid]={};
 checks[mid][key]=el.checked;
+updateCounts();
 saveData();
 }
 
@@ -255,6 +293,7 @@ canEdit=curUser.is_admin||curUser.position==='会长'||curUser.position==='副�
 if(canEdit)document.getElementById('btnClear').style.display='inline-block';
 await Promise.all([loadMembers(),loadSaved()]);
 renderTable();
+window.addEventListener('resize',fixStickyHeader);
 }
 init();
 </script>
